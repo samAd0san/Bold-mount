@@ -43,7 +43,7 @@ export default function Header() {
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-500 ${
         isScrolled 
-          ? 'bg-white/90 backdrop-blur-md shadow-md' 
+          ? 'glass-nav shadow-lg' 
           : 'bg-white'
       }`}
     >
@@ -121,13 +121,13 @@ export default function Header() {
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
             </Link>
 
-            <div className="flex items-center gap-1 ml-2">
-              <Button variant="ghost" size="icon" className="text-secondary hover:text-primary hover:bg-primary/5 h-9 w-9">
-                <Search className="h-4 w-4" />
+            <div className="flex items-center gap-2 ml-4">
+              <Button variant="ghost" size="icon" className="text-secondary hover:text-primary hover:bg-primary/5 h-10 w-10">
+                <Search className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="relative text-secondary hover:text-primary hover:bg-primary/5 h-9 w-9">
-                <ShoppingCart className="h-4 w-4" />
-                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] flex items-center justify-center text-white font-bold">0</span>
+              <Button variant="ghost" size="icon" className="relative text-secondary hover:text-primary hover:bg-primary/5 h-10 w-10">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full bg-primary text-xs flex items-center justify-center text-white font-bold">0</span>
               </Button>
             </div>
           </nav>

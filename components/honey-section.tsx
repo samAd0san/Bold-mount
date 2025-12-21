@@ -8,12 +8,12 @@ export default function HoneySection() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
           {/* Image - Fixed rectangular shape */}
-          <div className="relative h-[250px] sm:h-[300px] md:h-[400px] lg:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden shadow-xl">
+          <div className="relative h-[250px] sm:h-[300px] md:h-[400px] lg:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden shadow-xl bg-white">
             <Image
               src="/Natural Bee Honey.webp"
               alt="Premium Natural Honey"
               fill
-              className="object-cover"
+              className="object-contain p-6 md:p-8"
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>

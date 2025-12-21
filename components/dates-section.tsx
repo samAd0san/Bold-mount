@@ -79,12 +79,12 @@ export default function DatesSection() {
               className="bg-white border-0 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden group cursor-pointer rounded-xl md:rounded-2xl hover:scale-[1.02] active:scale-[0.98]"
             >
               {/* Image Container - Fixed height rectangle */}
-              <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 w-full overflow-hidden">
+              <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 w-full overflow-hidden bg-white">
                 <Image
                   src={date.image}
                   alt={date.name}
                   fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="object-contain p-4 md:p-5 group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
