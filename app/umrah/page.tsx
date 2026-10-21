@@ -15,6 +15,7 @@ import { ServeForm } from '@/components/serve/serve-form';
 import { PrefillButton } from '@/components/serve/prefill-button';
 import { ServeFaq } from '@/components/serve/serve-faq';
 import { MoreWays } from '@/components/serve/more-ways';
+import { UmrahFee } from '@/components/serve/umrah-fee';
 import { getSection } from '@/lib/sections';
 import { STOCK } from '@/lib/media';
 import { formatINR } from '@/lib/format';
@@ -190,8 +191,13 @@ export default function UmrahPage() {
               </Reveal>
             ))}
           </div>
+          <a href="#why-fee" className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-navy underline-offset-4 hover:underline">
+            Why is there a fee? Read what scholars say →
+          </a>
         </Container>
       </section>
+
+      <UmrahFee />
 
       <Steps
         className="bg-sand/50"
