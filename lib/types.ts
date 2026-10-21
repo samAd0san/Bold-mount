@@ -10,6 +10,7 @@ export interface Variant {
 export interface ProductImage {
   src: string;
   alt: string;
+  cover?: boolean; // full photo that should fill its tile (cut-outs stay contained)
 }
 
 export interface Product {
