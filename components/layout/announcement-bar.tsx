@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ANNOUNCEMENTS } from '@/lib/site';
+import { Phone } from 'lucide-react';
+import { ANNOUNCEMENTS, SITE } from '@/lib/site';
 
 export function AnnouncementBar() {
   const [i, setI] = useState(0);
@@ -18,10 +19,13 @@ export function AnnouncementBar() {
         <p key={i} className="truncate animate-in fade-in duration-700">
           {ANNOUNCEMENTS[i]}
         </p>
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav aria-label="Help" className="hidden items-center gap-6 md:flex">
           <Link href="/about" className="hover:underline">Our Story</Link>
           <Link href="/faq" className="hover:underline">FAQ</Link>
           <Link href="/contact" className="hover:underline">Contact</Link>
+          <a href={`tel:+${SITE.whatsapp}`} className="flex items-center gap-1.5 hover:underline">
+            <Phone size={14} aria-hidden /> {SITE.phoneDisplay}
+          </a>
         </nav>
       </div>
     </div>

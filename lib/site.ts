@@ -15,6 +15,6 @@ export const SITE = {
 
 export const ANNOUNCEMENTS = [
   `Free delivery on orders above ₹${SITE.freeShippingAbove}`,
-  `Order on WhatsApp · ${SITE.phoneDisplay}`,
+  'Doorstep delivery — share your location on WhatsApp',
   'A share of every order feeds a family in need',
 ];

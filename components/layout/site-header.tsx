@@ -2,21 +2,23 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, Phone, Search, ShoppingBag, X } from 'lucide-react';
+import { Menu, Search, ShoppingBag, X } from 'lucide-react';
 import { BRAND } from '@/lib/media';
-import { SECTIONS } from '@/lib/sections';
-import { SITE } from '@/lib/site';
+import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { useCart, cartCount } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
+import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { cn } from '@/lib/utils';
 import { MobileMenu } from './mobile-menu';
+import { CategoryRail } from './category-rail';
 
 const NAV = [
   { label: 'Home', href: '/' },
   { label: 'Shop All', href: '/shop' },
   { label: 'Gift Boxes', href: '/shop?filter=gifts' },
+  { label: 'Offers', href: '/shop?sale=1' },
   { label: 'Our Story', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
@@ -47,7 +49,6 @@ function SearchBox({ className, autoFocus, onDone }: { className?: string; autoF
 }
 
 export function SiteHeader() {
-  const pathname = usePathname();
   const hydrated = useHydrated();
   const count = useCart((s) => cartCount(s.items));
   const openCart = useCart((s) => s.setOpen);
@@ -66,13 +67,13 @@ export function SiteHeader() {
     <>
       {/* Main bar and category row share one white surface, split by a hairline (Pepperfry / Urban Ladder style). */}
       <header className={cn('sticky top-0 z-50 bg-pearl text-ink transition-shadow', scrolled && 'shadow-[0_8px_24px_-14px_rgb(11_27_43/0.35)]')}>
-        <div className="mx-auto flex h-16 max-w-site items-center gap-4 px-5 md:h-[76px] md:gap-8 md:px-8 lg:px-12">
+        <div className="mx-auto flex h-16 max-w-site items-center gap-6 px-5 md:h-[76px] md:px-8 lg:px-12">
           <Link href="/" aria-label="Bold Mount home" className="shrink-0">
-            <Image src={BRAND.logo} alt="Bold Mount" width={110} height={60} priority className="h-11 w-auto md:h-[52px]" />
+            <Image src={BRAND.logoHeader} alt="Bold Mount" width={235} height={128} unoptimized priority className="h-11 w-auto md:h-[52px]" />
           </Link>
 
-          <nav className="hidden items-center gap-6 lg:flex">
-            {NAV.slice(1, 3).map((n) => (
+          <nav aria-label="Shop" className="hidden items-center gap-7 lg:flex">
+            {NAV.slice(1, 4).map((n) => (
               <Link key={n.label} href={n.href} className="text-[0.95rem] font-semibold whitespace-nowrap text-ink transition-colors hover:text-navy">
                 {n.label}
               </Link>
@@ -81,9 +82,14 @@ export function SiteHeader() {
 
           <SearchBox className="hidden flex-1 md:block lg:max-w-xl xl:max-w-2xl" />
 
-          <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <a href={`tel:+${SITE.whatsapp}`} className="hidden items-center gap-2 px-2 text-sm font-semibold text-ink transition-colors hover:text-navy xl:flex">
-              <Phone size={18} className="text-navy" /> {SITE.phoneDisplay}
+          <div className="ml-auto flex items-center gap-1 sm:gap-2.5">
+            <a
+              href={whatsappGeneralLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden h-11 items-center gap-2 rounded-full bg-whatsapp px-5 text-sm font-semibold whitespace-nowrap text-white transition hover:brightness-105 md:flex"
+            >
+              <WhatsAppGlyph size={19} /> Order on WhatsApp
             </a>
             <button
               type="button"
@@ -125,32 +131,7 @@ export function SiteHeader() {
         )}
 
         {/* Category row — all nine sections, one tap away on every page. */}
-        <div className="border-y border-line">
-          <nav className="no-scrollbar mx-auto flex max-w-site gap-7 overflow-x-auto px-5 md:px-8 lg:justify-center lg:gap-10 lg:px-12">
-            {SECTIONS.map((s) => {
-              const active = pathname.startsWith(s.href);
-              return (
-                <Link
-                  key={s.slug}
-                  href={s.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'relative shrink-0 py-3 text-[0.95rem] font-medium whitespace-nowrap transition-colors lg:text-base',
-                    active ? 'text-navy' : 'text-ink hover:text-navy',
-                  )}
-                >
-                  {s.short}
-                  <span
-                    className={cn(
-                      'absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-gold transition-transform duration-300 ease-expo',
-                      active ? 'scale-x-100' : 'scale-x-0',
-                    )}
-                  />
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        <CategoryRail />
       </header>
 
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} links={NAV} />
