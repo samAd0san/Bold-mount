@@ -13,6 +13,7 @@ const TABS = [
   { id: 'talbeenah', label: 'Talbeenah', all: 'All Talbeenah', href: '/talbeenah', products: productsBySection('talbeenah') },
   { id: 'dates', label: 'Dates', all: 'All dates', href: '/dates', products: productsBySection('dates') },
   { id: 'honey', label: 'Honey', all: 'All honey', href: '/honey', products: productsBySection('honey') },
+  { id: 'dry-fruits', label: 'Dry Fruits', all: 'All dry fruits', href: '/dry-fruits', products: productsBySection('dry-fruits') },
   { id: 'wearings', label: 'Wearings', all: 'All wearings', href: '/wearings', products: productsBySection('wearings') },
   { id: 'gifts', label: 'Gift Boxes', all: 'All gift boxes', href: '/shop?filter=gifts', products: giftProducts() },
 ];

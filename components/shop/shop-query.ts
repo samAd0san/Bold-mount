@@ -31,7 +31,7 @@ export const PRICE_OPTIONS: { value: ShopPrice; label: string }[] = [
   { value: 'above-1000', label: 'Above ₹1,000' },
 ];
 
-const FILTERS: ShopFilter[] = ['talbeenah', 'dates', 'honey', 'wearings', 'gifts'];
+const FILTERS: ShopFilter[] = ['talbeenah', 'dates', 'honey', 'dry-fruits', 'wearings', 'gifts'];
 
 const first = (raw: string | string[] | undefined) => (Array.isArray(raw) ? raw[0] : raw);
 const pick = <T extends string>(allowed: readonly T[], raw: string | string[] | undefined): T | undefined =>

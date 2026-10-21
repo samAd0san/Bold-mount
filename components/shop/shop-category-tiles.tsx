@@ -27,6 +27,7 @@ export const CATEGORY_TILES: Tile[] = [
   sectionTile('talbeenah', false, 'object-[50%_25%]'),
   sectionTile('dates', true),
   sectionTile('honey', true),
+  sectionTile('dry-fruits', false),
   sectionTile('wearings', false, 'object-[45%_50%]'),
   { value: 'gifts', label: 'Gift Boxes', image: GIFT_IMG, cutout: true },
 ];
