@@ -103,26 +103,37 @@ const STEPS: { title: string; text: string; art: ReactNode }[] = [
 /** "How ordering works": three numbered cards with small UI mock-ups, then the two ways to start. */
 export function JourneyCards() {
   return (
-    <section className="py-14 md:py-20">
+    <section className="py-10 md:py-20">
       <Container>
         <Reveal>
-          <SectionHeading align="center" eyebrow="How ordering works" title="Three easy steps to" emphasis="your door" />
+          <SectionHeading
+            align="center"
+            eyebrow="How ordering works"
+            title="Three easy steps to"
+            emphasis="your door"
+            className="mb-5 md:mb-12"
+          />
         </Reveal>
 
-        <ol className="grid gap-5 md:grid-cols-3 md:gap-6">
+        {/* Phones: swipe row with the next card peeking; md+: the three-column grid. */}
+        <ol className="no-scrollbar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pt-1 pb-3 md:mx-0 md:grid md:snap-none md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pt-0 md:pb-0">
           {STEPS.map((s, i) => (
-            <li key={s.title} className="relative flex">
-              <Reveal delay={i * 0.08} className="flex w-full flex-col rounded-3xl bg-pearl p-4 shadow-card ring-1 ring-line md:p-5">
+            <li key={s.title} className="relative flex w-[82vw] max-w-[340px] shrink-0 snap-start md:w-auto md:max-w-none md:shrink">
+              {/* Off-screen cards never trigger the scroll-reveal, so on phones show them straight away. */}
+              <Reveal
+                delay={i * 0.08}
+                className="flex w-full flex-col rounded-3xl bg-pearl p-3.5 shadow-card ring-1 ring-line max-md:transform-none! max-md:opacity-100! md:p-5"
+              >
                 <div
                   aria-hidden="true"
-                  className="flex h-64 items-center justify-center rounded-2xl bg-sand bg-lattice-ink"
+                  className="flex h-48 items-center justify-center rounded-2xl bg-sand bg-lattice-ink max-md:*:scale-[0.8] md:h-64"
                 >
                   {s.art}
                 </div>
-                <div className="px-1 pb-2 pt-6">
-                  <span className="text-5xl font-normal leading-none text-gold-ink">{`0${i + 1}`}</span>
-                  <h3 className="mt-3 text-xl text-ink">{s.title}</h3>
-                  <p className="mt-2 leading-relaxed text-ink-soft">{s.text}</p>
+                <div className="px-1 pt-4 pb-1 md:pt-6 md:pb-2">
+                  <span className="text-4xl leading-none font-normal text-gold-ink md:text-5xl">{`0${i + 1}`}</span>
+                  <h3 className="mt-2 text-lg text-ink md:mt-3 md:text-xl">{s.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-soft md:mt-2 md:text-base">{s.text}</p>
                 </div>
               </Reveal>
               {i < STEPS.length - 1 && (
@@ -137,7 +148,7 @@ export function JourneyCards() {
           ))}
         </ol>
 
-        <Reveal className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center md:mt-12">
+        <Reveal className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center md:mt-12">
           <Link href="/shop" className={buttonClass('gold', 'px-8 py-3.5')}>
             Start shopping <ArrowRight size={16} />
           </Link>

@@ -74,25 +74,31 @@ const PROMOS: {
 /** Three coloured promo cards (Talbeenah, Sidr honey, Ajwa) — each card is one big link. */
 export function PromoTrio() {
   return (
-    <section className="py-8 md:py-12">
+    <section className="py-6 md:py-12">
       <Container>
-        <div className="grid gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
+        {/* Phones: swipe row with the next card peeking; md+: the original grid. */}
+        <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pt-1 pb-3 md:mx-0 md:grid md:snap-none md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 md:pt-0 md:pb-0 lg:grid-cols-3">
           {PROMOS.map((p, i) => {
             const t = TONES[p.tone];
             return (
-              <Reveal key={p.href} delay={i * 0.08} className="sm:last:col-span-2 lg:last:col-span-1">
+              // Off-screen cards never trigger the scroll-reveal, so on phones show them straight away.
+              <Reveal
+                key={p.href}
+                delay={i * 0.08}
+                className="w-[78vw] max-w-[320px] shrink-0 snap-start max-md:transform-none! max-md:opacity-100! md:w-auto md:max-w-none md:shrink md:last:col-span-2 lg:last:col-span-1"
+              >
                 <Link
                   href={p.href}
                   className={cn(
-                    'group relative flex h-full min-h-[220px] overflow-hidden rounded-2xl p-6 transition-shadow duration-500 hover:shadow-card-hover sm:min-h-[260px] md:p-8 lg:min-h-[300px]',
+                    'group relative flex h-full min-h-[200px] overflow-hidden rounded-2xl p-5 transition-shadow duration-500 hover:shadow-card-hover md:min-h-[260px] md:p-8 lg:min-h-[300px]',
                     t.card,
                   )}
                 >
                   <div className="relative z-10 flex max-w-[58%] flex-col">
                     <p className={cn('text-[0.7rem] font-semibold tracking-eyebrow uppercase', t.eyebrow)}>{p.eyebrow}</p>
-                    <h3 className="mt-2 text-2xl leading-tight md:text-[1.7rem]">{p.title}</h3>
-                    <p className={cn('mt-2 text-sm leading-relaxed', t.text)}>{p.text}</p>
-                    <div className="mt-auto pt-6">
+                    <h3 className="mt-1.5 text-xl leading-tight md:mt-2 md:text-[1.7rem]">{p.title}</h3>
+                    <p className={cn('mt-1.5 text-sm leading-relaxed md:mt-2', t.text)}>{p.text}</p>
+                    <div className="mt-auto pt-4 md:pt-6">
                       <span
                         className={cn(
                           'inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-semibold transition-colors duration-300',
