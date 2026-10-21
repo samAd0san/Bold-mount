@@ -71,7 +71,7 @@ export function MobileMenu({
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
-          <Image src={BRAND.logoIvory} alt="Bold Mount" width={90} height={50} className="h-10 w-auto" />
+          <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized className="h-10 w-auto" />
           <button type="button" onClick={onClose} aria-label="Close menu" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10">
             <X size={22} />
           </button>

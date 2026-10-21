@@ -14,6 +14,7 @@ const HELP = [
   { label: 'Delivery & Returns', href: '/policies/shipping' },
   { label: 'Privacy Policy', href: '/policies/privacy' },
   { label: 'Terms of Service', href: '/policies/terms' },
+  { label: 'Photo credits', href: '/credits' },
 ];
 
 export function SiteFooter() {
@@ -22,7 +23,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-site px-5 pt-14 pb-8 md:px-8 md:pt-20 lg:px-12">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-12">
           <div className="space-y-5">
-            <Image src={BRAND.logoIvory} alt="Bold Mount" width={150} height={82} className="h-16 w-auto" />
+            <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized className="h-16 w-auto" />
             <p className="max-w-sm text-sm leading-relaxed text-on-night-soft">
               Sunnah superfoods from blessed lands — and a community that serves. A share of every order supports
               families, madrasas and people in need.
