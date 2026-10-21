@@ -1,11 +1,12 @@
 import type { ShopSection } from '@/lib/types';
 
-// The shop's whole state lives in the URL (?filter=&sort=&price=&sale=1&gift=1) so links are shareable.
+// The shop's whole state lives in the URL (?q=&filter=&sort=&price=&sale=1&gift=1) so links are shareable.
 export type ShopFilter = ShopSection | 'gifts';
 export type ShopSort = 'featured' | 'price-asc' | 'price-desc' | 'discount' | 'newest';
 export type ShopPrice = 'any' | 'under-500' | '500-1000' | 'above-1000';
 
 export interface ShopQuery {
+  q?: string; // header search text
   filter?: ShopFilter; // undefined = All
   sort: ShopSort;
   price: ShopPrice;
@@ -39,6 +40,7 @@ const pick = <T extends string>(allowed: readonly T[], raw: string | string[] | 
 /** Reads the URL params into a clean query; anything unknown falls back to the default. */
 export function parseShopQuery(sp: ShopSearchParams): ShopQuery {
   return {
+    q: first(sp.q)?.trim().slice(0, 60) || undefined,
     filter: pick(FILTERS, sp.filter),
     sort: pick(SORT_OPTIONS.map((o) => o.value), sp.sort) ?? 'featured',
     price: pick(PRICE_OPTIONS.map((o) => o.value), sp.price) ?? 'any',
@@ -50,6 +52,7 @@ export function parseShopQuery(sp: ShopSearchParams): ShopQuery {
 /** Builds the /shop URL for a query, leaving defaults out so links stay short. */
 export function shopHref(q: ShopQuery): string {
   const p = new URLSearchParams();
+  if (q.q) p.set('q', q.q);
   if (q.filter) p.set('filter', q.filter);
   if (q.sort !== 'featured') p.set('sort', q.sort);
   if (q.price !== 'any') p.set('price', q.price);
@@ -62,4 +65,4 @@ export function shopHref(q: ShopQuery): string {
 /** How many drawer filters (price / sale / gift) are on — category and sort don't count. */
 export const activeFilterCount = (q: ShopQuery) => (q.price !== 'any' ? 1 : 0) + (q.sale ? 1 : 0) + (q.gift ? 1 : 0);
 
-export const clearFilters = (q: ShopQuery): ShopQuery => ({ ...q, price: 'any', sale: false, gift: false });
+export const clearFilters = (q: ShopQuery): ShopQuery => ({ ...q, q: undefined, price: 'any', sale: false, gift: false });

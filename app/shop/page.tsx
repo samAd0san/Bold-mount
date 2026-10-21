@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 export default async function ShopPage({ searchParams }: { searchParams: Promise<ShopSearchParams> }) {
   const query = parseShopQuery(await searchParams);
   const products = applyShopQuery(query);
-  const title = query.filter ? categoryLabel(query.filter) : 'All products';
+  const title = query.q ? `Results for “${query.q}”` : query.filter ? categoryLabel(query.filter) : 'All products';
   const section = query.filter && query.filter !== 'gifts' ? getSection(query.filter) : undefined;
 
   return (

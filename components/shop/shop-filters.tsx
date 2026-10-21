@@ -27,10 +27,19 @@ const SORTERS: Record<ShopSort, ((a: Product, b: Product) => number) | null> = {
   newest: (a, b) => Number(b.tags.includes('new')) - Number(a.tags.includes('new')),
 };
 
-/** Category first, then price / sale / gift, then sort. Ties keep catalogue order (sort is stable). */
+// Every search word must appear somewhere in the product's name, tagline, origin, section or description.
+const matchesSearch = (p: Product, text?: string) => {
+  if (!text) return true;
+  const hay = `${p.name} ${p.tagline} ${p.origin ?? ''} ${p.section} ${p.description}`.toLowerCase();
+  return text.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
+};
+
+/** Search and category first, then price / sale / gift, then sort. Ties keep catalogue order (sort is stable). */
 export function applyShopQuery(q: ShopQuery): Product[] {
   const base = !q.filter ? PRODUCTS : q.filter === 'gifts' ? giftProducts() : productsBySection(q.filter);
-  const list = base.filter((p) => inPrice(p, q.price) && (!q.sale || onSale(p)) && (!q.gift || p.tags.includes('gift')));
+  const list = base.filter(
+    (p) => matchesSearch(p, q.q) && inPrice(p, q.price) && (!q.sale || onSale(p)) && (!q.gift || p.tags.includes('gift')),
+  );
   const sorter = SORTERS[q.sort];
   return sorter ? [...list].sort(sorter) : list;
 }
@@ -38,6 +47,7 @@ export function applyShopQuery(q: ShopQuery): Product[] {
 /** One removable chip per active drawer filter, plus "Clear all". Plain links, so no JS needed. */
 export function ShopActiveFilters({ query }: { query: ShopQuery }) {
   const chips: { key: string; label: string; href: string }[] = [];
+  if (query.q) chips.push({ key: 'q', label: `“${query.q}”`, href: shopHref({ ...query, q: undefined }) });
   if (query.price !== 'any') {
     const label = PRICE_OPTIONS.find((o) => o.value === query.price)?.label ?? query.price;
     chips.push({ key: 'price', label, href: shopHref({ ...query, price: 'any' }) });
