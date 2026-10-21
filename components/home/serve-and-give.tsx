@@ -10,27 +10,39 @@ import { Reveal } from '@/components/motion/reveal';
 // The two most-asked services get the large tiles; the rest follow.
 const ORDER = ['zakat', 'umrah', 'khidmat-e-khalq', 'giveaway', 'volunteer'];
 
-/** Dark band with the five service sections: swipe row on phones, 2-large + 3-small bento from tablet up. */
-export function ServeAndGive() {
+/** The five service cards: swipe row on phones, 2-large + 3-small bento from tablet up. `joined` = sits under the mission panel. */
+export function ServeAndGive({ joined = false }: { joined?: boolean }) {
   const items = ORDER.map(getSection);
 
   return (
-    <section className="bg-night bg-lattice py-16 text-on-night md:py-24">
+    <section className={cn('bg-night bg-lattice text-on-night', joined ? 'pb-16 md:pb-24' : 'py-16 md:py-24')}>
       <Container>
-        <Reveal className="mb-10 grid gap-6 md:mb-14 md:grid-cols-[1.1fr_1fr] md:items-end md:gap-12">
-          <SectionHeading dark eyebrow="Serve & Give" title="Five ways to" emphasis="do good" className="mb-0 md:mb-0" />
-          <figure className="border-l-2 border-gold/60 pl-5">
-            <blockquote className="leading-relaxed text-on-night">
-              <p>
-                “The example of those who spend their wealth in the way of Allah is like a seed of grain which grows
-                seven spikes; in each spike is a hundred grains.”
-              </p>
-            </blockquote>
-            <figcaption className="mt-2 text-xs font-semibold tracking-eyebrow text-gold uppercase">
-              Al-Baqarah 2:261
-            </figcaption>
-          </figure>
-        </Reveal>
+        {joined ? (
+          <Reveal className="mb-6 flex items-end justify-between gap-6 md:mb-8">
+            <h3 className="text-2xl text-on-night md:text-3xl">
+              Five ways to <span className="text-gold">do good</span>
+            </h3>
+            <p className="hidden max-w-md text-right text-sm leading-relaxed text-on-night-soft md:block">
+              “…like a seed of grain which grows seven spikes; in each spike is a hundred grains.”{' '}
+              <span className="font-semibold text-gold">Al-Baqarah 2:261</span>
+            </p>
+          </Reveal>
+        ) : (
+          <Reveal className="mb-10 grid gap-6 md:mb-14 md:grid-cols-[1.1fr_1fr] md:items-end md:gap-12">
+            <SectionHeading dark eyebrow="Serve & Give" title="Five ways to" emphasis="do good" className="mb-0 md:mb-0" />
+            <figure className="border-l-2 border-gold/60 pl-5">
+              <blockquote className="leading-relaxed text-on-night">
+                <p>
+                  “The example of those who spend their wealth in the way of Allah is like a seed of grain which grows
+                  seven spikes; in each spike is a hundred grains.”
+                </p>
+              </blockquote>
+              <figcaption className="mt-2 text-xs font-semibold tracking-eyebrow text-gold uppercase">
+                Al-Baqarah 2:261
+              </figcaption>
+            </figure>
+          </Reveal>
+        )}
 
         <ul className="no-scrollbar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-6 md:gap-5 md:overflow-visible md:px-0 md:pb-0">
           {items.map((s, i) => {

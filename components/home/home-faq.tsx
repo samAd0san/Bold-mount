@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { ArrowRight, Plus } from 'lucide-react';
 import { formatINR } from '@/lib/format';
 import { SITE } from '@/lib/site';
+import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { buttonClass } from '@/components/ui/button-styles';
+import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { Container } from '@/components/ui/container';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Reveal } from '@/components/motion/reveal';
@@ -36,6 +38,19 @@ export function HomeFaq() {
           <Link href="/faq" className={buttonClass('outline')}>
             All FAQs <ArrowRight size={16} />
           </Link>
+          {/* Replaces the old closing CTA band: the next step for anyone whose question isn't listed. */}
+          <div className="mt-8 rounded-2xl bg-navy p-6 text-on-night">
+            <p className="text-lg font-semibold">Still have a question?</p>
+            <p className="mt-1 text-sm text-on-night-soft">Orders, Zakat, Umrah Badal or anything else — we&apos;re one message away.</p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className={buttonClass('whatsapp')}>
+                <WhatsAppGlyph size={17} /> Chat on WhatsApp
+              </a>
+              <a href={`tel:+${SITE.whatsapp}`} className="text-sm font-semibold text-gold hover:underline">
+                {SITE.phoneDisplay}
+              </a>
+            </div>
+          </div>
         </Reveal>
 
         <Reveal delay={0.08}>

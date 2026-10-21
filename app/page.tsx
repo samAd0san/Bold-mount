@@ -7,10 +7,7 @@ import { JourneyCards } from '@/components/home/journey-cards';
 import { MissionPanel } from '@/components/home/mission-panel';
 import { TalbeenahStory } from '@/components/home/talbeenah-story';
 import { ServeAndGive } from '@/components/home/serve-and-give';
-import { WhyBoldMount } from '@/components/home/why-bold-mount';
-import { CampaignWall } from '@/components/home/campaign-wall';
 import { HomeFaq } from '@/components/home/home-faq';
-import { CtaBand } from '@/components/home/cta-band';
 
 export const metadata: Metadata = {
   description:
@@ -23,18 +20,16 @@ export default function HomePage() {
     <>
       {/* Slide titles rotate, so the page's single h1 lives here for screen readers and search. */}
       <h1 className="sr-only">Bold Mount — Talbeenah, premium dates, Sidr honey and community service</h1>
+      {/* Shop first (what most visitors came for), then the story, then giving; trust points live in the header. */}
       <HeroSlider />
       <ExploreSections />
       <PromoTrio />
       <Bestsellers />
-      <JourneyCards />
       <TalbeenahStory />
-      <ServeAndGive />
+      <JourneyCards />
       <MissionPanel />
-      <WhyBoldMount />
-      <CampaignWall />
+      <ServeAndGive joined />
       <HomeFaq />
-      <CtaBand />
     </>
   );
 }

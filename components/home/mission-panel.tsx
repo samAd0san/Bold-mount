@@ -60,13 +60,13 @@ function Row({ lead, title, sub }: { lead: ReactNode; title: string; sub: string
 /** Dark inset panel: vines draw in behind a big mission statement, with small illustrative status cards around it. */
 export function MissionPanel() {
   return (
-    <section className="bg-night pb-16 pt-2 md:pb-24" aria-labelledby="mission-title">
+    <section className="bg-night bg-lattice pt-16 pb-10 md:pt-24 md:pb-14" aria-labelledby="mission-title">
       <Container>
-        <div className="relative isolate overflow-hidden rounded-[2rem] bg-navy px-4 py-14 sm:px-8 md:px-12 md:py-24 xl:flex xl:min-h-[44rem] xl:items-center xl:justify-center xl:py-32">
+        <div className="relative isolate overflow-hidden rounded-[2rem] bg-navy px-4 py-12 sm:px-8 md:px-12 md:py-20 xl:flex xl:min-h-[34rem] xl:items-center xl:justify-center xl:py-20">
           <RfVines />
 
           <Reveal className="relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
-            <p className="text-xs font-semibold uppercase tracking-eyebrow text-gold">Our mission</p>
+            <p className="text-xs font-semibold uppercase tracking-eyebrow text-gold">Serve &amp; Give</p>
             <div className="rule-gold mt-3" />
             <h2
               id="mission-title"
@@ -101,7 +101,7 @@ export function MissionPanel() {
               <Pill tone="sand">Hand-picked</Pill>
             </RfFloatCard>
 
-            <RfFloatCard className="xl:absolute xl:bottom-24 xl:left-12 xl:z-10 xl:w-52 2xl:left-24" delay={0.3} duration={6.5}>
+            <RfFloatCard className="xl:absolute xl:bottom-16 xl:left-12 xl:z-10 xl:w-52 2xl:left-24" delay={0.3} duration={6.5}>
               <Row
                 lead={
                   <IconDot>
@@ -114,7 +114,7 @@ export function MissionPanel() {
               <Pill tone="green">Delivered</Pill>
             </RfFloatCard>
 
-            <RfFloatCard className="xl:absolute xl:bottom-16 xl:right-10 xl:z-10 xl:w-52 2xl:right-24" delay={0.45} duration={7.5}>
+            <RfFloatCard className="xl:absolute xl:bottom-10 xl:right-10 xl:z-10 xl:w-52 2xl:right-24" delay={0.45} duration={7.5}>
               <Row
                 lead={
                   <IconDot>

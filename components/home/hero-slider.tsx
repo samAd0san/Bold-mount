@@ -137,7 +137,7 @@ export function HeroSlider() {
     <motion.section
       aria-roledescription="carousel"
       aria-label="Featured at Bold Mount"
-      className="relative isolate h-[62svh] min-h-[460px] overflow-hidden bg-night md:h-[86vh] md:min-h-[580px]"
+      className="relative isolate h-[62svh] min-h-[460px] overflow-hidden bg-night md:h-[78vh] md:min-h-[560px]"
       style={{ touchAction: 'pan-y' }}
       onPanEnd={onPanEnd}
       onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(true)}
