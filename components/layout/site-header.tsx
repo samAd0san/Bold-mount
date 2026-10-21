@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, Phone, ShoppingBag } from 'lucide-react';
+import { Menu, Phone, Search, ShoppingBag, X } from 'lucide-react';
 import { BRAND } from '@/lib/media';
 import { SECTIONS } from '@/lib/sections';
 import { SITE } from '@/lib/site';
@@ -21,12 +21,38 @@ const NAV = [
   { label: 'Contact', href: '/contact' },
 ];
 
+function SearchBox({ className, autoFocus, onDone }: { className?: string; autoFocus?: boolean; onDone?: () => void }) {
+  const router = useRouter();
+  const [text, setText] = useState('');
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = text.trim();
+    router.push(q ? `/shop?q=${encodeURIComponent(q)}` : '/shop');
+    onDone?.();
+  };
+  return (
+    <form role="search" onSubmit={submit} className={cn('relative', className)}>
+      <Search size={17} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" aria-hidden />
+      <input
+        type="search"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        autoFocus={autoFocus}
+        placeholder="Search Talbeenah, Ajwa dates, honey…"
+        aria-label="Search products"
+        className="h-11 w-full rounded-full border border-line bg-cream pr-4 pl-11 text-base text-ink placeholder:text-ink-soft/80 transition-colors focus:border-navy focus:bg-pearl focus:outline-none md:text-sm"
+      />
+    </form>
+  );
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const hydrated = useHydrated();
   const count = useCart((s) => cartCount(s.items));
   const openCart = useCart((s) => s.setOpen);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -36,48 +62,47 @@ export function SiteHeader() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href.split('?')[0]));
-
   return (
     <>
-      <header className={cn('sticky top-0 z-50 bg-navy text-on-night transition-shadow', scrolled && 'shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)]')}>
-        {/* Main bar */}
-        <div className="mx-auto flex h-16 max-w-site items-center gap-6 px-5 md:h-[72px] md:px-8 lg:px-12">
+      {/* Main bar and category row share one white surface, split by a hairline (Pepperfry / Urban Ladder style). */}
+      <header className={cn('sticky top-0 z-50 bg-pearl text-ink transition-shadow', scrolled && 'shadow-[0_8px_24px_-14px_rgb(11_27_43/0.35)]')}>
+        <div className="mx-auto flex h-16 max-w-site items-center gap-4 px-5 md:h-[76px] md:gap-8 md:px-8 lg:px-12">
           <Link href="/" aria-label="Bold Mount home" className="shrink-0">
-            <Image src={BRAND.logoIvory} alt="Bold Mount" width={120} height={66} priority className="h-11 w-auto md:h-12" />
+            <Image src={BRAND.logo} alt="Bold Mount" width={110} height={60} priority className="h-11 w-auto md:h-[52px]" />
           </Link>
 
-          <nav className="ml-4 hidden items-center gap-7 lg:flex">
-            {NAV.map((n) => (
-              <Link
-                key={n.label}
-                href={n.href}
-                className={cn(
-                  'relative py-2 text-[0.95rem] transition-colors hover:text-gold',
-                  isActive(n.href) && n.href !== '/shop?filter=gifts' ? 'text-gold' : 'text-on-night',
-                )}
-              >
+          <nav className="hidden items-center gap-6 lg:flex">
+            {NAV.slice(1, 3).map((n) => (
+              <Link key={n.label} href={n.href} className="text-[0.95rem] font-semibold whitespace-nowrap text-ink transition-colors hover:text-navy">
                 {n.label}
               </Link>
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-1 sm:gap-3">
-            <a
-              href={`tel:+${SITE.whatsapp}`}
-              className="hidden items-center gap-2 rounded-full px-3 py-2 text-sm text-on-night transition-colors hover:text-gold xl:flex"
-            >
-              <Phone size={17} /> {SITE.phoneDisplay}
+          <SearchBox className="hidden flex-1 md:block lg:max-w-xl xl:max-w-2xl" />
+
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <a href={`tel:+${SITE.whatsapp}`} className="hidden items-center gap-2 px-2 text-sm font-semibold text-ink transition-colors hover:text-navy xl:flex">
+              <Phone size={18} className="text-navy" /> {SITE.phoneDisplay}
             </a>
+            <button
+              type="button"
+              onClick={() => setSearchOpen((o) => !o)}
+              aria-label={searchOpen ? 'Close search' : 'Search'}
+              aria-expanded={searchOpen}
+              className="flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream md:hidden"
+            >
+              {searchOpen ? <X size={21} /> : <Search size={21} />}
+            </button>
             <button
               type="button"
               onClick={() => openCart(true)}
               aria-label={`Open cart${hydrated && count ? `, ${count} items` : ''}`}
-              className="relative flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+              className="relative flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream"
             >
-              <ShoppingBag size={21} />
+              <ShoppingBag size={22} />
               {hydrated && count > 0 && (
-                <span className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1 text-[0.7rem] font-bold text-night">
+                <span className="absolute top-0.5 right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-navy px-1 text-[0.7rem] font-bold text-on-night">
                   {count}
                 </span>
               )}
@@ -86,28 +111,41 @@ export function SiteHeader() {
               type="button"
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 lg:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream lg:hidden"
             >
-              <Menu size={22} />
+              <Menu size={23} />
             </button>
           </div>
         </div>
 
-        {/* Category rail — every section one tap away, on every page. */}
-        <div className="bg-azure">
-          <nav className="no-scrollbar mx-auto flex max-w-site gap-2 overflow-x-auto px-5 py-2 md:px-8 lg:justify-between lg:gap-1 lg:px-12">
+        {searchOpen && (
+          <div className="border-t border-line px-5 py-3 md:hidden">
+            <SearchBox autoFocus onDone={() => setSearchOpen(false)} />
+          </div>
+        )}
+
+        {/* Category row — all nine sections, one tap away on every page. */}
+        <div className="border-y border-line">
+          <nav className="no-scrollbar mx-auto flex max-w-site gap-7 overflow-x-auto px-5 md:px-8 lg:justify-center lg:gap-10 lg:px-12">
             {SECTIONS.map((s) => {
               const active = pathname.startsWith(s.href);
               return (
                 <Link
                   key={s.slug}
                   href={s.href}
+                  aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'flex shrink-0 items-center rounded-full border px-4 py-1.5 text-[0.95rem] font-medium whitespace-nowrap text-white transition-colors lg:border-transparent lg:px-3.5 lg:text-base',
-                    active ? 'border-white bg-white text-navy' : 'border-white/30 hover:bg-white/15',
+                    'relative shrink-0 py-3 text-[0.95rem] font-medium whitespace-nowrap transition-colors lg:text-base',
+                    active ? 'text-navy' : 'text-ink hover:text-navy',
                   )}
                 >
                   {s.short}
+                  <span
+                    className={cn(
+                      'absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-gold transition-transform duration-300 ease-expo',
+                      active ? 'scale-x-100' : 'scale-x-0',
+                    )}
+                  />
                 </Link>
               );
             })}

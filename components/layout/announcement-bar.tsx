@@ -13,8 +13,8 @@ export function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="bg-gold text-night">
-      <div className="mx-auto flex h-9 max-w-site items-center justify-center px-5 text-[0.8rem] font-medium md:justify-between md:px-8 lg:px-12">
+    <div className="bg-linear-to-r from-gold-deep via-gold to-gold-bright text-night">
+      <div className="mx-auto flex h-9 max-w-site items-center justify-center px-5 text-[0.82rem] font-semibold md:justify-between md:px-8 lg:px-12">
         <p key={i} className="truncate animate-in fade-in duration-700">
           {ANNOUNCEMENTS[i]}
         </p>
