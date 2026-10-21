@@ -71,7 +71,7 @@ export const SECTIONS: Section[] = [
     short: 'Wearings',
     tagline: 'Simple, dignified, comfortable',
     blurb: 'Thobes, kurtas, kufis, abayas and hijabs for everyday and Jumu‘ah.',
-    image: STOCK.wear.thobe,
+    image: STOCK.wear.kurta,
     icon: Shirt,
     cta: 'Shop Wearings',
   },

@@ -27,7 +27,7 @@ export default function WearingsPage() {
   return (
     <CategoryPage
       slug="wearings"
-      heroImage={STOCK.wear.thobe}
+      heroImage={STOCK.wear.kufi}
       heroEyebrow="New range"
       intro={{
         eyebrow: 'Modest wear',
