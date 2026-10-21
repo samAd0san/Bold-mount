@@ -36,7 +36,8 @@ export function FloatingActions() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"
-        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-whatsapp text-white shadow-[0_10px_30px_-8px_rgb(37_211_102/0.7)] transition-transform duration-300 hover:scale-110"
+        // Phones only: from md up the sticky header always shows "Order on WhatsApp".
+        className="relative flex h-14 w-14 items-center justify-center md:hidden rounded-full bg-whatsapp text-white shadow-[0_10px_30px_-8px_rgb(37_211_102/0.7)] transition-transform duration-300 hover:scale-110"
       >
         <span className="absolute inset-0 rounded-full bg-whatsapp opacity-40 motion-safe:animate-ping-soft" />
         <WhatsAppGlyph size={30} className="relative" />
