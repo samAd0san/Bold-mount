@@ -54,11 +54,6 @@ export function UmrahFee() {
           ))}
         </div>
 
-        <p className="mt-5 text-sm leading-relaxed text-ink-soft">
-          IslamQA also cites the permissibility of paying someone to perform Umrah on behalf of a deceased person, subject
-          to the relevant conditions. <span className="italic">Source: Islam Question &amp; Answer (IslamQA).</span>
-        </p>
-
         <Reveal className="mt-12 rounded-[1.75rem] bg-navy bg-lattice p-6 text-on-night sm:p-8 md:p-10">
           <h3 className="text-2xl text-on-night md:text-3xl">
             Our <span className="text-gold">commitments</span> to you
