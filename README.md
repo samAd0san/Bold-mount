@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bold Mount
 
-## Getting Started
+Storefront and community site for **Bold Mount** — Sunnah superfoods (Talbeenah, premium dates, Sidr honey, dry fruits, modest wear) and community services (Khidmat-e-Khalq, Zakat, volunteer guidance, free Qur’an giveaways, Umrah Badal).
 
-First, run the development server:
+Live: https://bold-mount.vercel.app
+
+There is no backend. Every order, booking, pledge and request ends in a **pre-filled WhatsApp message** to Bold Mount, where price, delivery and payment are confirmed personally.
+
+## Run it locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev -- -p 3100   # http://localhost:3100 (hot reload)
+npm run build            # production build — run before pushing
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Node 20+ is recommended.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Area | Routes |
+|------|--------|
+| Shop | `/` · `/shop` (category tiles, sort, filters, `?q=` search) · `/talbeenah` · `/dates` · `/honey` · `/dry-fruits` · `/wearings` · `/product/[slug]` · `/cart` |
+| Serve & Give | `/khidmat-e-khalq` · `/zakat` (calculator + pledge) · `/volunteer` · `/giveaway` · `/umrah` (packages + booking) |
+| Info | `/about` · `/contact` · `/faq` · `/policies/shipping` (Delivery & Returns) · `/policies/privacy` · `/policies/terms` · `/credits` |
 
-## Learn More
+## Where to change things
 
-To learn more about Next.js, take a look at the following resources:
+| To change… | Edit |
+|------------|------|
+| Products, prices, pack sizes, product photos | `lib/products.ts` (prices are **placeholders** — whole rupees) |
+| Categories in the header row, home tiles and footer | `lib/sections.ts` |
+| Any image path | `lib/media.ts` (files live in `public/images/…`) |
+| WhatsApp number, email, free-delivery threshold, announcement bar | `lib/site.ts` |
+| WhatsApp message wording | `lib/whatsapp.ts` |
+| Umrah Badal packages | `app/umrah/page.tsx` |
+| Colours, fonts, shared styles | `app/globals.css` (Tailwind v4 `@theme` tokens) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How ordering works
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Customer adds products to the cart (saved in their browser).
+2. Checkout collects name, mobile and a drop address — or a one-tap location pin.
+3. WhatsApp opens with the full order filled in; Bold Mount confirms availability, delivery and payment there.
 
-## Deploy on Vercel
+Delivery is doorstep delivery by Bold Mount; free above the threshold in `lib/site.ts`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Content rules
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Halal imagery:** no images of women and no human faces anywhere. Clothing is shown on hangers or folded; hands alone are fine.
+- **No cure claims:** food copy must not claim to treat or cure disease (FSSAI). Posters that do are kept out of the site.
+- **Religious references:** add a Qur’an verse, hadith or fatwa only with a verified source and citation.
+- **Photos:** use only free-licence images (Unsplash, Pexels, Pixabay, or Creative Commons with credit). Record each one in the matching `credits.json`; the `/credits` page lists them automatically.
+- Images that must not ship (faces, claims, superseded files) go in `archive/not-deployed-images/` — outside `public/`, so they are never deployed. The folder is listed in `.gitignore`, so add new files there with `git add -f`. Don’t delete them.
+
+## Deploy
+
+Vercel builds automatically from GitHub:
+
+- push to **`main`** → production (bold-mount.vercel.app)
+- push any other branch → a preview deployment (visible to the Vercel team)
+
+## Tech
+
+Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · framer-motion · zustand · lucide-react
