@@ -23,7 +23,8 @@ export function ProductGallery({ images }: { images: ProductImage[] }) {
             sizes="(max-width: 768px) 100vw, (max-width: 1480px) 50vw, 720px"
             aria-hidden={i !== active}
             className={cn(
-              'object-contain p-6 transition-opacity duration-500 ease-expo md:p-10',
+              'transition-opacity duration-500 ease-expo',
+              img.cover ? 'object-cover' : 'object-contain p-6 md:p-10',
               i === active ? 'opacity-100' : 'opacity-0',
             )}
           />
@@ -44,7 +45,7 @@ export function ProductGallery({ images }: { images: ProductImage[] }) {
                 i === active ? 'ring-2 ring-navy' : 'ring-1 ring-line hover:ring-navy/40',
               )}
             >
-              <Image src={img.src} alt="" fill sizes="80px" className="object-contain p-1.5" />
+              <Image src={img.src} alt="" fill sizes="80px" className={img.cover ? 'object-cover' : 'object-contain p-1.5'} />
             </button>
           ))}
         </div>

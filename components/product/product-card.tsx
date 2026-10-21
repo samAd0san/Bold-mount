@@ -4,6 +4,7 @@ import type { Product } from '@/lib/types';
 import { discountPct, formatINR } from '@/lib/format';
 import { getSection } from '@/lib/sections';
 import { QuickAdd } from './quick-add';
+import { cn } from '@/lib/utils';
 
 // Square studio card (Darkwood-style): cream tile, discount badge, label, name, price, quick add.
 export function ProductCard({ product }: { product: Product }) {
@@ -20,7 +21,10 @@ export function ProductCard({ product }: { product: Product }) {
             alt={product.images[0].alt}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-contain p-5 transition-transform duration-700 ease-expo group-hover:scale-[1.06]"
+            className={cn(
+              'transition-transform duration-700 ease-expo group-hover:scale-[1.06]',
+              product.images[0].cover ? 'object-cover' : 'object-contain p-5',
+            )}
           />
         )}
         {off != null && (
