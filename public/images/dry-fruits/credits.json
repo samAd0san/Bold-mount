@@ -1,0 +1,112 @@
+[
+  {
+    "path": "/images/dry-fruits/almonds.webp",
+    "topic": "dry-fruits",
+    "description": "Pile of about 30 whole raw almonds cut out on transparent (1200x1200, subject 1008px = 8% padding); crisp edges, no bowl; cut from the Mockup Graphics studio shot.",
+    "photographer": "Mockup Graphics",
+    "source_url": "https://unsplash.com/photos/hw8vOPAIZgk",
+    "licence": "Unsplash License",
+    "width": 1200,
+    "height": 1200,
+    "kb": 199
+  },
+  {
+    "path": "/images/dry-fruits/almonds-photo.webp",
+    "topic": "dry-fruits",
+    "description": "Heaped white bowl of whole almonds on a soft off-white surface, warm and clean, no text; a different shot from the cut-out source (nicer natural look).",
+    "photographer": "Mockupo",
+    "source_url": "https://unsplash.com/photos/8LvXmMZuAU0",
+    "licence": "Unsplash License",
+    "width": 1600,
+    "height": 1066,
+    "kb": 63
+  },
+  {
+    "path": "/images/dry-fruits/cashews.webp",
+    "topic": "dry-fruits",
+    "description": "Round wooden bowl of pale whole cashews (W320-style, creamy white), top-down, cut out on transparent; the bowl is part of the cut-out.",
+    "photographer": "Mockup Graphics",
+    "source_url": "https://unsplash.com/photos/xWRwCmhcWDM",
+    "licence": "Unsplash License",
+    "width": 1200,
+    "height": 1200,
+    "kb": 155
+  },
+  {
+    "path": "/images/dry-fruits/cashews-photo.webp",
+    "topic": "dry-fruits",
+    "description": "Same top-down bowl of pale whole cashews on pure white with a soft shadow; square 1600x1600.",
+    "photographer": "Mockup Graphics",
+    "source_url": "https://unsplash.com/photos/xWRwCmhcWDM",
+    "licence": "Unsplash License",
+    "width": 1600,
+    "height": 1600,
+    "kb": 80
+  },
+  {
+    "path": "/images/dry-fruits/walnuts.webp",
+    "topic": "dry-fruits",
+    "description": "Two small wooden bowls cut out on transparent: one of shelled walnut kernels (halves and pieces), one of in-shell walnuts; clean edges, reflection removed.",
+    "photographer": "Neva",
+    "source_url": "https://www.pexels.com/photo/nuts-on-brown-wooden-bowl-7987578/",
+    "licence": "Pexels License",
+    "width": 1200,
+    "height": 1200,
+    "kb": 124
+  },
+  {
+    "path": "/images/dry-fruits/walnuts-photo.webp",
+    "topic": "dry-fruits",
+    "description": "Natural studio shot of the same two wooden bowls (walnut kernels and in-shell walnuts) on a glossy white surface with soft reflections; no text.",
+    "photographer": "Neva",
+    "source_url": "https://www.pexels.com/photo/nuts-on-brown-wooden-bowl-7987578/",
+    "licence": "Pexels License",
+    "width": 1600,
+    "height": 1066,
+    "kb": 60
+  },
+  {
+    "path": "/images/dry-fruits/dry-fruit-barfi.webp",
+    "topic": "dry-fruits",
+    "description": "Three thick slices of a date/fig-and-nut bar packed with cashews, almonds and sesame, cut out on transparent. So-so match: rectangular slabs (not square/diamond), Italian panforte-style date-nut bar rather than Indian barfi, dark brown, slightly soft focus; loaf behind was masked out.",
+    "photographer": "FOX ^.ᆽ.^= ∫",
+    "source_url": "https://www.pexels.com/photo/sweet-with-honey-fig-and-nuts-17743620/",
+    "licence": "Pexels License",
+    "width": 1200,
+    "height": 1200,
+    "kb": 209
+  },
+  {
+    "path": "/images/dry-fruits/dry-fruit-barfi-photo.webp",
+    "topic": "dry-fruits",
+    "description": "Natural landscape shot of the same date-and-nut slices on baking paper over a wooden board (end of the uncut loaf visible top left); warm, no text. Same so-so caveat as the cut-out.",
+    "photographer": "FOX ^.ᆽ.^= ∫",
+    "source_url": "https://www.pexels.com/photo/sweet-with-honey-fig-and-nuts-17743620/",
+    "licence": "Pexels License",
+    "width": 1600,
+    "height": 1066,
+    "kb": 188
+  },
+  {
+    "path": "/images/dry-fruits/dry-fruits-hero.webp",
+    "topic": "dry-fruits",
+    "description": "Banner: five white bowls of cashews, almonds, walnut kernels, pistachios and dates on dark wood, low moody light; dark empty space on the left and top for text. Dates stand in for raisins (no raisins in this shot); bowls sit centre-right so left copy room is about 20% wide plus the dark top.",
+    "photographer": "Naveena V",
+    "source_url": "https://unsplash.com/photos/nH4NKSU3QNI",
+    "licence": "Unsplash License",
+    "width": 2400,
+    "height": 1600,
+    "kb": 122
+  },
+  {
+    "path": "/images/dry-fruits/dry-fruits-tile.webp",
+    "topic": "dry-fruits",
+    "description": "Square crop (1200x1200) for a round category tile: four white bowls of almonds, cashews, walnut kernels and pistachios with a few loose nuts on dark wood; no dates or raisins. A faint signature at the very top of the original is cropped out.",
+    "photographer": "Naveena V",
+    "source_url": "https://unsplash.com/photos/rapNRod3W1s",
+    "licence": "Unsplash License",
+    "width": 1200,
+    "height": 1200,
+    "kb": 60
+  }
+]
