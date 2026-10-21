@@ -376,7 +376,7 @@ export const PRODUCTS: Product[] = [
     slug: 'dry-fruit-barfi',
     name: 'Dry Fruit Barfi',
     section: 'dry-fruits',
-    tags: ['new', 'gift'],
+    tags: ['new'],
     badge: 'New',
     tagline: 'Soft squares packed with mixed dry fruits',
     description:
@@ -387,10 +387,7 @@ export const PRODUCTS: Product[] = [
       { src: DRY_FRUITS.barfi, alt: 'Dry fruit barfi squares' },
       { src: DRY_FRUITS.barfiPhoto, alt: 'Dry fruit barfi — close-up photo', cover: true },
     ],
-    variants: packs([
-      ['250 g', 399, 449],
-      ['500 g', 749, 849],
-    ]),
+    variants: packs([['1 piece', 30, 50]]),
   },
 
   // ── Wearings (placeholder range until real stock is photographed) ──

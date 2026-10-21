@@ -50,7 +50,7 @@ export default function DryFruitsPage() {
       }
       products={productsBySection('dry-fruits')}
       gridTitle="Shop dry fruits"
-      gridIntro="Almonds, cashews and walnuts in pouch sizes for home, plus dry fruit barfi for gifting."
+      gridIntro="Almonds, cashews and walnuts in pouch sizes for home, plus dry fruit barfi by the piece."
       divided
     >
       <section className="bg-sand">
