@@ -1,26 +1,15 @@
-import { BadgeCheck, HandCoins, HeartHandshake, MessageCircle } from 'lucide-react';
+import { BadgeCheck, ExternalLink, HandCoins, HeartHandshake, MessageCircle } from 'lucide-react';
 import { Container } from '@/components/ui/container';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Reveal } from '@/components/motion/reveal';
 
-// Rulings as cited by Islam Question & Answer (IslamQA), supplied by Bold Mount; wording kept close to the source.
-const RULINGS = [
-  {
-    who: 'Shaykh Ibn Baz',
-    rahimahullah: true,
-    text: 'Permitted receiving money for performing Hajj on behalf of another, provided the person has a proper religious intention and is not driven solely by worldly gain.',
-  },
-  {
-    who: 'Shaykh Ibn ‘Uthaymeen',
-    rahimahullah: true,
-    text: 'Distinguished between taking money to enable oneself to perform the pilgrimage — which is permissible — and undertaking it solely to earn money, which he described as blameworthy.',
-  },
-  {
-    who: 'The Permanent Committee (Saudi Arabia)',
-    rahimahullah: false,
-    text: 'In Fatawa al-Lajnah al-Da’imah (11/60), ruled that a person appointed to perform Hajj on behalf of someone else may receive payment, even if it exceeds travel, food and other expenses.',
-  },
-];
+// Verified 2026-10-21 against IslamQA (ar) answer 26978, which cites the Committee at 11/60. Add only rulings you can source.
+const RULING = {
+  who: 'The Permanent Committee for Scholarly Research and Ifta’',
+  cite: 'Fatawa al-Lajnah al-Da’imah 11/60',
+  text: 'It is permissible for the one appointed to perform Hajj on another’s behalf to take the payment agreed for it — even if it is more than he spent on transport, food and drink. He should intend to share in the good and to worship in the Sacred House, and not intend money alone.',
+  source: 'https://islamqa.info/ar/answers/26978',
+};
 
 const COMMITMENTS = [
   { Icon: HandCoins, title: 'The fee covers the journey', text: 'Travel and stay in Makkah, local transport, food and the time of the person who performs it.' },
@@ -29,7 +18,7 @@ const COMMITMENTS = [
   { Icon: MessageCircle, title: 'Agreed upfront', text: 'The amount, date and performer are confirmed with you on WhatsApp before you pay anything.' },
 ];
 
-/** Explains why Umrah Badal carries a fee, with scholars' rulings and our commitments. */
+/** Explains why Umrah Badal carries a fee: one sourced ruling plus our commitments. */
 export function UmrahFee() {
   return (
     <section id="why-fee" className="scroll-mt-32 border-t border-line py-16 md:py-24">
@@ -38,21 +27,28 @@ export function UmrahFee() {
           eyebrow="Transparency"
           title="Why is there a"
           emphasis="fee?"
-          intro="Performing Umrah on someone’s behalf means a real journey to Makkah. The fee pays for that journey and the performer’s time — and scholars have permitted taking payment for it, with the right intention."
+          intro="Performing Umrah on someone’s behalf means a real journey to Makkah. The fee pays for that journey and the performer’s time."
         />
 
-        <div className="grid gap-5 md:grid-cols-3">
-          {RULINGS.map((r, i) => (
-            <Reveal key={r.who} delay={i * 0.06} className="h-full">
-              <figure className="flex h-full flex-col rounded-2xl bg-pearl p-6 ring-1 ring-line sm:p-7">
-                <figcaption className="text-sm font-semibold text-navy">
-                  {r.who} {r.rahimahullah && <span className="font-arabic font-normal text-gold-ink">رحمه الله</span>}
-                </figcaption>
-                <blockquote className="mt-3 flex-1 leading-relaxed text-ink-soft">{r.text}</blockquote>
-              </figure>
-            </Reveal>
-          ))}
-        </div>
+        <Reveal>
+          <figure className="rounded-2xl border-l-4 border-gold bg-pearl p-6 ring-1 ring-line sm:p-8">
+            <blockquote className="text-lg leading-relaxed text-ink md:text-xl">“{RULING.text}”</blockquote>
+            <figcaption className="mt-5 flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                <span className="font-semibold text-navy">{RULING.who}</span>
+                <span className="text-ink-soft"> · {RULING.cite} (translated summary)</span>
+              </span>
+              <a
+                href={RULING.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-1.5 font-semibold text-navy underline-offset-4 hover:underline"
+              >
+                Read the fatwa (Arabic) <ExternalLink size={14} aria-hidden />
+              </a>
+            </figcaption>
+          </figure>
+        </Reveal>
 
         <Reveal className="mt-12 rounded-[1.75rem] bg-navy bg-lattice p-6 text-on-night sm:p-8 md:p-10">
           <h3 className="text-2xl text-on-night md:text-3xl">

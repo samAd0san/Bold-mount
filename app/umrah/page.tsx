@@ -192,7 +192,7 @@ export default function UmrahPage() {
             ))}
           </div>
           <a href="#why-fee" className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-navy underline-offset-4 hover:underline">
-            Why is there a fee? Read what scholars say →
+            Why is there a fee? →
           </a>
         </Container>
       </section>
