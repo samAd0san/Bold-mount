@@ -1,0 +1,33 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { Phone } from 'lucide-react';
+import { ANNOUNCEMENTS, SITE } from '@/lib/site';
+
+export function AnnouncementBar() {
+  const [i, setI] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setI((n) => (n + 1) % ANNOUNCEMENTS.length), 4500);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="bg-linear-to-r from-gold-deep via-gold to-gold-bright text-night">
+      <div className="mx-auto flex h-9 max-w-site items-center justify-center px-5 text-[0.82rem] font-semibold md:justify-between md:px-8 lg:px-12">
+        <p key={i} className="truncate animate-in fade-in duration-700">
+          {ANNOUNCEMENTS[i]}
+        </p>
+        <nav aria-label="Help" className="hidden items-center gap-6 md:flex">
+          <Link href="/about" className="hover:underline">Our Story</Link>
+          <Link href="/faq" className="hover:underline">FAQ</Link>
+          <Link href="/contact" className="hover:underline">Contact</Link>
+          <a href={`tel:+${SITE.whatsapp}`} className="flex items-center gap-1.5 hover:underline">
+            <Phone size={14} aria-hidden /> {SITE.phoneDisplay}
+          </a>
+        </nav>
+      </div>
+    </div>
+  );
+}
