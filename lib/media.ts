@@ -38,6 +38,19 @@ export const PRODUCT_IMG = {
   },
 };
 
+export const DRY_FRUITS = {
+  hero: '/images/dry-fruits/dry-fruits-hero.webp',
+  tile: '/images/dry-fruits/dry-fruits-tile.webp',
+  almonds: '/images/dry-fruits/almonds.webp',
+  almondsPhoto: '/images/dry-fruits/almonds-photo.webp',
+  cashews: '/images/dry-fruits/cashews.webp',
+  cashewsPhoto: '/images/dry-fruits/cashews-photo.webp',
+  walnuts: '/images/dry-fruits/walnuts.webp',
+  walnutsPhoto: '/images/dry-fruits/walnuts-photo.webp',
+  barfi: '/images/dry-fruits/dry-fruit-barfi.webp',
+  barfiPhoto: '/images/dry-fruits/dry-fruit-barfi-photo.webp',
+};
+
 // Only posters without cure claims (FSSAI) or faces; the rest are kept out of public/.
 export const CAMPAIGN = {
   talbeenahBlue: '/images/campaign/talbeenah-sunnah-blue.webp',

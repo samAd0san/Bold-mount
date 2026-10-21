@@ -2,6 +2,7 @@ import {
   Wheat,
   TreePalm,
   Droplets,
+  Nut,
   Shirt,
   HeartHandshake,
   HandCoins,
@@ -10,7 +11,7 @@ import {
   Landmark,
   type LucideIcon,
 } from 'lucide-react';
-import { PRODUCT_IMG, STOCK } from './media';
+import { DRY_FRUITS, PRODUCT_IMG, STOCK } from './media';
 
 // The nine things Bold Mount offers — drives the header rail, menus, home tiles and footer.
 export interface Section {
@@ -62,6 +63,18 @@ export const SECTIONS: Section[] = [
     image: PRODUCT_IMG.honeySidr,
     icon: Droplets,
     cta: 'Shop Honey',
+  },
+  {
+    slug: 'dry-fruits',
+    href: '/dry-fruits',
+    kind: 'shop',
+    title: 'Dry Fruits',
+    short: 'Dry Fruits',
+    tagline: 'Almonds, cashews, walnuts & barfi',
+    blurb: 'Crunchy whole nuts and a soft mixed dry-fruit barfi — for daily snacking, guests and gifting.',
+    image: DRY_FRUITS.tile,
+    icon: Nut,
+    cta: 'Shop Dry Fruits',
   },
   {
     slug: 'wearings',

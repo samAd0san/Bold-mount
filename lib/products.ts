@@ -1,5 +1,5 @@
 import type { Product, ShopSection, Variant } from './types';
-import { CAMPAIGN, PRODUCT_IMG, STOCK } from './media';
+import { CAMPAIGN, DRY_FRUITS, PRODUCT_IMG, STOCK } from './media';
 
 // PLACEHOLDER PRICES — sanity-checked against Organo Mart (Oct 2026); replace with Bold Mount's real price list.
 const packs = (rows: [string, number, number?][]): Variant[] =>
@@ -300,6 +300,96 @@ export const PRODUCTS: Product[] = [
       ['250 g', 349, 399],
       ['500 g', 649, 749],
       ['1 kg', 1199, 1399],
+    ]),
+  },
+
+  // ── Dry fruits ────────────────────────────────────────────
+  {
+    slug: 'premium-almonds',
+    name: 'Premium Almonds (Badam)',
+    section: 'dry-fruits',
+    tags: ['new'],
+    tagline: 'Whole, crunchy and naturally sweet',
+    description:
+      'Plump whole almonds with a clean crunch — lovely on their own, soaked overnight, or chopped over Talbeenah with a drizzle of honey.',
+    highlights: ['Whole, unbroken kernels', 'No salt, oil or coating', 'Great soaked overnight or roasted'],
+    details: [
+      { label: 'Ingredients', value: '100% almonds' },
+      { label: 'Storage', value: 'Airtight container in a cool, dry place' },
+    ],
+    images: [
+      { src: DRY_FRUITS.almonds, alt: 'Whole almonds' },
+      { src: DRY_FRUITS.almondsPhoto, alt: 'Almonds — close-up photo', cover: true },
+    ],
+    variants: packs([
+      ['250 g', 299, 349],
+      ['500 g', 549, 649],
+      ['1 kg', 1049, 1249],
+    ]),
+  },
+  {
+    slug: 'whole-cashews',
+    name: 'Whole Cashews (Kaju)',
+    section: 'dry-fruits',
+    tags: ['new'],
+    tagline: 'Creamy, buttery and whole',
+    description:
+      'Large whole cashews with a soft, buttery bite — perfect for snacking, sweets and festive cooking.',
+    highlights: ['Large whole cashews', 'No salt, oil or coating', 'Rich and creamy'],
+    details: [
+      { label: 'Ingredients', value: '100% cashew nuts' },
+      { label: 'Storage', value: 'Airtight container in a cool, dry place' },
+    ],
+    images: [
+      { src: DRY_FRUITS.cashews, alt: 'Whole cashews' },
+      { src: DRY_FRUITS.cashewsPhoto, alt: 'Cashews — close-up photo', cover: true },
+    ],
+    variants: packs([
+      ['250 g', 329, 379],
+      ['500 g', 629, 729],
+      ['1 kg', 1199, 1399],
+    ]),
+  },
+  {
+    slug: 'walnut-kernels',
+    name: 'Walnut Kernels (Akhrot)',
+    section: 'dry-fruits',
+    tags: ['new'],
+    tagline: 'Light, mellow halves',
+    description:
+      'Light walnut halves with a mellow, buttery taste — add them to Talbeenah, salads and desserts, or enjoy a handful with dates.',
+    highlights: ['Light-coloured halves', 'Shelled and ready to eat', 'Lovely with dates and honey'],
+    details: [
+      { label: 'Ingredients', value: '100% walnut kernels' },
+      { label: 'Storage', value: 'Airtight container; refrigerate in hot weather' },
+    ],
+    images: [
+      { src: DRY_FRUITS.walnuts, alt: 'Walnut kernels' },
+      { src: DRY_FRUITS.walnutsPhoto, alt: 'Walnuts — close-up photo', cover: true },
+    ],
+    variants: packs([
+      ['250 g', 449, 499],
+      ['500 g', 849, 949],
+    ]),
+  },
+  {
+    slug: 'dry-fruit-barfi',
+    name: 'Dry Fruit Barfi',
+    section: 'dry-fruits',
+    tags: ['new', 'gift'],
+    badge: 'New',
+    tagline: 'Soft squares packed with mixed dry fruits',
+    description:
+      'Bite-sized squares made with a rich mix of dry fruits — a wholesome sweet for guests, Eid boxes and gifting. Ask us on WhatsApp for the exact mix in the current batch.',
+    highlights: ['Packed with mixed dry fruits', 'Square, bite-sized pieces', 'Lovely for gifting'],
+    details: [{ label: 'Storage', value: 'Cool, dry place; best within a few weeks of opening' }],
+    images: [
+      { src: DRY_FRUITS.barfi, alt: 'Dry fruit barfi squares' },
+      { src: DRY_FRUITS.barfiPhoto, alt: 'Dry fruit barfi — close-up photo', cover: true },
+    ],
+    variants: packs([
+      ['250 g', 399, 449],
+      ['500 g', 749, 849],
     ]),
   },
 

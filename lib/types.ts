@@ -1,4 +1,4 @@
-export type ShopSection = 'talbeenah' | 'dates' | 'honey' | 'wearings';
+export type ShopSection = 'talbeenah' | 'dates' | 'honey' | 'dry-fruits' | 'wearings';
 
 export interface Variant {
   id: string; // e.g. "500g"
