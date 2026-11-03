@@ -4,12 +4,14 @@ Storefront and community site for **Bold Mount** — Sunnah superfoods (Talbeena
 
 Live: https://bold-mount.vercel.app
 
-There is no backend. Every order, booking, pledge and request ends in a **pre-filled WhatsApp message** to Bold Mount, where price, delivery and payment are confirmed personally.
+Products and categories live in MongoDB and are edited from **`/admin`** (PIN, default `1111`). Customers can pay online (Razorpay: UPI / Google Pay / PhonePe, cards, netbanking, Apple Pay) or send the order on WhatsApp; both land in the admin. Every form on the site (contact, zakat pledge, volunteer, giveaway, umrah booking) still opens WhatsApp and is also saved for the admin.
 
 ## Run it locally
 
 ```bash
 npm install
+cp .env.example .env     # then fill in the values (see the comments in .env.example)
+npm run seed             # first time only: loads the original 5 categories + 23 products (never overwrites)
 npm run dev -- -p 3100   # http://localhost:3100 (hot reload)
 npm run build            # production build — run before pushing
 npm run lint
@@ -24,13 +26,16 @@ Node 20+ is recommended.
 | Shop | `/` · `/shop` (category tiles, sort, filters, `?q=` search) · `/talbeenah` · `/dates` · `/honey` · `/dry-fruits` · `/wearings` · `/product/[slug]` · `/cart` |
 | Serve & Give | `/khidmat-e-khalq` · `/zakat` (calculator + pledge) · `/volunteer` · `/giveaway` · `/umrah` (packages + booking) |
 | Info | `/about` · `/contact` · `/faq` · `/policies/shipping` (Delivery & Returns) · `/policies/privacy` · `/policies/terms` · `/credits` |
+| Account | `/account` (Google sign-in, "My orders") · `/category/[slug]` (categories added in the admin) |
+| Admin | `/admin` (dashboard) · `/admin/orders` · `/admin/products` · `/admin/categories` · `/admin/users` · `/admin/forms` · `/admin/settings` (change PIN) |
 
 ## Where to change things
 
 | To change… | Edit |
 |------------|------|
-| Products, prices, pack sizes, product photos | `lib/products.ts` (prices are **placeholders** — whole rupees) |
-| Categories in the header row, home tiles and footer | `lib/sections.ts` |
+| Products, prices, pack sizes, product photos, shop categories | **`/admin`** → Products / Categories (photos upload to Cloudinary). Prices are whole rupees; the seeded ones are **placeholders** |
+| The five "Serve & Give" sections in the header row, home tiles and footer | `lib/sections.ts` |
+| Delivery charge below the free-delivery threshold | `lib/site.ts` (`deliveryFee`, a placeholder ₹50) |
 | Any image path | `lib/media.ts` (files live in `public/images/…`) |
 | WhatsApp number, email, free-delivery threshold, announcement bar | `lib/site.ts` |
 | WhatsApp message wording | `lib/whatsapp.ts` |
@@ -41,9 +46,25 @@ Node 20+ is recommended.
 
 1. Customer adds products to the cart (saved in their browser).
 2. Checkout collects name, mobile and a drop address — or a one-tap location pin.
-3. WhatsApp opens with the full order filled in; Bold Mount confirms availability, delivery and payment there.
+3. **Pay online:** the server re-prices the cart from the database, creates a Razorpay order, and marks it paid only after checking Razorpay's signature. **Or order on WhatsApp:** WhatsApp opens with the order filled in, and the order is saved as "On WhatsApp".
+4. Every order appears in `/admin/orders`, where its status is set (New → Confirmed → Delivered / Cancelled).
 
-Delivery is doorstep delivery by Bold Mount; free above the threshold in `lib/site.ts`.
+Delivery is doorstep delivery by Bold Mount; free above the threshold in `lib/site.ts`, otherwise `deliveryFee`.
+
+## Backend
+
+The API is Next.js route handlers in `app/api/*` (helpers in `lib/server/*`), deployed with the site on Vercel. Pages never touch the database directly — they read the catalog through `lib/catalog.ts` (cached for 60 seconds; admin edits refresh it straight away).
+
+| Collection (db `boldmount`) | Holds |
+|------|--------|
+| `categories`, `products` | The catalog (name, prices per size, compare-at prices, multiple images, tags, active flag, sort order) |
+| `orders` | Items, totals, customer, payment status, order status, Razorpay ids |
+| `users` | Customers who signed in with Google |
+| `forms` | Contact / zakat / volunteer / giveaway / umrah submissions |
+| `visits` | Anonymous page views for the admin dashboard (bots skipped) |
+| `settings`, `counters`, `admin_attempts` | Admin PIN (hashed), order numbers, PIN lockout |
+
+Environment variables are listed in `.env.example`. The same values are set in Vercel (Production + Preview; `APP_URL` is Production only). **Razorpay keys are test keys** — switch to live keys after Bold Mount's own Razorpay KYC.
 
 ## Content rules
 
@@ -62,4 +83,4 @@ Vercel builds automatically from GitHub:
 
 ## Tech
 
-Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · framer-motion · zustand · lucide-react
+Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · framer-motion · zustand · lucide-react · MongoDB Atlas (mongoose) · Razorpay · Google sign-in · Cloudinary
