@@ -45,3 +45,5 @@ next-env.d.ts
 
 # keep the template of required env vars in git
 !.env.example
+/test-results/
+/playwright-report/
