@@ -11,6 +11,7 @@ const HELP = [
   { label: 'Contact Us', href: '/contact' },
   { label: 'FAQ', href: '/faq' },
   { label: 'Delivery & Returns', href: '/policies/shipping' },
+  { label: 'Refund & Cancellation', href: '/policies/refund-cancellation' },
   { label: 'Privacy Policy', href: '/policies/privacy' },
   { label: 'Terms of Service', href: '/policies/terms' },
   { label: 'Photo credits', href: '/credits' },
@@ -39,7 +40,7 @@ export function SiteFooter({ categories }: { categories: Category[] }) {
                 </a>
               </li>
               <li className="flex items-center gap-3 text-on-night-soft">
-                <MapPin size={16} className="text-gold" /> Doorstep delivery — share your location
+                <MapPin size={16} className="text-gold" /> Doorstep delivery — pay online
               </li>
             </ul>
           </div>
@@ -51,7 +52,7 @@ export function SiteFooter({ categories }: { categories: Category[] }) {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-on-night-soft md:flex-row">
           <p>© {new Date().getFullYear()} Bold Mount. All rights reserved.</p>
-          <p>We confirm every order personally</p>
+          <p>Online payments handled by Razorpay</p>
         </div>
       </div>
     </footer>

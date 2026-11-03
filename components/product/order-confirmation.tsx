@@ -6,11 +6,9 @@ import { CheckCircle2 } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { formatINR } from '@/lib/format';
 import { buttonClass } from '@/components/ui/button-styles';
-import { useAccount } from '@/components/auth/use-account';
 
 /** Shown after a successful online payment, in place of the cart. */
 export function OrderConfirmation({ order }: { order: Order }) {
-  const { user } = useAccount();
   const ref = useRef<HTMLDivElement>(null);
   // The form was far down the page; bring the confirmation into view.
   useEffect(() => ref.current?.scrollIntoView({ block: 'start' }), []);
@@ -41,11 +39,9 @@ export function OrderConfirmation({ order }: { order: Order }) {
         <Link href="/shop" className={buttonClass('gold')}>
           Continue shopping
         </Link>
-        {user && (
-          <Link href="/account" className={buttonClass('outline')}>
-            My orders
-          </Link>
-        )}
+        <Link href="/account" className={buttonClass('outline')}>
+          Track it in My orders
+        </Link>
       </div>
     </div>
   );

@@ -164,8 +164,8 @@ function Cards({ data }: { data: Stats | null }) {
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
       <Stat label="Visitors" info="Different people who opened the site, counted once each however often they came back. Bots are not counted." value={d ? n(d.visitors) : dash} />
       <Stat label="Page views" info="Every time a page was opened, including repeat visits by the same person." value={d ? n(d.pageViews) : dash} />
-      <Stat label="Orders" info="Orders placed in this period. The first number is orders paid online, the second is all orders including WhatsApp ones." value={d ? <>{n(d.paidOrders)} <span className="text-base font-medium text-ink-soft">of {n(d.orders)}</span></> : dash} sub="paid of total" />
-      <Stat label="Revenue" info="Total of the orders paid online in this period. WhatsApp orders are not included until you handle them yourself." value={d ? formatINR(d.revenue) : dash} sub="paid orders" />
+      <Stat label="Orders" info="Orders placed in this period. The first number is orders paid online (even if refunded later), the second is all orders including WhatsApp ones." value={d ? <>{n(d.paidOrders)} <span className="text-base font-medium text-ink-soft">of {n(d.orders)}</span></> : dash} sub="paid of total" />
+      <Stat label="Revenue" info="Total of the orders paid online in this period, minus any refunds you sent back. WhatsApp orders are not included until you handle them yourself." value={d ? formatINR(d.revenue) : dash} sub="paid orders" />
       <Stat label="Sign-ups" info="New customer accounts created in this period." value={d ? n(d.signups) : dash} />
       <Stat label="Active now" live={!!d?.activeNow} info="People who opened a page in the last 5 minutes. This one ignores the period buttons." value={d ? n(d.activeNow) : dash} sub="in the last 5 minutes" />
     </div>

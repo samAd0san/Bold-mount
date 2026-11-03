@@ -1,16 +1,18 @@
 'use client';
 
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { AlertCircle, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import { cartSubtotal, type CartItem } from '@/store/cart';
-import { whatsappOrderLink } from '@/lib/whatsapp';
+import { whatsappGeneralLink, whatsappOrderLink } from '@/lib/whatsapp';
 import { postJson } from '@/lib/client-api';
 import { formatINR } from '@/lib/format';
 import { deliveryFor } from '@/lib/shop';
 import type { Order, OrderCustomer } from '@/lib/types';
 import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
-import { useAccount } from '@/components/auth/use-account';
+import { GoogleMark } from '@/components/auth/google-button';
+import { signInHref, signOut, useAccount } from '@/components/auth/use-account';
 import { cn } from '@/lib/utils';
 import { LocationShare, mapsUrl, type Coords } from './location-share';
 import { loadRazorpay, type RazorpayResponse } from './razorpay';
@@ -67,19 +69,42 @@ function validate(v: Partial<Record<Key, string>>, hasLocation: boolean): Partia
   return errors;
 }
 
+type Draft = { values: Partial<Record<Key, string>>; location: Coords | null };
 type Problem = { message: string; toWhatsApp?: boolean };
 
-/** Delivery details → pay online with Razorpay, or send the order on WhatsApp; both orders are saved for /admin. */
+// The Google sign-in is a full-page trip, so the typed details wait in sessionStorage and come back with the customer.
+const DRAFT_KEY = 'boldmount-checkout-draft';
+const readDraft = (): Draft | null => {
+  try {
+    return JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? 'null');
+  } catch {
+    return null;
+  }
+};
+
+const FINE_LINK = 'font-semibold text-navy underline underline-offset-4';
+
+/** Delivery details → sign in, then pay online with Razorpay or send the order on WhatsApp; both orders are saved to the customer's account. */
 export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; onClear: () => void; onPaid: (order: Order) => void }) {
-  const { user } = useAccount();
-  const [values, setValues] = useState<Partial<Record<Key, string>>>({});
+  const { ready, user, google } = useAccount();
+  // This form only mounts after hydration (see CartView), so reading sessionStorage here is safe.
+  const [values, setValues] = useState<Partial<Record<Key, string>>>(() => readDraft()?.values ?? {});
   const [errors, setErrors] = useState<Partial<Record<Key, string>>>({});
   const [sentLink, setSentLink] = useState<string | null>(null);
-  const [location, setLocation] = useState<Coords | null>(null);
+  const [location, setLocation] = useState<Coords | null>(() => readDraft()?.location ?? null);
   const [paying, setPaying] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const savedWhatsApp = useRef('');
+  const signedOut = ready && !user;
+
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(DRAFT_KEY);
+    } catch {
+      /* storage blocked: nothing to clear */
+    }
+  }, []);
 
   const subtotal = cartSubtotal(items);
   const total = subtotal + deliveryFor(subtotal);
@@ -114,8 +139,26 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
 
   const lines = items.map(({ slug, variantId, qty }) => ({ slug, variantId, qty }));
 
+  const saveDraft = () => {
+    // Empty fields are left out so the name can still fall back to the Google name afterwards.
+    const filled = FIELDS.map((f) => [f.key, get(f.key)] as const).filter(([, v]) => v);
+    const draft: Draft = { values: Object.fromEntries(filled), location };
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      /* storage blocked: they just retype */
+    }
+  };
+
+  // The server says 401 when the session has ended: forget the stale sign-in so the prompt shows.
+  const sessionEnded = (message: string) => {
+    setProblem({ message });
+    void signOut();
+  };
+
   const payOnline = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     const customer = collect();
     if (!customer || paying) return;
     setPaying(true);
@@ -129,7 +172,8 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
     });
     if (!res.ok) {
       setPaying(false);
-      setProblem({ message: res.error, toWhatsApp: res.status === 503 });
+      if (res.status === 401) sessionEnded(res.error);
+      else setProblem({ message: res.error, toWhatsApp: res.status === 503 });
       return;
     }
     const { order, razorpay } = res.data;
@@ -216,7 +260,15 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
     const fingerprint = JSON.stringify([lines, customer]);
     if (savedWhatsApp.current !== fingerprint) {
       savedWhatsApp.current = fingerprint;
-      void postJson('/api/orders', { method: 'whatsapp', items: lines, customer }, true);
+      void postJson('/api/orders', { method: 'whatsapp', items: lines, customer }, true).then((res) => {
+        if (res.ok) return;
+        // Let "Send again" retry the save; a 401 also means they must sign in again.
+        savedWhatsApp.current = '';
+        if (res.status === 401) {
+          setSentLink(null);
+          sessionEnded(res.error);
+        }
+      });
     }
   };
 
@@ -289,44 +341,93 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
           </p>
         )}
 
-        <button type="submit" disabled={paying} className={buttonClass('gold', 'w-full py-3.5')}>
-          {paying ? <Loader2 size={17} className="animate-spin" /> : <Lock size={16} />} Pay {formatINR(total)} securely
-        </button>
-        <p className="text-center text-xs text-ink-soft">UPI · Google Pay · Cards · Apple Pay</p>
-
-        <div className="flex items-center gap-3 text-xs text-ink-soft" aria-hidden>
-          <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
-        </div>
-
-        <button
-          type="button"
-          onClick={orderOnWhatsApp}
-          disabled={paying}
-          className={buttonClass('outline', 'w-full border-whatsapp-ink/40 py-3.5 text-whatsapp-ink hover:border-whatsapp hover:bg-whatsapp hover:text-white')}
-        >
-          <WhatsAppGlyph size={18} /> {sentLink ? 'Send again on WhatsApp' : 'Order on WhatsApp instead'}
-        </button>
-
-        {sentLink ? (
-          <div role="status" className="rounded-xl bg-whatsapp/10 p-4 text-sm">
-            <p className="flex items-start gap-2 font-medium text-whatsapp-ink">
-              <CheckCircle2 size={18} className="mt-px shrink-0" />
-              WhatsApp opened with your order — press send to confirm. We’ll confirm availability, delivery and payment there.
-            </p>
-            <p className="mt-1 flex flex-wrap gap-x-4 pl-[26px] text-ink-soft">
-              <a href={sentLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
-                WhatsApp didn’t open?
-              </a>
-              <button type="button" onClick={onClear} className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
-                Clear cart
-              </button>
-            </p>
+        {!ready && (
+          <div aria-busy className="space-y-3">
+            <span role="status" className="sr-only">
+              Checking your sign-in…
+            </span>
+            <div className="h-12 animate-pulse rounded-full bg-sand" />
+            <div className="h-12 animate-pulse rounded-full bg-sand" />
           </div>
-        ) : (
-          <p className="text-xs leading-relaxed text-ink-soft">
-            Payments are processed securely by Razorpay. Prefer to talk first? Send the order on WhatsApp and we’ll confirm availability, delivery and payment with you.
-          </p>
         )}
+
+        {signedOut &&
+          (google ? (
+            <>
+              <a href={signInHref('/cart')} onClick={saveDraft} className={buttonClass('gold', 'w-full px-5 py-3.5 text-center')}>
+                <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-white">
+                  <GoogleMark className="size-4" />
+                </span>
+                Sign in with Google to place your order
+              </a>
+              <p className="text-center text-xs leading-relaxed text-ink-soft">
+                Your orders are saved to your account so you can track them, cancel or ask for a refund.
+              </p>
+            </>
+          ) : (
+            <p role="status" className="rounded-xl bg-sand p-4 text-sm leading-relaxed text-ink">
+              Sign-in isn’t available right now, so we can’t take orders on the website. Please try again soon, or{' '}
+              <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className={FINE_LINK}>
+                message us on WhatsApp
+              </a>
+              .
+            </p>
+          ))}
+
+        {ready && user && (
+          <>
+            <button type="submit" disabled={paying} className={buttonClass('gold', 'w-full py-3.5')}>
+              {paying ? <Loader2 size={17} className="animate-spin" /> : <Lock size={16} />} Pay {formatINR(total)} securely
+            </button>
+            <p className="text-center text-xs text-ink-soft">UPI · Google Pay · PhonePe · Paytm · Cards · Netbanking · Apple Pay (Safari)</p>
+
+            <div className="flex items-center gap-3 text-xs text-ink-soft" aria-hidden>
+              <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
+            </div>
+
+            <button
+              type="button"
+              onClick={orderOnWhatsApp}
+              disabled={paying}
+              className={buttonClass('outline', 'w-full border-whatsapp-ink/40 py-3.5 text-whatsapp-ink hover:border-whatsapp hover:bg-whatsapp hover:text-white')}
+            >
+              <WhatsAppGlyph size={18} /> {sentLink ? 'Send again on WhatsApp' : 'Order on WhatsApp instead'}
+            </button>
+
+            {sentLink ? (
+              <div role="status" className="rounded-xl bg-whatsapp/10 p-4 text-sm">
+                <p className="flex items-start gap-2 font-medium text-whatsapp-ink">
+                  <CheckCircle2 size={18} className="mt-px shrink-0" />
+                  WhatsApp opened with your order — press send to confirm. We’ll confirm availability, delivery and payment there.
+                </p>
+                <p className="mt-1 flex flex-wrap gap-x-4 pl-[26px] text-ink-soft">
+                  <a href={sentLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
+                    WhatsApp didn’t open?
+                  </a>
+                  <button type="button" onClick={onClear} className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
+                    Clear cart
+                  </button>
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs leading-relaxed text-ink-soft">
+                Payments are handled by Razorpay, so we never see or store your card details. Prefer to talk first? Send the order on WhatsApp and we’ll confirm availability, delivery and payment with you.
+              </p>
+            )}
+          </>
+        )}
+
+        <p className="text-center text-xs leading-relaxed text-ink-soft">
+          By placing an order you agree to our{' '}
+          <Link href="/policies/terms" className={FINE_LINK}>
+            Terms
+          </Link>{' '}
+          and{' '}
+          <Link href="/policies/refund-cancellation" className={FINE_LINK}>
+            Refund & Cancellation
+          </Link>{' '}
+          policy.
+        </p>
       </div>
     </form>
   );

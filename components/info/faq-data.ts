@@ -15,7 +15,7 @@ export interface FaqGroup {
 
 const FREE = formatINR(SITE.freeShippingAbove);
 
-// Answers stay in step with the site: pay online or order on WhatsApp; delivery time is confirmed with each customer.
+// Answers stay in step with the site: pay online first (WhatsApp is the alternative); delivery time is confirmed with each customer.
 export const FAQ_GROUPS: FaqGroup[] = [
   {
     id: 'orders',
@@ -23,21 +23,21 @@ export const FAQ_GROUPS: FaqGroup[] = [
     items: [
       {
         q: 'How do I place an order?',
-        a: 'Add what you like to your cart, then check out. Pay online (UPI, Google Pay, cards), or send the cart to us on WhatsApp as a ready-made message. Either way we confirm everything with you personally.',
+        a: 'Add what you like to your cart, sign in with Google, then check out and pay securely online with UPI (Google Pay, PhonePe, Paytm), cards, netbanking or Apple Pay on Safari. Your order is placed once the payment goes through, and we confirm delivery with you. Prefer to talk first? You can also send your order to us on WhatsApp from checkout.',
         link: { label: 'Start shopping', href: '/shop' },
       },
       {
         q: 'How does delivery work?',
-        a: 'We deliver to your door ourselves. Share your drop address or location at checkout or on WhatsApp, and we confirm the delivery time with you before we dispatch.',
+        a: 'We deliver to your door ourselves. Share your drop address or location at checkout, and we confirm the delivery time with you before we dispatch.',
         link: { label: 'Read Delivery & Returns', href: '/policies/shipping' },
       },
       {
         q: 'How do I share my location?',
-        a: 'At checkout, tap “Use my current location” and allow access. Or in WhatsApp, tap 📎 → Location → Send your current location.',
+        a: 'At checkout, tap “Use my current location” and allow access, or just type your drop address. If you order on WhatsApp, tap 📎 → Location → Send your current location.',
       },
       {
         q: 'Do you deliver to my area?',
-        a: 'Share your drop address or location pin on WhatsApp and we will confirm delivery to you, along with the time.',
+        a: 'Enter your drop address and pincode at checkout and we confirm delivery and the time with you before we dispatch. Not sure we reach you? Message your pincode to us on WhatsApp before you pay and we will check.',
       },
       {
         q: 'Is delivery free?',
@@ -45,7 +45,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'How do I pay?',
-        a: 'At checkout you can pay online with UPI, Google Pay, cards or Apple Pay — it is processed securely by Razorpay. If you order on WhatsApp instead, we share payment details with you there once your order is confirmed.',
+        a: 'At checkout you can pay online with UPI (Google Pay, PhonePe, Paytm), debit or credit cards, netbanking or Apple Pay on Safari. Payments are handled by Razorpay, and we never see or store your card details. If you order on WhatsApp instead, we share payment details with you there once your order is confirmed.',
       },
       {
         q: 'How long will my order take to arrive?',
@@ -53,12 +53,22 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'Can I return something?',
-        a: 'Perishable food cannot be returned once opened. If something arrives damaged or incorrect, send us a photo on WhatsApp at delivery or within 24 hours and we will replace it.',
-        link: { label: 'Read Delivery & Returns', href: '/policies/shipping' },
+        a: 'For hygiene and safety, we cannot take back food that has been opened or used. If food arrives damaged, leaking, wrong, missing an item or past its date, request a refund from My orders within 48 hours of delivery and send us photos on WhatsApp. We will replace it or refund it. Modest wear can be returned within 7 days of delivery if it is unworn and unwashed, with its tags.',
+        link: { label: 'Read Refund & Cancellation', href: '/policies/refund-cancellation' },
+      },
+      {
+        q: 'Can I cancel?',
+        a: 'Yes, any time before your order is dispatched. Sign in, open My orders and press “Cancel order”. If you paid online, the full amount, including delivery, goes back to your original payment method. Banks usually take 5–7 working days, and UPI is often sooner. Once an order is dispatched it cannot be cancelled, so message us if there is a problem.',
+        link: { label: 'Go to My orders', href: '/account' },
+      },
+      {
+        q: 'How do refunds work?',
+        a: 'Online payments go back to the original payment method through Razorpay. If you cancel before dispatch, a paid online order is refunded automatically. For a problem with a delivered order, request a refund from My orders and we reply within 2 working days; approved refunds are sent within 5–7 working days. WhatsApp orders paid by UPI or bank transfer go back to the same account.',
+        link: { label: 'Read Refund & Cancellation', href: '/policies/refund-cancellation' },
       },
       {
         q: 'Can I order in bulk or as a gift?',
-        a: 'Yes. Browse our gift boxes, or message us on WhatsApp with what you have in mind and we will help you put it together.',
+        a: 'Yes. Browse our gift boxes and check out online, or message us on WhatsApp with what you have in mind for a bulk or custom gift and we will help you put it together.',
         link: { label: 'See gift boxes', href: '/shop?filter=gifts' },
       },
     ],

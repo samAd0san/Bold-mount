@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LogOut, PackageOpen } from 'lucide-react';
-import type { Order } from '@/lib/types';
+import { CANCELLABLE, REFUND_REQUEST_DAYS, type Order, type OrderRefund } from '@/lib/types';
 import { formatINR } from '@/lib/format';
 import { buttonClass } from '@/components/ui/button-styles';
 import { Avatar } from '@/components/auth/avatar';
 import { GoogleButton } from '@/components/auth/google-button';
+import { CancelOrder, RequestRefund } from '@/components/auth/order-actions';
+import { OrderProgress } from '@/components/auth/order-progress';
 import { signInHref, signOut, useAccount } from '@/components/auth/use-account';
 
 const CARD = 'rounded-2xl bg-pearl ring-1 ring-line ring-inset';
@@ -17,12 +19,33 @@ const PAYMENT: Record<Order['payment'], string> = {
   pending: 'Payment pending',
   failed: 'Payment failed',
   'on-whatsapp': 'Ordered on WhatsApp',
+  refunded: 'Refunded',
 };
-const STATUS: Record<Order['status'], string> = { new: 'Received', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
 
 const when = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-function OrderCard({ order }: { order: Order }) {
+function refundText(r: OrderRefund): string {
+  switch (r.status) {
+    case 'refunded':
+      return `Refund of ${formatINR(r.amount)} sent on ${when(r.updatedAt)}. It reaches your original payment method in 5–7 working days.`;
+    case 'requested':
+      return `Refund requested on ${when(r.requestedAt)}. We reply within 2 working days.`;
+    case 'declined':
+      return r.reply ? `Refund declined: ${r.reply}` : 'Refund declined.';
+    case 'failed':
+      return 'Your refund is being retried. We’ll update you here.';
+  }
+}
+
+// A refund can be asked for once delivered and paid, until REFUND_REQUEST_DAYS after delivery.
+function canRequestRefund(o: Order, now: number): boolean {
+  if (o.status !== 'delivered' || o.payment !== 'paid' || o.refund || !o.deliveredAt) return false;
+  return now - new Date(o.deliveredAt).getTime() <= REFUND_REQUEST_DAYS * 86_400_000;
+}
+
+function OrderCard({ order, now, onChange }: { order: Order; now: number; onChange: (order: Order) => void }) {
+  const cancellable = CANCELLABLE.includes(order.status);
+  const refundable = canRequestRefund(order, now);
   return (
     <li className={`${CARD} p-5`}>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
@@ -39,17 +62,32 @@ function OrderCard({ order }: { order: Order }) {
           </li>
         ))}
       </ul>
+      {order.status === 'cancelled' ? (
+        <p className="mt-4 rounded-xl bg-sand px-4 py-3 text-sm font-medium text-ink">
+          Cancelled{order.cancelledBy === 'customer' && ' by you'}
+          {order.cancelledBy === 'shop' && ' by the shop'}
+          {order.cancelledAt && <span className="font-normal text-ink-soft"> on {when(order.cancelledAt)}</span>}
+        </p>
+      ) : (
+        <OrderProgress order={order} />
+      )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
-        <p className="flex flex-wrap gap-2 text-xs font-medium">
+        <p className="text-xs font-medium">
           <span className={order.payment === 'paid' ? 'rounded-full bg-whatsapp/15 px-2.5 py-1 text-whatsapp-ink' : 'rounded-full bg-sand px-2.5 py-1 text-ink'}>
             {PAYMENT[order.payment]}
           </span>
-          <span className="rounded-full bg-sand px-2.5 py-1 text-ink">{STATUS[order.status]}</span>
         </p>
         <p className="text-sm text-ink-soft">
           Total <span className="ml-1 text-lg font-semibold tabular-nums text-navy">{formatINR(order.total)}</span>
         </p>
       </div>
+      {order.refund && <p className="mt-3 rounded-xl bg-cream px-4 py-3 text-sm leading-relaxed text-ink">{refundText(order.refund)}</p>}
+      {(cancellable || refundable) && (
+        <div className="mt-4 flex flex-wrap gap-3">
+          {cancellable && <CancelOrder order={order} onDone={onChange} />}
+          {refundable && <RequestRefund order={order} onDone={onChange} />}
+        </div>
+      )}
     </li>
   );
 }
@@ -57,6 +95,8 @@ function OrderCard({ order }: { order: Order }) {
 function Orders() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [failed, setFailed] = useState(false);
+  // Taken once when the page loads, so the refund window doesn't need the clock during render.
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     let live = true;
@@ -68,6 +108,8 @@ function Orders() {
       live = false;
     };
   }, []);
+
+  const replace = (next: Order) => setOrders((list) => list && list.map((o) => (o.id === next.id ? next : o)));
 
   if (failed) return <p className={`${CARD} p-6 text-ink-soft`}>We couldn’t load your orders right now. Please refresh in a moment.</p>;
   if (!orders) return <div className={`h-40 animate-pulse ${CARD}`} aria-label="Loading your orders" />;
@@ -87,7 +129,7 @@ function Orders() {
   return (
     <ul className="space-y-4">
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} />
+        <OrderCard key={o.id} order={o} now={now} onChange={replace} />
       ))}
     </ul>
   );
@@ -109,7 +151,7 @@ export function AccountView() {
             <GoogleButton href={signInHref('/account')} className="mt-6" />
           </>
         ) : (
-          <p className="mt-2 text-sm text-ink-soft">Sign-in isn’t available right now. You can still order on WhatsApp any time.</p>
+          <p className="mt-2 text-sm text-ink-soft">Sign-in isn’t available right now. Please try again in a little while.</p>
         )}
       </div>
     );
@@ -127,7 +169,15 @@ export function AccountView() {
           <LogOut size={16} /> Sign out
         </button>
       </div>
-      <h2 className="text-xl text-ink">My orders</h2>
+      <div>
+        <h2 className="text-xl text-ink">My orders</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Cancel an order before it is dispatched, or ask for a refund after delivery.{' '}
+          <Link href="/policies/refund-cancellation" className="font-semibold text-navy underline underline-offset-4">
+            Refund & Cancellation policy
+          </Link>
+        </p>
+      </div>
       <Orders />
     </div>
   );

@@ -2,20 +2,41 @@
 
 import * as React from 'react';
 import { ChevronDown, MapPin, MessageCircle, Phone } from 'lucide-react';
-import { adminFetch, clock, telLink, useFetch, waLink } from '@/components/admin/api';
+import { useAdmin } from '@/components/admin/admin-gate';
+import { adminFetch, clock, SignedOut, telLink, useFetch, waLink } from '@/components/admin/api';
+import { CancelDialog, RefundPanel } from '@/components/admin/order-refund';
 import { Badge, Chips, Empty, ErrorNote, PageHead, Select, Skeleton } from '@/components/admin/ui';
 import { formatINR } from '@/lib/format';
 import { ORDER_STATUSES, type Order, type OrderStatus, type PaymentStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-const STATUS_LABEL: Record<OrderStatus, string> = { new: 'New', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
-const PAY: Record<PaymentStatus, { label: string; tone: 'green' | 'amber' | 'red' | 'blue' }> = {
+const STATUS_LABEL: Record<OrderStatus, string> = { new: 'New', confirmed: 'Confirmed', dispatched: 'Dispatched', delivered: 'Delivered', cancelled: 'Cancelled' };
+const PAY: Record<PaymentStatus, { label: string; tone: 'green' | 'amber' | 'red' | 'blue' | 'gray' }> = {
   paid: { label: 'Paid', tone: 'green' },
   pending: { label: 'Pending', tone: 'amber' },
   failed: { label: 'Failed', tone: 'red' },
   'on-whatsapp': { label: 'On WhatsApp', tone: 'blue' },
+  refunded: { label: 'Refunded', tone: 'gray' },
 };
 const FILTERS: { value: OrderStatus | 'all'; label: string }[] = [{ value: 'all', label: 'All' }, ...ORDER_STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s] }))];
+
+/** Small badge for where a refund stands; a finished refund shows its amount instead of the payment badge. */
+function refundBadge(o: Order): { label: string; tone: 'gold' | 'red' | 'gray' } | null {
+  const r = o.refund;
+  if (!r) return null;
+  if (r.status === 'requested') return { label: 'Refund requested', tone: 'gold' };
+  if (r.status === 'failed') return { label: 'Refund failed', tone: 'red' };
+  if (r.status === 'refunded') return { label: `Refunded ${formatINR(r.amount)}`, tone: 'gray' };
+  return { label: 'Refund declined', tone: 'gray' };
+}
+
+/** "dispatched 3 Nov, 9:41 pm" for the order's current stage, or '' when there is nothing to say. */
+function stageNote(o: Order): string {
+  if (o.status === 'dispatched' && o.dispatchedAt) return ` · dispatched ${clock(o.dispatchedAt)}`;
+  if (o.status === 'delivered' && o.deliveredAt) return ` · delivered ${clock(o.deliveredAt)}`;
+  if (o.status === 'cancelled' && o.cancelledAt) return ` · cancelled${o.cancelledBy ? ` by the ${o.cancelledBy}` : ''} ${clock(o.cancelledAt)}`;
+  return '';
+}
 
 const summary = (o: Order) => o.items.map((i) => `${i.qty} × ${i.name}${i.variant ? ` (${i.variant})` : ''}`).join(', ');
 
@@ -25,17 +46,44 @@ export function OrdersList() {
   const [open, setOpen] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState<string | null>(null);
   const [problem, setProblem] = React.useState<string | null>(null);
+  const [cancelling, setCancelling] = React.useState<Order | null>(null);
+  const { refreshAttention } = useAdmin();
+
+  const replace = (order: Order) => mutate((d) => ({ ...d, orders: d.orders.map((x) => (x.id === order.id ? order : x)) }));
 
   const setStatus = async (o: Order, status: OrderStatus) => {
+    // A paid order is cancelled through the box that offers the refund.
+    if (status === 'cancelled' && o.payment === 'paid') {
+      setCancelling(o);
+      return;
+    }
     setSaving(o.id);
     setProblem(null);
     try {
       const res = await adminFetch<{ order: Order }>(`/api/admin/orders/${o.id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
-      mutate((d) => ({ ...d, orders: d.orders.map((x) => (x.id === o.id ? res.order : x)) }));
+      replace(res.order);
     } catch (e) {
       setProblem(`${o.number}: ${(e as Error).message}`);
     } finally {
       setSaving(null);
+    }
+  };
+
+  // Cancel, then (if ticked) refund in full. A refused refund leaves the order cancelled with a "Refund failed" badge.
+  const cancelPaid = async (o: Order, refund: boolean) => {
+    setProblem(null);
+    const res = await adminFetch<{ order: Order }>(`/api/admin/orders/${o.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'cancelled' }) });
+    replace(res.order);
+    if (!refund) return;
+    try {
+      const paid = await adminFetch<{ order: Order }>(`/api/admin/orders/${o.id}/refund`, { method: 'POST', body: JSON.stringify({ amount: o.total }) });
+      replace(paid.order);
+    } catch (e) {
+      if (e instanceof SignedOut) throw e;
+      setProblem(`${o.number} is cancelled, but the refund didn’t go through (${(e as Error).message}). You can try again from the order.`);
+      reload();
+    } finally {
+      refreshAttention();
     }
   };
 
@@ -54,6 +102,7 @@ export function OrdersList() {
           {data.orders.map((o) => {
             const expanded = open === o.id;
             const pay = PAY[o.payment];
+            const rb = refundBadge(o);
             const c = o.customer;
             return (
               <li key={o.id} className="rounded-2xl border bg-pearl shadow-card">
@@ -65,7 +114,8 @@ export function OrdersList() {
                     <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold text-navy">{o.number}</span>
-                        <Badge tone={pay.tone}>{pay.label}</Badge>
+                        {o.payment !== 'refunded' && <Badge tone={pay.tone}>{pay.label}</Badge>}
+                        {rb && <Badge tone={rb.tone}>{rb.label}</Badge>}
                       </p>
                       <p className="mt-0.5 text-xs text-ink-soft">{clock(o.createdAt)}</p>
                     </div>
@@ -133,9 +183,11 @@ export function OrdersList() {
                         <p className="mt-1 whitespace-pre-wrap text-ink">{c.note}</p>
                       </div>
                     )}
+                    <RefundPanel order={o} onSaved={replace} onFailed={reload} />
                     <p className="text-xs text-ink-soft">
                       {o.method === 'online' ? 'Paid through the website' : 'Ordered on WhatsApp'}
                       {o.paidAt ? ` · paid ${clock(o.paidAt)}` : ''}
+                      {stageNote(o)}
                     </p>
                   </div>
                 )}
@@ -144,6 +196,8 @@ export function OrdersList() {
           })}
         </ul>
       )}
+
+      {cancelling && <CancelDialog key={cancelling.id} order={cancelling} onClose={() => setCancelling(null)} onConfirm={(refund) => cancelPaid(cancelling, refund)} />}
     </div>
   );
 }

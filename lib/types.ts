@@ -72,9 +72,27 @@ export interface OrderCustomer {
 }
 
 export type OrderMethod = 'online' | 'whatsapp';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'on-whatsapp';
-export type OrderStatus = 'new' | 'confirmed' | 'delivered' | 'cancelled';
-export const ORDER_STATUSES: OrderStatus[] = ['new', 'confirmed', 'delivered', 'cancelled'];
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'on-whatsapp' | 'refunded';
+export type OrderStatus = 'new' | 'confirmed' | 'dispatched' | 'delivered' | 'cancelled';
+export const ORDER_STATUSES: OrderStatus[] = ['new', 'confirmed', 'dispatched', 'delivered', 'cancelled'];
+/** The customer can cancel in these statuses (before it leaves the shop). */
+export const CANCELLABLE: OrderStatus[] = ['new', 'confirmed'];
+/** Days after delivery the customer can still ask for a refund. */
+export const REFUND_REQUEST_DAYS = 7;
+export const REFUND_REASONS = ['Damaged or leaking', 'Wrong item', 'Item missing', 'Expired or quality issue', 'Size or fit (modest wear)', 'Other'] as const;
+
+/** requested = customer asked, waiting for the shop; refunded = money sent back via Razorpay; failed = Razorpay refused, retry from admin. */
+export type RefundStatus = 'requested' | 'refunded' | 'declined' | 'failed';
+export interface OrderRefund {
+  status: RefundStatus;
+  reason: string;
+  note?: string;
+  amount: number; // rupees asked for / sent back
+  razorpayRefundId?: string;
+  reply?: string; // shop's note to the customer (e.g. why declined)
+  requestedAt: string;
+  updatedAt: string;
+}
 
 export interface Order {
   id: string;
@@ -90,8 +108,13 @@ export interface Order {
   status: OrderStatus;
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
+  refund?: OrderRefund;
+  cancelledBy?: 'customer' | 'shop';
   createdAt: string;
   paidAt?: string;
+  dispatchedAt?: string;
+  deliveredAt?: string;
+  cancelledAt?: string;
 }
 
 /** A form someone filled on the site (contact, zakat pledge, volunteer, giveaway, umrah…). */

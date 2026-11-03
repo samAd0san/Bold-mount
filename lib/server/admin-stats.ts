@@ -126,14 +126,23 @@ export async function adminStats(period: Period, custom?: DayRange): Promise<Adm
       },
     ]).next(),
     visitsOf(d).distinct('vid', { ts: { $gte: new Date(Date.now() - ACTIVE_MS) } }),
+    // Paid includes orders refunded later; revenue is what the shop kept (total minus money sent back).
     d.collection('orders').aggregate<{ orders: number; paid: number; revenue: number }>([
       { $match: { ...created, payment: { $ne: 'failed' } } },
       {
         $group: {
           _id: null,
           orders: { $sum: 1 },
-          paid: { $sum: { $cond: [{ $eq: ['$payment', 'paid'] }, 1, 0] } },
-          revenue: { $sum: { $cond: [{ $eq: ['$payment', 'paid'] }, '$total', 0] } },
+          paid: { $sum: { $cond: [{ $in: ['$payment', ['paid', 'refunded']] }, 1, 0] } },
+          revenue: {
+            $sum: {
+              $cond: [
+                { $in: ['$payment', ['paid', 'refunded']] },
+                { $subtract: ['$total', { $cond: [{ $eq: ['$refund.status', 'refunded'] }, { $ifNull: ['$refund.amount', 0] }, 0] }] },
+                0,
+              ],
+            },
+          },
         },
       },
     ]).next(),

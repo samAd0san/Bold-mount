@@ -3,6 +3,7 @@ import { rejectCrossSite } from '@/lib/server/auth';
 import { connectDb } from '@/lib/server/db';
 import { fail, handle, ok, readJson } from '@/lib/server/http';
 import { OrderModel, toOrder } from '@/lib/server/models';
+import { refundOrder } from '@/lib/server/orders';
 import { validPaymentSignature } from '@/lib/server/razorpay';
 import { isObjectId } from '@/lib/server/slug';
 
@@ -24,9 +25,13 @@ export const POST = handle(async (req: Request) => {
   await connectDb();
   const order = await OrderModel.findOne({ _id: b.orderId, method: 'online', razorpayOrderId: b.razorpayOrderId });
   if (!order) return fail(400, UNCONFIRMED);
-  if (order.payment !== 'paid') {
-    order.set({ payment: 'paid', razorpayPaymentId: b.razorpayPaymentId, paidAt: new Date() });
-    await order.save();
+  if (order.payment === 'paid' || order.payment === 'refunded') return ok({ order: toOrder(order.toObject()) });
+  order.set({ payment: 'paid', razorpayPaymentId: b.razorpayPaymentId, paidAt: new Date() });
+  await order.save();
+  // Paid after it was cancelled (e.g. in another tab): send the money straight back.
+  if (order.status === 'cancelled') {
+    const { doc } = await refundOrder(order, order.total ?? 0, { reason: 'Paid after the order was cancelled', requestedAt: new Date() });
+    if (doc) return ok({ order: toOrder(doc) });
   }
   return ok({ order: toOrder(order.toObject()) });
 });

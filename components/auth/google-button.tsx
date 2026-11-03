@@ -12,7 +12,7 @@ export function GoogleMark({ className }: { className?: string }) {
   );
 }
 
-/** "Continue with Google": a plain link, because OAuth needs a full-page navigation. */
+/** "Sign in with Google": a plain link, because OAuth needs a full-page navigation. */
 export function GoogleButton({ href, className }: { href: string; className?: string }) {
   return (
     <a
@@ -22,7 +22,7 @@ export function GoogleButton({ href, className }: { href: string; className?: st
         className,
       )}
     >
-      <GoogleMark /> Continue with Google
+      <GoogleMark /> Sign in with Google
     </a>
   );
 }

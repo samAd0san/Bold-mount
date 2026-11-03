@@ -4,16 +4,27 @@ import { connectDb } from '@/lib/server/db';
 import { fail, handle, ok, readJson } from '@/lib/server/http';
 import { OrderModel, toOrder } from '@/lib/server/models';
 import { isObjectId } from '@/lib/server/slug';
-import { ORDER_STATUSES } from '@/lib/types';
+import { ORDER_STATUSES, type OrderStatus } from '@/lib/types';
 
-const Body = z.object({ status: z.enum(ORDER_STATUSES, 'Status must be new, confirmed, delivered or cancelled.') });
+const Body = z.object({ status: z.enum(ORDER_STATUSES, 'Status must be new, confirmed, dispatched, delivered or cancelled.') });
 
+const STAMP: Partial<Record<OrderStatus, string>> = { dispatched: 'dispatchedAt', delivered: 'deliveredAt', cancelled: 'cancelledAt' };
+
+// Changes the status and stamps the time. It never refunds; that is a separate step.
 export const PATCH = handle(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const denied = await adminOnly(req, true);
   if (denied) return denied;
   const { id } = await params;
   const { status } = Body.parse(await readJson(req));
   await connectDb();
-  const doc = isObjectId(id) ? await OrderModel.findByIdAndUpdate(id, { status }, { new: true }).lean() : null;
+  if (!isObjectId(id)) return fail(404, 'That order was not found.');
+
+  const stamp = STAMP[status];
+  const update = {
+    $set: { status, ...(stamp ? { [stamp]: new Date() } : {}), ...(status === 'cancelled' ? { cancelledBy: 'shop' } : {}) },
+    ...(status === 'cancelled' ? {} : { $unset: { cancelledAt: '', cancelledBy: '' } }),
+  };
+  // Only a real change is stamped; picking the current status again leaves the times alone.
+  const doc = (await OrderModel.findOneAndUpdate({ _id: id, status: { $ne: status } }, update, { returnDocument: 'after' }).lean()) ?? (await OrderModel.findById(id).lean());
   return doc ? ok({ order: toOrder(doc) }) : fail(404, 'That order was not found.');
 });

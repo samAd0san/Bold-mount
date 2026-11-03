@@ -1,7 +1,8 @@
 import 'server-only';
 import { z } from 'zod';
 import { db } from '@/lib/server/db';
-import { CategoryModel, ProductModel } from '@/lib/server/models';
+import { CategoryModel, OrderModel, ProductModel } from '@/lib/server/models';
+import { refundPayment } from '@/lib/server/razorpay';
 import { deliveryFor } from '@/lib/shop';
 import type { OrderItem } from '@/lib/types';
 
@@ -81,4 +82,31 @@ export async function nextOrderNumber(): Promise<string> {
   const doc = await counters.findOneAndUpdate({ _id: 'order' }, { $inc: { seq: 1 } }, { returnDocument: 'after' });
   if (!doc) throw new Error('Order counter missing');
   return `BM-${doc.seq}`;
+}
+
+type RefundInfo = { reason: string; note?: string; reply?: string; requestedAt: Date };
+
+/** Sends `amount` back through Razorpay and saves the result on the order. Returns the updated order, plus Razorpay's reason when it refused (the order then stays paid with refund "failed"). */
+export async function refundOrder(
+  order: { _id: unknown; number: string; razorpayPaymentId?: string | null },
+  amount: number,
+  info: RefundInfo,
+) {
+  const base = {
+    reason: info.reason, ...(info.note ? { note: info.note } : {}), ...(info.reply ? { reply: info.reply } : {}),
+    amount, requestedAt: info.requestedAt, updatedAt: new Date(),
+  };
+  let refundId: string;
+  try {
+    refundId = (await refundPayment(order.razorpayPaymentId ?? '', amount, order.number)).id;
+  } catch (e) {
+    const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: { refund: { ...base, status: 'failed' } } }, { returnDocument: 'after' }).lean();
+    return { doc, error: (e as Error).message };
+  }
+  const set = { payment: 'refunded', refund: { ...base, status: 'refunded', razorpayRefundId: refundId } };
+  const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: set }, { returnDocument: 'after' }).lean().catch((e: unknown) => {
+    console.error('[refund] sent but not saved', order.number, refundId); // the money is already back with the customer
+    throw e;
+  });
+  return { doc, error: null };
 }

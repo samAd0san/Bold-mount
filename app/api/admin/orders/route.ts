@@ -12,7 +12,7 @@ export const GET = handle(async (req: Request) => {
   if (denied) return denied;
   const raw = new URL(req.url).searchParams.get('status');
   const status = raw ? Status.safeParse(raw) : null;
-  if (status && !status.success) return fail(400, 'Status must be new, confirmed, delivered or cancelled.');
+  if (status && !status.success) return fail(400, 'Status must be new, confirmed, dispatched, delivered or cancelled.');
   await connectDb();
   const docs = await OrderModel.find(status ? { status: status.data } : {}).sort({ createdAt: -1 }).limit(200).lean();
   return ok({ orders: docs.map(toOrder) });

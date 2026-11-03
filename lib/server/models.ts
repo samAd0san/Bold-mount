@@ -1,6 +1,6 @@
 import 'server-only';
 import mongoose, { Schema, type InferSchemaType, type Model } from 'mongoose';
-import type { Category, FormEntry, Order, Product } from '@/lib/types';
+import type { Category, FormEntry, Order, OrderRefund, Product } from '@/lib/types';
 
 // Collections in the "boldmount" db: categories, products, orders, users, forms, plus visits/settings/counters (raw driver).
 
@@ -56,11 +56,29 @@ const OrderSchema = new Schema(
     },
     userId: { type: String, index: true },
     method: { type: String, enum: ['online', 'whatsapp'], required: true },
-    payment: { type: String, enum: ['pending', 'paid', 'failed', 'on-whatsapp'], default: 'pending' },
-    status: { type: String, enum: ['new', 'confirmed', 'delivered', 'cancelled'], default: 'new' },
+    payment: { type: String, enum: ['pending', 'paid', 'failed', 'on-whatsapp', 'refunded'], default: 'pending' },
+    status: { type: String, enum: ['new', 'confirmed', 'dispatched', 'delivered', 'cancelled'], default: 'new' },
     razorpayOrderId: { type: String, index: true },
     razorpayPaymentId: String,
+    refund: {
+      type: {
+        _id: false,
+        status: { type: String, enum: ['requested', 'refunded', 'declined', 'failed'] },
+        reason: String,
+        note: String,
+        amount: Number,
+        razorpayRefundId: String,
+        reply: String,
+        requestedAt: Date,
+        updatedAt: Date,
+      },
+      default: undefined,
+    },
+    cancelledBy: { type: String, enum: ['customer', 'shop'] },
     paidAt: Date,
+    dispatchedAt: Date,
+    deliveredAt: Date,
+    cancelledAt: Date,
   },
   { timestamps: true },
 );
@@ -114,11 +132,19 @@ export const toProduct = (d: any): Product => ({
   active: d.active !== false, sort: d.sort ?? 0,
 });
 
+const toRefund = (r: any): OrderRefund => ({
+  status: r.status, reason: r.reason ?? '', ...(r.note ? { note: r.note } : {}), amount: r.amount ?? 0,
+  ...(r.razorpayRefundId ? { razorpayRefundId: r.razorpayRefundId } : {}), ...(r.reply ? { reply: r.reply } : {}),
+  requestedAt: iso(r.requestedAt)!, updatedAt: iso(r.updatedAt)!,
+});
+
 export const toOrder = (d: any): Order => ({
   id: String(d._id), number: d.number, items: d.items ?? [], subtotal: d.subtotal, delivery: d.delivery, total: d.total,
   customer: d.customer, ...(d.userId ? { userId: d.userId } : {}), method: d.method, payment: d.payment, status: d.status,
   ...(d.razorpayOrderId ? { razorpayOrderId: d.razorpayOrderId } : {}), ...(d.razorpayPaymentId ? { razorpayPaymentId: d.razorpayPaymentId } : {}),
-  createdAt: iso(d.createdAt)!, ...(d.paidAt ? { paidAt: iso(d.paidAt) } : {}),
+  ...(d.refund ? { refund: toRefund(d.refund) } : {}), ...(d.cancelledBy ? { cancelledBy: d.cancelledBy } : {}),
+  createdAt: iso(d.createdAt)!, ...(d.paidAt ? { paidAt: iso(d.paidAt) } : {}), ...(d.dispatchedAt ? { dispatchedAt: iso(d.dispatchedAt) } : {}),
+  ...(d.deliveredAt ? { deliveredAt: iso(d.deliveredAt) } : {}), ...(d.cancelledAt ? { cancelledAt: iso(d.cancelledAt) } : {}),
 });
 
 export const toForm = (d: any): FormEntry => ({

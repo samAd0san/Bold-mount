@@ -17,7 +17,7 @@ export interface Policy {
   blocks: PolicyBlock[];
 }
 
-export const POLICY_UPDATED = 'October 2026';
+export const POLICY_UPDATED = 'November 2026';
 
 const FREE = formatINR(SITE.freeShippingAbove);
 
@@ -27,38 +27,98 @@ export const POLICIES: Policy[] = [
     slug: 'shipping',
     title: 'Delivery & Returns',
     intro: 'How delivery works, and what to do if something is not right with your order.',
-    description: `Bold Mount delivers to your door ourselves. Share your drop address or location at checkout or on WhatsApp; delivery time is confirmed before dispatch. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders of ${FREE} or more.`,
+    description: `Bold Mount delivers to your door ourselves. Pay online at checkout and share your drop address or location; delivery time is confirmed before dispatch. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders of ${FREE} or more.`,
     blocks: [
       {
         heading: 'Delivery to your door',
         paragraphs: ['We deliver your order ourselves.'],
         list: [
-          'Share your drop address at checkout, or tap “Use my current location”. You can also send a location pin on WhatsApp.',
+          'Share your drop address at checkout, or tap “Use my current location”. If you order on WhatsApp instead, send a location pin there.',
           'We confirm the delivery time with you before we dispatch your order.',
           `Delivery is ${formatINR(SITE.deliveryFee)} per order, and free on orders of ${FREE} or more.`,
         ],
       },
       {
-        heading: 'How orders work',
+        heading: 'How orders and payment work',
         paragraphs: [
-          'Pay online at checkout (UPI, Google Pay, cards or Apple Pay), or send your cart to us as a WhatsApp message. We confirm availability and delivery with you personally; for WhatsApp orders we also share payment details at that time.',
+          'Pay online at checkout with UPI (Google Pay, PhonePe, Paytm), debit or credit cards, netbanking or Apple Pay on Safari. Your order is placed once the payment goes through, and we confirm delivery with you personally.',
+          'Payments are processed by Razorpay. We never see or store your card details.',
+          'You sign in with Google at checkout, so your orders are saved to your account and you can track them, cancel them or ask for a refund.',
+          'Prefer to talk first? You can send your order to us on WhatsApp from checkout instead. We then confirm availability and share payment details with you there.',
         ],
       },
       {
         heading: 'Returns',
         paragraphs: [
-          'Our food products are perishable, so they cannot be returned once opened. For anything else, message us and we will do our best to help.',
+          'Our food products are perishable. For hygiene and safety, we cannot take back food that has been opened or used. Modest wear can be returned within 7 days of delivery if it is unworn and unwashed, with its tags.',
         ],
+        link: { label: 'Read Refund & Cancellation', href: '/policies/refund-cancellation' },
       },
       {
         heading: 'Damaged or incorrect items',
-        paragraphs: ['If your order arrives damaged, or is not what you ordered:'],
+        paragraphs: ['If your food order arrives damaged, leaking, wrong, missing an item or past its date:'],
         ordered: true,
         list: [
           'Take a clear photo of the item and its packaging.',
-          'Send it to us on WhatsApp at delivery, or within 24 hours.',
-          'We will replace the item.',
+          'Request a refund from My orders within 48 hours of delivery.',
+          'Send the photos to us on WhatsApp with your order number.',
+          'We will replace the item or refund it.',
         ],
+      },
+    ],
+  },
+  {
+    slug: 'refund-cancellation',
+    title: 'Refund & Cancellation',
+    intro: 'How to cancel an order, and when you can get a refund.',
+    description:
+      'Cancel your Bold Mount order from My orders any time before it is dispatched, with a full refund if you paid online. What happens if we cancel, how damaged or wrong food items and modest-wear returns are handled, and how refunds are paid.',
+    blocks: [
+      {
+        heading: 'Cancelling your order',
+        paragraphs: ['You can cancel your order yourself from My orders, any time before it is dispatched.'],
+        list: [
+          'If you paid online, we refund the full amount, including delivery, to your original payment method. Banks usually take 5–7 working days, and UPI is often sooner.',
+          'Once your order is dispatched, it cannot be cancelled. If there is a problem, message us.',
+        ],
+        link: { label: 'Go to My orders', href: '/account' },
+      },
+      {
+        heading: 'If we cancel',
+        paragraphs: [
+          'If an item is out of stock, we cannot deliver to your pincode, or there is a problem with your payment, we cancel the order and refund you in full.',
+        ],
+      },
+      {
+        heading: 'Food items',
+        paragraphs: [
+          'This covers Talbeenah, dates, honey and dry fruits. For hygiene and safety, we cannot take back food that has been opened or used.',
+          'If your order arrives damaged, leaking, wrong, missing an item or past its date, request a refund from My orders within 48 hours of delivery and send us photos on WhatsApp. We will replace it or refund it.',
+        ],
+      },
+      {
+        heading: 'Modest wear',
+        paragraphs: [
+          'Tell us within 7 days of delivery. Unworn, unwashed items with their tags can be exchanged or refunded once we receive them back.',
+          'Custom-stitched or altered pieces cannot be returned unless they are faulty.',
+        ],
+      },
+      {
+        heading: 'How refunds are paid',
+        list: [
+          'Online payments go back to the original payment method through Razorpay.',
+          'WhatsApp orders paid by UPI or bank transfer go back to the same account.',
+          'We reply to refund requests within 2 working days, and approved refunds are sent within 5–7 working days.',
+        ],
+      },
+      {
+        heading: 'Delivery charges',
+        paragraphs: ['Delivery charges are refunded when you cancel before dispatch, or when the problem was our mistake.'],
+      },
+      {
+        heading: 'Contact',
+        paragraphs: ['Questions about a cancellation or refund? Get in touch:'],
+        list: [`Phone: ${SITE.phoneDisplay}`, `WhatsApp: ${SITE.phoneDisplay}`, `Email: ${SITE.email}`],
       },
     ],
   },
@@ -67,30 +127,42 @@ export const POLICIES: Policy[] = [
     title: 'Privacy Policy',
     intro: 'We keep this simple: we only use what you send us, and only to look after your order or request.',
     description:
-      'What Bold Mount collects, why, and how it is used: only the details you send us on WhatsApp to fulfil orders and requests. Your cart stays in your browser and we never sell your data.',
+      'What Bold Mount collects, why, and how it is used: the details you give at checkout or send us on WhatsApp to fulfil orders and requests. Payments are handled by Razorpay, so we never see or store your card details. We never sell your data.',
     blocks: [
       {
         heading: 'What we collect',
         paragraphs: [
-          'Only what you send us: your name, phone number and drop address or shared location, plus any message or request details you choose to share.',
+          'Only what you give us: your name, phone number and drop address or shared location at checkout, plus any message or request details you choose to share. For online orders we also keep the payment reference Razorpay returns (such as the payment ID), so we can match your payment to your order.',
+        ],
+      },
+      {
+        heading: 'Signing in with Google',
+        paragraphs: [
+          'You sign in with Google to place an order. Google shares your name, email address and profile picture with us; we use them only to keep your orders in your account so you can track, cancel or ask for a refund. We never see your Google password.',
         ],
       },
       {
         heading: 'How we use it',
         paragraphs: [
-          'To confirm and deliver your order, answer your questions and carry out the requests you make, such as Zakat, Umrah Badal or a giveaway. We contact you on WhatsApp for this.',
+          'To confirm and deliver your order, answer your questions and carry out the requests you make, such as Zakat, Umrah Badal or a giveaway. We contact you by phone or WhatsApp for this.',
         ],
       },
       {
         heading: 'Your cart',
         paragraphs: [
-          'Your cart is stored in your own browser, on your device. It is not sent to us until you choose to send your order on WhatsApp. Clearing your browser data removes it.',
+          'Your cart is stored in your own browser, on your device. It is not sent to us until you check out, either by paying online or by sending your order on WhatsApp. Clearing your browser data removes it.',
+        ],
+      },
+      {
+        heading: 'Online payments',
+        paragraphs: [
+          'Online payments are processed by Razorpay. You enter your card, UPI or netbanking details with Razorpay, not with us, so we never see or store them. Razorpay’s own terms and privacy policy apply to the payment.',
         ],
       },
       {
         heading: 'Sharing',
         paragraphs: [
-          'We do not sell your data. We share details only with those who need them to complete your order, such as whoever is delivering it to you.',
+          'We do not sell your data. We share details only with those who need them to complete your order, such as Razorpay for your payment and whoever is delivering it to you.',
         ],
       },
       {
@@ -108,7 +180,7 @@ export const POLICIES: Policy[] = [
     title: 'Terms of Service',
     intro: 'The ground rules for using this site and placing an order with us.',
     description:
-      'Terms for using the Bold Mount site: prices in INR may change, orders are confirmed once we contact you to check availability and delivery, and our services are performed with sincerity per the details you give.',
+      'Terms for using the Bold Mount site: prices are in INR and may change, you can pay online (payments are handled by Razorpay), orders are confirmed once we contact you to check availability and delivery, and our services are performed with sincerity per the details you give.',
     blocks: [
       {
         heading: 'Using this site',
@@ -117,7 +189,13 @@ export const POLICIES: Policy[] = [
       {
         heading: 'Prices and orders',
         paragraphs: [
-          'Prices are in Indian rupees (₹). Prices and availability may change. Your order is confirmed once we contact you to check availability and delivery.',
+          'Prices are in Indian rupees (₹). Prices and availability may change. You sign in with Google to place an order. Your order is confirmed once we contact you to check availability and delivery.',
+        ],
+      },
+      {
+        heading: 'Payments',
+        paragraphs: [
+          'You can pay online at checkout with UPI, cards, netbanking or Apple Pay on Safari. Payments are processed by Razorpay, and we never see or store your card details. Orders sent on WhatsApp are paid as agreed with us there.',
         ],
       },
       {
@@ -136,6 +214,11 @@ export const POLICIES: Policy[] = [
         heading: 'Delivery and returns',
         paragraphs: ['Delivery, damaged items and returns are covered in our Delivery & Returns page.'],
         link: { label: 'Read Delivery & Returns', href: '/policies/shipping' },
+      },
+      {
+        heading: 'Cancellations and refunds',
+        paragraphs: ['You can cancel an order from My orders before it is dispatched. How cancellations and refunds work is covered in our Refund & Cancellation policy.'],
+        link: { label: 'Read Refund & Cancellation', href: '/policies/refund-cancellation' },
       },
       {
         heading: 'Changes',

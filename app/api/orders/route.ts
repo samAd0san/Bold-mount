@@ -7,10 +7,12 @@ import { OrderModel, toOrder } from '@/lib/server/models';
 import { nextOrderNumber, OrderBody, priceCart } from '@/lib/server/orders';
 import { createRazorpayOrder, razorpayKeyId, razorpayReady } from '@/lib/server/razorpay';
 
-// Places an order. Prices come from the database, never from the browser.
+// Places an order (sign-in required). Prices come from the database, never from the browser.
 export const POST = handle(async (req: Request) => {
   const blocked = rejectCrossSite(req);
   if (blocked) return blocked;
+  const userId = await sessionUid();
+  if (!userId) return fail(401, 'Please sign in to place your order.');
   const body = OrderBody.parse(await readJson(req));
   if (body.method === 'online' && !razorpayReady()) return fail(503, 'Online payment isn’t set up yet. Please order on WhatsApp.');
 
@@ -20,8 +22,7 @@ export const POST = handle(async (req: Request) => {
 
   const _id = new Types.ObjectId();
   const number = await nextOrderNumber();
-  const userId = await sessionUid();
-  const base = { _id, number, ...cart, customer: body.customer, method: body.method, status: 'new' as const, ...(userId ? { userId } : {}) };
+  const base = { _id, number, ...cart, customer: body.customer, method: body.method, status: 'new' as const, userId };
 
   if (body.method === 'whatsapp') {
     const order = await OrderModel.create({ ...base, payment: 'on-whatsapp' });

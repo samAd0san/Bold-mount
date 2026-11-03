@@ -27,6 +27,26 @@ export async function createRazorpayOrder(rupees: number, receipt: string, order
   return { id: body.id };
 }
 
+/** Sends `rupees` back to the customer's original payment method; returns Razorpay's refund id, or throws with Razorpay's reason. */
+export async function refundPayment(paymentId: string, rupees: number, orderNumber: string): Promise<{ id: string }> {
+  const res = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}/refund`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${Buffer.from(`${keyId()}:${keySecret()}`).toString('base64')}`,
+    },
+    body: JSON.stringify({ amount: Math.round(rupees * 100), speed: 'normal', receipt: orderNumber, notes: { order: orderNumber } }),
+    signal: AbortSignal.timeout(15_000),
+    cache: 'no-store',
+  });
+  const body = (await res.json().catch(() => ({}))) as { id?: string; error?: { description?: string } };
+  if (!res.ok || !body.id) {
+    console.error('[razorpay] refund failed', res.status, body.error?.description ?? '');
+    throw new Error(body.error?.description || 'Razorpay refund failed');
+  }
+  return { id: body.id };
+}
+
 /** True when `signature` is the HMAC-SHA256 of `orderId|paymentId` made with our key secret (never true without a secret). */
 export function validPaymentSignature(razorpayOrderId: string, paymentId: string, signature: string): boolean {
   if (!keySecret()) return false;
