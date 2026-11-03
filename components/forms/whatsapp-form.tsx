@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { whatsappFormLink } from '@/lib/whatsapp';
+import { postJson } from '@/lib/client-api';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +20,7 @@ export interface FormField {
 const INPUT =
   'w-full rounded-xl border border-line bg-pearl px-4 py-3 text-base text-ink placeholder:text-ink-soft/70 transition-colors focus:border-navy focus:outline-none md:text-sm';
 
-/** Collects details and opens WhatsApp with them pre-filled — no backend needed. */
+/** Collects details, opens WhatsApp with them pre-filled, and saves a copy so the owner sees it in /admin. */
 export function WhatsAppForm({
   title,
   fields,
@@ -37,17 +38,27 @@ export function WhatsAppForm({
 }) {
   const [values, setValues] = useState<Record<string, string>>(initial);
   const [sent, setSent] = useState(false);
+  const [website, setWebsite] = useState(''); // honeypot: people leave it empty, bots fill it
   const set = (name: string, v: string) => setValues((s) => ({ ...s, [name]: v }));
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const byLabel = Object.fromEntries(fields.map((f) => [f.label, values[f.name] ?? '']));
+    // window.open must run inside the click itself (popup blockers); saving the copy is fire-and-forget.
     window.open(whatsappFormLink(title, byLabel), '_blank', 'noopener,noreferrer');
     setSent(true);
+    const filled = Object.entries(byLabel).flatMap(([label, value]) => (value.trim() ? [{ label, value: value.trim() }] : []));
+    void postJson('/api/forms', { form: title, page: window.location.pathname, fields: filled, website }, true);
   };
 
   return (
     <form onSubmit={submit} className={cn('grid gap-4 md:grid-cols-2', className)}>
+      <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0">
+        <label>
+          Website
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+        </label>
+      </div>
       {fields.map((f) => (
         <label key={f.name} className={cn('block', (f.full || f.type === 'textarea') && 'md:col-span-2')}>
           <span className="mb-1.5 block text-sm font-medium text-ink">

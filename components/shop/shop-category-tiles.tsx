@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { STOCK } from '@/lib/media';
-import { getSection } from '@/lib/sections';
-import type { ShopSection } from '@/lib/types';
+import { CUTOUT_IMAGES } from '@/lib/sections';
+import type { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ShopTileScroller } from './shop-tile-scroller';
 import { shopHref, type ShopFilter, type ShopQuery } from './shop-query';
@@ -17,30 +17,25 @@ interface Tile {
   crop?: string; // object-position for photos
 }
 
-const sectionTile = (slug: ShopSection, cutout: boolean, crop?: string): Tile => {
-  const s = getSection(slug);
-  return { value: slug, label: s.short, image: s.image, cutout, crop };
-};
+// Where to centre the photo inside the circle, for the categories whose photo needs it.
+const CROPS: Record<string, string> = { talbeenah: 'object-[50%_25%]', wearings: 'object-[45%_50%]' };
 
-export const CATEGORY_TILES: Tile[] = [
+const buildTiles = (categories: Category[]): Tile[] => [
   { label: 'All', image: STOCK.datesHero, cutout: false, crop: 'object-[75%_50%]' },
-  sectionTile('talbeenah', false, 'object-[50%_25%]'),
-  sectionTile('dates', true),
-  sectionTile('honey', true),
-  sectionTile('dry-fruits', false),
-  sectionTile('wearings', false, 'object-[45%_50%]'),
+  ...categories.map((c) => ({ value: c.slug, label: c.short, image: c.image, cutout: CUTOUT_IMAGES.has(c.image), crop: CROPS[c.slug] })),
   { value: 'gifts', label: 'Gift Boxes', image: GIFT_IMG, cutout: true },
 ];
 
-export const categoryLabel = (filter?: ShopFilter) => CATEGORY_TILES.find((t) => t.value === filter)?.label ?? 'All';
+export const categoryLabel = (categories: Category[], filter?: ShopFilter) =>
+  filter === 'gifts' ? 'Gift Boxes' : (categories.find((c) => c.slug === filter)?.short ?? 'All');
 
 /** "Shop by category" image tiles: plain links, so the chosen category lives in the URL. */
-export function ShopCategoryTiles({ query }: { query: ShopQuery }) {
+export function ShopCategoryTiles({ query, categories }: { query: ShopQuery; categories: Category[] }) {
   return (
     <nav aria-label="Shop by category">
       <p className="eyebrow">Shop by category</p>
       <ShopTileScroller activeKey={query.filter ?? 'all'}>
-        {CATEGORY_TILES.map((t) => {
+        {buildTiles(categories).map((t) => {
           const on = t.value === query.filter;
           return (
             <li key={t.label} className="shrink-0 snap-start">

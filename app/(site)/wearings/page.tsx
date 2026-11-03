@@ -15,6 +15,8 @@ export const metadata: Metadata = {
     'Simple, dignified modest wear from Bold Mount — thobes, kurta sets, kufis, abayas and hijabs. A new range; ask on WhatsApp about sizes and custom stitching.',
 };
 
+export const revalidate = 60;
+
 const SIZE_MESSAGE = [
   'Assalamu alaikum Bold Mount,',
   'I am looking at your modest wear and need a different size / custom stitching.',

@@ -27,21 +27,21 @@ export const POLICIES: Policy[] = [
     slug: 'shipping',
     title: 'Delivery & Returns',
     intro: 'How delivery works, and what to do if something is not right with your order.',
-    description: `Bold Mount delivers to your door ourselves. Share your drop address or location on WhatsApp; delivery time and any charge are confirmed before dispatch. Free delivery above ${FREE}.`,
+    description: `Bold Mount delivers to your door ourselves. Share your drop address or location at checkout or on WhatsApp; delivery time is confirmed before dispatch. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders of ${FREE} or more.`,
     blocks: [
       {
         heading: 'Delivery to your door',
         paragraphs: ['We deliver your order ourselves.'],
         list: [
-          'Share your drop address or a location pin on WhatsApp, or tap “Use my current location” at checkout.',
-          'We confirm the delivery time and any delivery charge with you on WhatsApp before we dispatch your order.',
-          `Delivery is free on orders above ${FREE}.`,
+          'Share your drop address at checkout, or tap “Use my current location”. You can also send a location pin on WhatsApp.',
+          'We confirm the delivery time with you before we dispatch your order.',
+          `Delivery is ${formatINR(SITE.deliveryFee)} per order, and free on orders of ${FREE} or more.`,
         ],
       },
       {
         heading: 'How orders work',
         paragraphs: [
-          'Your cart is sent to us as a WhatsApp message. Your order is confirmed only once we reply, and we share payment details with you at that time.',
+          'Pay online at checkout (UPI, Google Pay, cards or Apple Pay), or send your cart to us as a WhatsApp message. We confirm availability and delivery with you personally; for WhatsApp orders we also share payment details at that time.',
         ],
       },
       {
@@ -108,7 +108,7 @@ export const POLICIES: Policy[] = [
     title: 'Terms of Service',
     intro: 'The ground rules for using this site and placing an order with us.',
     description:
-      'Terms for using the Bold Mount site: prices in INR may change, orders are confirmed only once we reply on WhatsApp, and our services are performed with sincerity per the details you give.',
+      'Terms for using the Bold Mount site: prices in INR may change, orders are confirmed once we contact you to check availability and delivery, and our services are performed with sincerity per the details you give.',
     blocks: [
       {
         heading: 'Using this site',
@@ -117,7 +117,7 @@ export const POLICIES: Policy[] = [
       {
         heading: 'Prices and orders',
         paragraphs: [
-          'Prices are in Indian rupees (₹). Prices and availability may change. Your order is confirmed only once we reply on WhatsApp.',
+          'Prices are in Indian rupees (₹). Prices and availability may change. Your order is confirmed once we contact you to check availability and delivery.',
         ],
       },
       {

@@ -6,7 +6,7 @@ import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { Reveal } from '@/components/motion/reveal';
 import { formatINR } from '@/lib/format';
-import { lowestPrice } from '@/lib/products';
+import { lowestPrice } from '@/lib/shop';
 import { whatsappProductLink } from '@/lib/whatsapp';
 import type { Product } from '@/lib/types';
 

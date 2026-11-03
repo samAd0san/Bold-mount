@@ -8,6 +8,7 @@ import { useCart, cartSubtotal } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
 import { formatINR } from '@/lib/format';
 import { SITE } from '@/lib/site';
+import { deliveryFor } from '@/lib/shop';
 import { whatsappOrderLink } from '@/lib/whatsapp';
 import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
@@ -15,8 +16,11 @@ import { cn } from '@/lib/utils';
 
 export function CartDrawer() {
   const hydrated = useHydrated();
-  const { items, open, setOpen, setQty, remove } = useCart();
+  const { items: stored, open, setOpen, setQty, remove } = useCart();
+  // The saved cart isn't known on the server, so show it empty until the page has hydrated.
+  const items = hydrated ? stored : [];
   const subtotal = cartSubtotal(items);
+  const delivery = deliveryFor(subtotal);
   const toFree = Math.max(0, SITE.freeShippingAbove - subtotal);
   const show = hydrated && open;
 
@@ -112,6 +116,10 @@ export function CartDrawer() {
               <div className="flex items-center justify-between">
                 <span className="text-ink-soft">Subtotal</span>
                 <span className="text-lg font-semibold text-ink">{formatINR(subtotal)}</span>
+              </div>
+              <div className="-mt-1 flex items-center justify-between text-sm">
+                <span className="text-ink-soft">Delivery</span>
+                <span className={delivery ? 'tabular-nums text-ink' : 'font-medium text-whatsapp-ink'}>{delivery ? formatINR(delivery) : 'Free'}</span>
               </div>
               <Link href="/cart" onClick={() => setOpen(false)} className={buttonClass('navy', 'w-full py-3.5')}>
                 Checkout

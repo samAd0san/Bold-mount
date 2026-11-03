@@ -13,7 +13,7 @@ import { ScriptureBand } from '@/components/shop/scripture-band';
 import { PosterGallery, type GalleryItem } from '@/components/shop/poster-gallery';
 import { MiniFaq, type FaqItem } from '@/components/shop/mini-faq';
 import { CAMPAIGN, STOCK } from '@/lib/media';
-import { getProduct } from '@/lib/products';
+import { getProduct } from '@/lib/catalog';
 import { formatINR } from '@/lib/format';
 import { SITE } from '@/lib/site';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     'Premium roasted Talbeenah: slow-roasted whole-barley porridge mix, the comforting food recommended by the Prophet ﷺ (Sahih al-Bukhari 5417). What it is, how to make it, and packs to order.',
 };
 
-const PACK = getProduct('premium-roasted-talbeenah');
+export const revalidate = 60;
 
 const NUTRIENTS = [
   { icon: Wheat, title: 'Fibre', text: 'Whole barley is rich in dietary fibre, including beta-glucan.' },
@@ -64,11 +64,11 @@ const FAQ: FaqItem[] = [
     q: 'How do I order?',
     a: (
       <>
-        Add a pack to your cart and send the order on WhatsApp, or message us directly on{' '}
+        Add a pack to your cart and pay online or send the order on WhatsApp, or message us directly on{' '}
         <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className="font-semibold text-navy underline-offset-4 hover:underline">
           {SITE.phoneDisplay}
         </a>
-        . Delivery is free on orders above {formatINR(SITE.freeShippingAbove)}.
+        . Delivery is {formatINR(SITE.deliveryFee)}, and free on orders above {formatINR(SITE.freeShippingAbove)}.
       </>
     ),
   },
@@ -76,14 +76,15 @@ const FAQ: FaqItem[] = [
 
 const inlineLink = 'font-semibold text-navy underline underline-offset-4 decoration-gold-deep/50 hover:decoration-navy';
 
-export default function TalbeenahPage() {
+export default async function TalbeenahPage() {
+  const pack = await getProduct('premium-roasted-talbeenah');
   return (
     <CategoryPage
       slug="talbeenah"
       heroImage={STOCK.barleyField}
       heroActions={
         <>
-          <Link href="/product/premium-roasted-talbeenah" className={buttonClass('gold')}>
+          <Link href={pack ? `/product/${pack.slug}` : '#products'} className={buttonClass('gold')}>
             Choose pack
           </Link>
           <a href="#products" className={buttonClass('outline-light')}>
@@ -95,7 +96,7 @@ export default function TalbeenahPage() {
       gridIntro="Single packs, a value duo and our Sunnah Trio gift box."
       before={
         <>
-          {PACK && <FeaturedProduct product={PACK} eyebrow="Our own Talbeenah" />}
+          {pack && <FeaturedProduct product={pack} eyebrow="Our own Talbeenah" />}
 
           <ScriptureBand
             arabic="تلبينة"

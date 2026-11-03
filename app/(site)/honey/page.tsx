@@ -10,7 +10,7 @@ import { CategoryPage } from '@/components/shop/category-page';
 import { ScriptureBand } from '@/components/shop/scripture-band';
 import { PointGrid, type Point } from '@/components/shop/point-grid';
 import { PRODUCT_IMG, STOCK } from '@/lib/media';
-import { getProduct, productsBySection } from '@/lib/products';
+import { getProduct, productsByCategory } from '@/lib/catalog';
 
 export const metadata: Metadata = {
   title: 'Raw Sidr Honey',
@@ -18,9 +18,7 @@ export const metadata: Metadata = {
     'Pure, raw and unheated Sidr (Ber) honey — thick, buttery and deeply flavoured, with nothing added. The perfect sweetener for Talbeenah. Order on WhatsApp.',
 };
 
-const TRIO = getProduct('sunnah-trio-gift-box');
-// The gift box carries a jar too, so it belongs next to the single honey product.
-const HONEY = [...productsBySection('honey'), ...(TRIO ? [TRIO] : [])];
+export const revalidate = 60;
 
 const WHY: Point[] = [
   {
@@ -40,7 +38,10 @@ const WHY: Point[] = [
   },
 ];
 
-export default function HoneyPage() {
+export default async function HoneyPage() {
+  const trio = await getProduct('sunnah-trio-gift-box');
+  // The gift box carries a jar too, so it belongs next to the single honey product.
+  const honey = [...(await productsByCategory('honey')), ...(trio ? [trio] : [])];
   return (
     <CategoryPage
       slug="honey"
@@ -77,7 +78,7 @@ export default function HoneyPage() {
           </section>
         </>
       }
-      products={HONEY}
+      products={honey}
       gridTitle="Shop honey"
       gridIntro="Pure Sidr Honey in three jar sizes — or find it in our Sunnah Trio gift box."
       divided
@@ -100,8 +101,8 @@ export default function HoneyPage() {
                 <Link href="/talbeenah" className={buttonClass('gold')}>
                   Shop Talbeenah
                 </Link>
-                {TRIO && (
-                  <Link href={`/product/${TRIO.slug}`} className={buttonClass('outline-light')}>
+                {trio && (
+                  <Link href={`/product/${trio.slug}`} className={buttonClass('outline-light')}>
                     See the Sunnah Trio
                   </Link>
                 )}

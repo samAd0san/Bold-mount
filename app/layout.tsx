@@ -2,11 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Albert_Sans, Amiri } from 'next/font/google';
 import './globals.css';
 import { SITE } from '@/lib/site';
-import { AnnouncementBar } from '@/components/layout/announcement-bar';
-import { SiteHeader } from '@/components/layout/site-header';
-import { SiteFooter } from '@/components/layout/site-footer';
-import { CartDrawer } from '@/components/layout/cart-drawer';
-import { FloatingActions } from '@/components/layout/floating-actions';
 
 const albert = Albert_Sans({
   subsets: ['latin'],
@@ -48,14 +43,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${albert.variable} ${amiri.variable}`}>
-      <body>
-        <AnnouncementBar />
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
-        <CartDrawer />
-        <FloatingActions />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

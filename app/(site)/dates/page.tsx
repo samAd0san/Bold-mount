@@ -5,7 +5,7 @@ import { Reveal } from '@/components/motion/reveal';
 import { CategoryPage } from '@/components/shop/category-page';
 import { ScriptureBand } from '@/components/shop/scripture-band';
 import { STOCK } from '@/lib/media';
-import { productsBySection } from '@/lib/products';
+import { productsByCategory } from '@/lib/catalog';
 
 export const metadata: Metadata = {
   title: 'Premium Dates — Ajwa, Medjool, Safawi & more',
@@ -13,8 +13,7 @@ export const metadata: Metadata = {
     'Hand-picked dates from Madinah, Jordan, Iraq, Tunisia and Saudi Arabia — Ajwa, Medjool, Safawi, Mabroom, Sukkary and a gift hamper. Order on WhatsApp.',
 };
 
-// Regions come from the catalogue so the chips never list a place we don't stock.
-const ORIGINS = [...new Set(productsBySection('dates').flatMap((p) => (p.origin ? [p.origin.split(',')[0]] : [])))];
+export const revalidate = 60;
 
 const STORAGE_TIPS = [
   { icon: Package, title: 'Keep them airtight', text: 'A sealed box or jar, away from heat, sunlight and moisture.' },
@@ -22,7 +21,9 @@ const STORAGE_TIPS = [
   { icon: Sun, title: 'Serve at room temperature', text: 'Take them out a little before eating for the softest, sweetest bite.' },
 ];
 
-export default function DatesPage() {
+export default async function DatesPage() {
+  // Regions come from the catalogue so the chips never list a place we don't stock.
+  const origins = [...new Set((await productsByCategory('dates')).flatMap((p) => (p.origin ? [p.origin.split(',')[0]] : [])))];
   return (
     <CategoryPage
       slug="dates"
@@ -41,7 +42,7 @@ export default function DatesPage() {
         ),
         aside: (
           <ul aria-label="Where our dates come from" className="flex flex-wrap gap-2">
-            {ORIGINS.map((o) => (
+            {origins.map((o) => (
               <li
                 key={o}
                 className="inline-flex items-center gap-1.5 rounded-full border border-line bg-pearl px-3.5 py-2 text-sm font-medium text-ink"

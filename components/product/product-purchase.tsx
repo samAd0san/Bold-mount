@@ -14,7 +14,7 @@ import { QtyStepper } from './qty-stepper';
 
 // Wear variants are either sizes (S/M/52…) or colours (Black/Navy…); food variants are pack sizes.
 function optionName(product: Product): string {
-  if (product.section !== 'wearings') return 'Pack size';
+  if (product.category !== 'wearings') return 'Pack size';
   return product.variants.every((v) => /^(XS|S|M|L|XL|XXL|\d+)$/.test(v.label)) ? 'Size' : 'Colour';
 }
 

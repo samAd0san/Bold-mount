@@ -1,7 +1,5 @@
-import type { ShopSection } from '@/lib/types';
-
 // The shop's whole state lives in the URL (?q=&filter=&sort=&price=&sale=1&gift=1) so links are shareable.
-export type ShopFilter = ShopSection | 'gifts';
+export type ShopFilter = string; // a category slug, or 'gifts'
 export type ShopSort = 'featured' | 'price-asc' | 'price-desc' | 'discount' | 'newest';
 export type ShopPrice = 'any' | 'under-500' | '500-1000' | 'above-1000';
 
@@ -31,17 +29,15 @@ export const PRICE_OPTIONS: { value: ShopPrice; label: string }[] = [
   { value: 'above-1000', label: 'Above ₹1,000' },
 ];
 
-const FILTERS: ShopFilter[] = ['talbeenah', 'dates', 'honey', 'dry-fruits', 'wearings', 'gifts'];
-
 const first = (raw: string | string[] | undefined) => (Array.isArray(raw) ? raw[0] : raw);
 const pick = <T extends string>(allowed: readonly T[], raw: string | string[] | undefined): T | undefined =>
   allowed.find((a) => a === first(raw));
 
-/** Reads the URL params into a clean query; anything unknown falls back to the default. */
-export function parseShopQuery(sp: ShopSearchParams): ShopQuery {
+/** Reads the URL params into a clean query; anything unknown falls back to the default. `slugs` = the live category slugs. */
+export function parseShopQuery(sp: ShopSearchParams, slugs: readonly string[]): ShopQuery {
   return {
     q: first(sp.q)?.trim().slice(0, 60) || undefined,
-    filter: pick(FILTERS, sp.filter),
+    filter: pick([...slugs, 'gifts'], sp.filter),
     sort: pick(SORT_OPTIONS.map((o) => o.value), sp.sort) ?? 'featured',
     price: pick(PRICE_OPTIONS.map((o) => o.value), sp.price) ?? 'any',
     sale: first(sp.sale) === '1',

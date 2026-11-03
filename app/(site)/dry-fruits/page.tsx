@@ -8,13 +8,14 @@ import { Reveal } from '@/components/motion/reveal';
 import { CategoryPage } from '@/components/shop/category-page';
 import { PointGrid, type Point } from '@/components/shop/point-grid';
 import { DRY_FRUITS } from '@/lib/media';
-import { productsBySection } from '@/lib/products';
 
 export const metadata: Metadata = {
   title: 'Dry Fruits',
   description:
     'Whole almonds, cashews and walnut kernels, plus soft dry fruit barfi squares — for daily snacking, guests and gifting. Order on WhatsApp.',
 };
+
+export const revalidate = 60;
 
 const WHY: Point[] = [
   {
@@ -48,7 +49,6 @@ export default function DryFruitsPage() {
           </Container>
         </section>
       }
-      products={productsBySection('dry-fruits')}
       gridTitle="Shop dry fruits"
       gridIntro="Almonds, cashews and walnuts in pouch sizes for home, plus dry fruit barfi by the piece."
       divided

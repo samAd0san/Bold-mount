@@ -2,9 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Check, ChevronDown, ChevronRight, MapPin, PackageCheck, Truck } from 'lucide-react';
-import type { ShopSection } from '@/lib/types';
-import { PRODUCTS, getProduct, relatedProducts } from '@/lib/products';
-import { getSection } from '@/lib/sections';
+import { getCategory, getProduct, getProducts, relatedProducts } from '@/lib/catalog';
+import { categoryHref } from '@/lib/shop';
 import { SITE } from '@/lib/site';
 import { formatINR } from '@/lib/format';
 import { Container } from '@/components/ui/container';
@@ -17,15 +16,23 @@ import { ProductPurchase } from '@/components/product/product-purchase';
 
 type Props = { params: Promise<{ slug: string }> };
 
-const ARABIC: Partial<Record<ShopSection, string>> = { talbeenah: 'تلبينة', dates: 'تمر', honey: 'عسل' };
+const ARABIC: Record<string, string> = { talbeenah: 'تلبينة', dates: 'تمر', honey: 'عسل' };
 
-export function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ slug: p.slug }));
+export const revalidate = 60;
+// Products added in /admin after the build are rendered on first visit.
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    return (await getProducts()).map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) return { title: 'Product not found' };
   return {
     title: product.name,
@@ -41,22 +48,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) notFound();
 
-  const section = getSection(product.section);
-  const related = relatedProducts(product);
+  const category = await getCategory(product.category);
+  const related = await relatedProducts(product);
   const prices = product.variants.map((v) => v.price);
   const details = [
     ...(product.details ?? []),
     {
       label: 'Delivery & ordering',
-      value: `Free delivery on orders above ${formatINR(SITE.freeShippingAbove)}. Every order is confirmed on WhatsApp — availability, delivery and payment are agreed there before we dispatch. We deliver to your door — just share your address or location.`,
+      value: `Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders above ${formatINR(SITE.freeShippingAbove)}. Pay online (UPI, cards) or send your order on WhatsApp — we confirm availability and delivery with you before we dispatch. We deliver to your door — just share your address or location.`,
     },
   ];
   const assurances = [
     { icon: Truck, label: `Free delivery above ${formatINR(SITE.freeShippingAbove)}` },
-    { icon: PackageCheck, label: product.section === 'wearings' ? 'Carefully packed' : 'Freshly packed' },
+    { icon: PackageCheck, label: product.category === 'wearings' ? 'Carefully packed' : 'Freshly packed' },
     { icon: WhatsAppGlyph, label: 'Order support on WhatsApp' },
   ];
 
@@ -64,7 +71,7 @@ export default async function ProductPage({ params }: Props) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    image: product.images.map((i) => `${SITE.url}${i.src}`),
+    image: product.images.map((i) => (i.src.startsWith('http') ? i.src : `${SITE.url}${i.src}`)),
     description: product.description,
     brand: { '@type': 'Brand', name: SITE.name },
     offers: {
@@ -90,7 +97,7 @@ export default async function ProductPage({ params }: Props) {
         <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 py-4 text-xs text-ink-soft md:py-6">
           <Link href="/" className="shrink-0 hover:text-navy">Home</Link>
           <ChevronRight size={12} className="shrink-0" />
-          <Link href={section.href} className="shrink-0 hover:text-navy">{section.title}</Link>
+          <Link href={categoryHref(product.category)} className="shrink-0 hover:text-navy">{category?.name ?? 'Shop'}</Link>
           <ChevronRight size={12} className="shrink-0" />
           <span aria-current="page" className="truncate text-ink">{product.name}</span>
         </nav>
@@ -112,11 +119,11 @@ export default async function ProductPage({ params }: Props) {
                   <MapPin size={14} className="text-gold-ink" /> {product.origin}
                 </span>
               ) : (
-                <span className="eyebrow">{section.title}</span>
+                <span className="eyebrow">{category?.name}</span>
               )}
-              {ARABIC[product.section] && (
+              {ARABIC[product.category] && (
                 <span lang="ar" dir="rtl" className="ml-auto font-arabic text-xl text-gold-ink">
-                  {ARABIC[product.section]}
+                  {ARABIC[product.category]}
                 </span>
               )}
             </div>
@@ -174,7 +181,7 @@ export default async function ProductPage({ params }: Props) {
                 eyebrow="More to love"
                 title="You may also"
                 emphasis="like"
-                link={{ label: `All ${section.short}`, href: section.href }}
+                link={{ label: `All ${category?.short ?? 'products'}`, href: categoryHref(product.category) }}
               />
               <ProductRail products={related} />
             </Reveal>

@@ -10,7 +10,8 @@ import { Reveal } from '@/components/motion/reveal';
 import { OfferCard } from '@/components/info/offer-card';
 import { pageMeta } from '@/components/info/page-meta';
 import { BRAND, STOCK } from '@/lib/media';
-import { SERVE_SECTIONS, SHOP_SECTIONS } from '@/lib/sections';
+import { getCategories } from '@/lib/catalog';
+import { SERVE_SECTIONS, shopSections } from '@/lib/sections';
 import { SITE } from '@/lib/site';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
@@ -46,7 +47,10 @@ const PROMISES = [
   },
 ];
 
-export default function AboutPage() {
+export const revalidate = 60;
+
+export default async function AboutPage() {
+  const categories = await getCategories();
   return (
     <>
       <PageHero
@@ -101,7 +105,7 @@ export default function AboutPage() {
             />
           </Reveal>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {SHOP_SECTIONS.map((s, i) => (
+            {shopSections(categories).map((s, i) => (
               <Reveal key={s.slug} delay={i * 0.06} className="h-full">
                 <OfferCard section={s} />
               </Reveal>

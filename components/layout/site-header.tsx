@@ -10,6 +10,8 @@ import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { useCart, cartCount } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
+import { AccountMenu } from '@/components/auth/account-menu';
+import type { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { MobileMenu } from './mobile-menu';
 import { CategoryRail } from './category-rail';
@@ -48,7 +50,7 @@ function SearchBox({ className, autoFocus, onDone }: { className?: string; autoF
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ categories }: { categories: Category[] }) {
   const hydrated = useHydrated();
   const count = useCart((s) => cartCount(s.items));
   const openCart = useCart((s) => s.setOpen);
@@ -100,6 +102,7 @@ export function SiteHeader() {
             >
               {searchOpen ? <X size={21} /> : <Search size={21} />}
             </button>
+            <AccountMenu className="hidden lg:flex" />
             <button
               type="button"
               onClick={() => openCart(true)}
@@ -130,11 +133,11 @@ export function SiteHeader() {
           </div>
         )}
 
-        {/* Category row — all nine sections, one tap away on every page. */}
-        <CategoryRail />
+        {/* Category row — every shop category and serve page, one tap away on every page. */}
+        <CategoryRail categories={categories} />
       </header>
 
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} links={NAV} />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} links={NAV} categories={categories} />
     </>
   );
 }

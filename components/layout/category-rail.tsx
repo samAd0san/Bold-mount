@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { SECTIONS } from '@/lib/sections';
+import { allSections } from '@/lib/sections';
+import type { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-/** All nine sections in one row; < > arrows over a soft fade appear only while there's more to scroll that way. */
-export function CategoryRail() {
+/** Every shop category and serve page in one row; < > arrows over a soft fade appear only while there's more to scroll that way. */
+export function CategoryRail({ categories }: { categories: Category[] }) {
+  const sections = allSections(categories);
   const pathname = usePathname();
   const ref = useRef<HTMLElement>(null);
   const [edges, setEdges] = useState({ left: false, right: false });
@@ -45,7 +47,7 @@ export function CategoryRail() {
         aria-label="Categories"
         className="no-scrollbar mx-auto flex max-w-site gap-7 overflow-x-auto scroll-px-10 px-5 md:px-8 lg:justify-center lg:gap-10 lg:px-12"
       >
-        {SECTIONS.map((s) => {
+        {sections.map((s) => {
           const active = pathname.startsWith(s.href);
           return (
             <Link

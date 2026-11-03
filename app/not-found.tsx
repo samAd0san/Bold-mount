@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Container } from '@/components/ui/container';
 import { buttonClass } from '@/components/ui/button-styles';
 import { BRAND } from '@/lib/media';
+import { SiteChrome } from '@/components/layout/site-chrome';
 
 export const metadata: Metadata = {
   title: 'Page not found',
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
+    <SiteChrome>
     <section className="bg-lattice-ink py-20 md:py-28">
       <Container className="flex flex-col items-center text-center">
         <div className="relative h-24 w-48 overflow-hidden md:h-28 md:w-56">
@@ -36,5 +38,6 @@ export default function NotFound() {
         </div>
       </Container>
     </section>
+    </SiteChrome>
   );
 }
