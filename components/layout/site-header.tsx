@@ -6,10 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Menu, Search, ShoppingBag, X } from 'lucide-react';
 import { BRAND } from '@/lib/media';
-import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { useCart, cartCount } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { AccountMenu } from '@/components/auth/account-menu';
 import type { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -85,14 +83,6 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
           <SearchBox className="hidden flex-1 md:block lg:max-w-xl xl:max-w-2xl" />
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2.5">
-            <a
-              href={whatsappGeneralLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden h-11 items-center gap-2 rounded-full bg-whatsapp px-5 text-sm font-semibold whitespace-nowrap text-white transition hover:brightness-105 md:flex"
-            >
-              <WhatsAppGlyph size={19} /> Order on WhatsApp
-            </a>
             <button
               type="button"
               onClick={() => setSearchOpen((o) => !o)}

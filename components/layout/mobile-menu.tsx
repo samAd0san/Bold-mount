@@ -12,8 +12,6 @@ import { Avatar } from '@/components/auth/avatar';
 import { signInHref, signOut, useAccount } from '@/components/auth/use-account';
 import { GoogleMark } from '@/components/auth/google-button';
 import { SITE } from '@/lib/site';
-import { whatsappGeneralLink } from '@/lib/whatsapp';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { cn } from '@/lib/utils';
 
 function Group({ title, items, onClose }: { title: string; items: Section[]; onClose: () => void }) {
@@ -137,15 +135,7 @@ export function MobileMenu({
           <Group title="Serve & Give" items={SERVE_SECTIONS} onClose={onClose} />
         </div>
 
-        <div className="space-y-3 border-t border-white/10 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-          <a
-            href={whatsappGeneralLink()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-whatsapp py-3 text-sm font-semibold text-white"
-          >
-            <WhatsAppGlyph size={18} /> Chat on WhatsApp
-          </a>
+        <div className="border-t border-white/10 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <a href={`tel:+${SITE.whatsapp}`} className="flex items-center justify-center gap-2 text-sm text-on-night-soft">
             <Phone size={15} /> {SITE.phoneDisplay}
           </a>

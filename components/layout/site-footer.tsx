@@ -4,8 +4,6 @@ import { BRAND } from '@/lib/media';
 import { SERVE_SECTIONS, shopSections } from '@/lib/sections';
 import type { Category } from '@/lib/types';
 import { SITE } from '@/lib/site';
-import { whatsappGeneralLink } from '@/lib/whatsapp';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { FooterColumn } from './footer-column';
 
 const HELP = [
@@ -44,14 +42,6 @@ export function SiteFooter({ categories }: { categories: Category[] }) {
                 <MapPin size={16} className="text-gold" /> Doorstep delivery — share your location
               </li>
             </ul>
-            <a
-              href={whatsappGeneralLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-whatsapp px-5 py-2.5 text-sm font-semibold text-white"
-            >
-              <WhatsAppGlyph size={17} /> Chat with us
-            </a>
           </div>
 
           <FooterColumn heading="Shop" links={[...shopSections(categories).map((s) => ({ label: s.title, href: s.href })), { label: 'Gift Boxes', href: '/shop?filter=gifts' }]} />

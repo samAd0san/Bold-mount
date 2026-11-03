@@ -9,9 +9,7 @@ import { useHydrated } from '@/lib/use-hydrated';
 import { formatINR } from '@/lib/format';
 import { SITE } from '@/lib/site';
 import { deliveryFor } from '@/lib/shop';
-import { whatsappOrderLink } from '@/lib/whatsapp';
 import { buttonClass } from '@/components/ui/button-styles';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { cn } from '@/lib/utils';
 
 export function CartDrawer() {
@@ -124,14 +122,6 @@ export function CartDrawer() {
               <Link href="/cart" onClick={() => setOpen(false)} className={buttonClass('navy', 'w-full py-3.5')}>
                 Checkout
               </Link>
-              <a
-                href={whatsappOrderLink(items.map(({ name, variant, price, qty }) => ({ name, variant, price, qty })))}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonClass('whatsapp', 'w-full py-3.5')}
-              >
-                <WhatsAppGlyph size={18} /> Order on WhatsApp
-              </a>
             </div>
           </>
         )}
