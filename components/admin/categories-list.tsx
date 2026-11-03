@@ -2,17 +2,17 @@
 
 import * as React from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { adminFetch, slugify, useFetch } from '@/components/admin/api';
+import { adminFetch, useFetch } from '@/components/admin/api';
 import { SingleImage } from '@/components/admin/image-fields';
 import { Badge, Button, ConfirmDelete, Empty, ErrorNote, Field, Input, Modal, PageHead, Skeleton, Switch, Textarea, Thumb } from '@/components/admin/ui';
 import type { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 type Row = Category & { products: number };
-type Draft = { name: string; short: string; slug: string; tagline: string; blurb: string; image: string; active: boolean; sort: string };
+type Draft = { name: string; short: string; tagline: string; blurb: string; image: string; active: boolean; sort: string };
 
-const blank: Draft = { name: '', short: '', slug: '', tagline: '', blurb: '', image: '', active: true, sort: '' };
-const draftFrom = (c: Row): Draft => ({ name: c.name, short: c.short, slug: c.slug, tagline: c.tagline, blurb: c.blurb, image: c.image, active: c.active, sort: String(c.sort) });
+const blank: Draft = { name: '', short: '', tagline: '', blurb: '', image: '', active: true, sort: '' };
+const draftFrom = (c: Row): Draft => ({ name: c.name, short: c.short, tagline: c.tagline, blurb: c.blurb, image: c.image, active: c.active, sort: String(c.sort) });
 
 export function CategoriesList() {
   const { data, error, reload, mutate } = useFetch<{ categories: Row[] }>('/api/admin/categories');
@@ -76,7 +76,6 @@ export function CategoriesList() {
 
 function CategoryDialog({ category, onClose, onSaved }: { category: Row | null; onClose: () => void; onSaved: () => void }) {
   const [d, setD] = React.useState<Draft>(category ? draftFrom(category) : blank);
-  const [slugEdited, setSlugEdited] = React.useState(!!category);
   const [tried, setTried] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
@@ -85,17 +84,15 @@ function CategoryDialog({ category, onClose, onSaved }: { category: Row | null; 
 
   const errors: Record<string, string> = {};
   if (tried && !d.name.trim()) errors.name = 'Give the category a name.';
-  if (tried && d.slug && !/^[a-z0-9-]+$/.test(d.slug)) errors.slug = 'Use lowercase letters, numbers and dashes only.';
 
   const save = async () => {
     setTried(true);
-    if (!d.name.trim() || (d.slug && !/^[a-z0-9-]+$/.test(d.slug))) return;
+    if (!d.name.trim()) return;
     setProblem(null);
     setSaving(true);
     const payload = {
       name: d.name.trim(),
       short: d.short.trim() || d.name.trim(),
-      slug: d.slug.trim() || slugify(d.name),
       tagline: d.tagline.trim(),
       blurb: d.blurb.trim(),
       image: d.image,
@@ -121,24 +118,11 @@ function CategoryDialog({ category, onClose, onSaved }: { category: Row | null; 
       <form onSubmit={(e) => { e.preventDefault(); void save(); }} noValidate className="flex flex-col gap-4">
         {problem && <ErrorNote>{problem}</ErrorNote>}
         <Field label="Name" error={errors.name}>
-          <Input
-            value={d.name}
-            onChange={(e) => {
-              const name = e.target.value;
-              setD((s) => ({ ...s, name, ...(slugEdited ? {} : { slug: slugify(name) }) }));
-            }}
-            placeholder="e.g. Premium Dates"
-            autoComplete="off"
-          />
+          <Input value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Premium Dates" autoComplete="off" />
         </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Short label" hint="Used on small tabs.">
-            <Input value={d.short} onChange={(e) => set('short', e.target.value)} placeholder="e.g. Dates" />
-          </Field>
-          <Field label="Slug" error={errors.slug} hint="The end of the web address.">
-            <Input value={d.slug} onChange={(e) => { setSlugEdited(true); set('slug', e.target.value.toLowerCase()); }} autoComplete="off" />
-          </Field>
-        </div>
+        <Field label="Short label" hint="Used on small tabs.">
+          <Input value={d.short} onChange={(e) => set('short', e.target.value)} placeholder="e.g. Dates" />
+        </Field>
         <Field label="Tagline">
           <Input value={d.tagline} onChange={(e) => set('tagline', e.target.value)} />
         </Field>

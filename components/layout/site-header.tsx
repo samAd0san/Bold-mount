@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, Search, ShoppingBag, X } from 'lucide-react';
 import { BRAND } from '@/lib/media';
 import { useCart, cartCount } from '@/store/cart';
@@ -48,7 +48,22 @@ function SearchBox({ className, autoFocus, onDone }: { className?: string; autoF
   );
 }
 
+/** Hidden shortcut for the owner: 5 quick taps on the logo open the admin PIN pad. */
+function useAdminTaps() {
+  const router = useRouter();
+  const taps = useRef<number[]>([]);
+  return (e: React.MouseEvent) => {
+    const now = Date.now();
+    taps.current = [...taps.current.filter((t) => now - t < 4000), now];
+    if (taps.current.length < 5) return;
+    e.preventDefault();
+    taps.current = [];
+    router.push('/admin');
+  };
+}
+
 export function SiteHeader({ categories }: { categories: Category[] }) {
+  const onLogoTap = useAdminTaps();
   const hydrated = useHydrated();
   const count = useCart((s) => cartCount(s.items));
   const openCart = useCart((s) => s.setOpen);
@@ -68,7 +83,7 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
       {/* Main bar and category row share one white surface, split by a hairline (Pepperfry / Urban Ladder style). */}
       <header className={cn('sticky top-0 z-50 bg-pearl text-ink transition-shadow', scrolled && 'shadow-[0_8px_24px_-14px_rgb(11_27_43/0.35)]')}>
         <div className="mx-auto flex h-16 max-w-site items-center gap-6 px-5 md:h-[76px] md:px-8 lg:px-12">
-          <Link href="/" aria-label="Bold Mount home" className="shrink-0">
+          <Link href="/" aria-label="Bold Mount home" onClick={onLogoTap} className="shrink-0">
             <Image src={BRAND.logoHeader} alt="Bold Mount" width={235} height={128} unoptimized priority className="h-11 w-auto md:h-[52px]" />
           </Link>
 

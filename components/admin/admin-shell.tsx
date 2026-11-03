@@ -4,88 +4,183 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ExternalLink, LogOut } from 'lucide-react';
+import {
+  ExternalLink,
+  Inbox,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Package,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ReceiptText,
+  Settings,
+  Tags,
+  Users,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { useAdmin } from '@/components/admin/admin-gate';
 import { adminFetch, SignedOut } from '@/components/admin/api';
 import { BRAND } from '@/lib/media';
 import { cn } from '@/lib/utils';
 
-const TABS = [
-  { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/orders', label: 'Orders' },
-  { href: '/admin/products', label: 'Products' },
-  { href: '/admin/categories', label: 'Categories' },
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/forms', label: 'Forms' },
-  { href: '/admin/settings', label: 'Settings' },
+const TABS: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/orders', label: 'Orders', icon: ReceiptText },
+  { href: '/admin/products', label: 'Products', icon: Package },
+  { href: '/admin/categories', label: 'Categories', icon: Tags },
+  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/forms', label: 'Forms', icon: Inbox },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
+const COLLAPSED_KEY = 'bm-admin-sidebar-collapsed';
+
+function readCollapsed() {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+const ROW = 'relative flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold transition';
+const IDLE = 'text-on-night-soft hover:bg-white/10 hover:text-on-night';
+
+/** Left sidebar: icons + names, or icons only when collapsed (desktop). On phones it slides in from the menu button. */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const { logout, unread, setUnread } = useAdmin();
+  const { logout, unread, setUnread, attention, refreshAttention } = useAdmin();
   const [leaving, setLeaving] = React.useState(false);
+  // The shell only renders in the browser (after the PIN check), so reading storage here is safe.
+  const [collapsed, setCollapsed] = React.useState(readCollapsed);
+  const [openPath, setOpenPath] = React.useState<string | null>(null);
+  const open = openPath === path; // the phone menu closes itself on navigation
 
-  // The Forms page keeps the count fresh itself; everywhere else we ask once per page.
+  // The Forms page keeps its count fresh itself; everywhere else we ask once per page. Same for orders needing attention.
   React.useEffect(() => {
+    refreshAttention();
     if (path.startsWith('/admin/forms')) return;
     adminFetch<{ unread: number }>('/api/admin/forms')
       .then((d) => setUnread(d.unread))
       .catch((e) => { if (!(e instanceof SignedOut)) setUnread(0); });
-  }, [path, setUnread]);
+  }, [path, setUnread, refreshAttention]);
 
-  // On phones the tab row scrolls sideways; keep the current tab in view.
   React.useEffect(() => {
-    document.querySelector('nav[aria-label="Admin sections"] [aria-current="page"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
-  }, [path]);
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpenPath(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  const toggle = () => {
+    setCollapsed((c) => {
+      try { localStorage.setItem(COLLAPSED_KEY, c ? '0' : '1'); } catch {}
+      return !c;
+    });
+  };
+
+  // Collapsed only applies from md up; the phone menu always shows names.
+  const label = cn('truncate', collapsed && 'md:sr-only');
 
   return (
     <div className="min-h-dvh bg-cream">
-      <header className="sticky top-0 z-40 bg-navy text-on-night">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
-          <Link href="/admin" className="flex items-center gap-2.5" aria-label="Admin home">
-            <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized priority className="h-9 w-auto" />
-            <span className="rounded-md bg-gold px-1.5 py-0.5 text-[11px] font-bold tracking-wider text-night uppercase">Admin</span>
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 bg-navy px-2 text-on-night md:hidden">
+        <button type="button" onClick={() => setOpenPath(path)} aria-label="Open menu" aria-expanded={open} className="grid size-11 place-items-center rounded-full hover:bg-white/10">
+          <Menu className="size-6" />
+        </button>
+        <Link href="/admin" className="flex items-center gap-2.5">
+          <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized priority className="h-8 w-auto" />
+          <span className="rounded-md bg-gold px-1.5 py-0.5 text-[11px] font-bold tracking-wider text-night uppercase">Admin</span>
+        </Link>
+      </header>
+
+      <div
+        onClick={() => setOpenPath(null)}
+        aria-hidden
+        className={cn('fixed inset-0 z-40 bg-night/60 transition-opacity md:hidden', open ? 'opacity-100' : 'pointer-events-none opacity-0')}
+      />
+
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-navy text-on-night transition-[transform,width,visibility] duration-300',
+          open ? 'translate-x-0' : 'max-md:invisible max-md:-translate-x-full',
+          collapsed ? 'md:w-[4.5rem]' : 'md:w-60',
+        )}
+      >
+        <div className="flex h-16 shrink-0 items-center gap-2 px-4">
+          <Link href="/admin" aria-label="Admin home" className="flex min-w-0 items-center gap-2.5">
+            <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized className={cn('h-9 w-auto', collapsed && 'md:hidden')} />
+            <Image src={BRAND.mark} alt="" width={40} height={40} className={cn('hidden size-10 object-contain', collapsed && 'md:block')} />
+            <span className={cn('rounded-md bg-gold px-1.5 py-0.5 text-[11px] font-bold tracking-wider text-night uppercase', collapsed && 'md:hidden')}>Admin</span>
           </Link>
-          <div className="ml-auto flex items-center gap-1">
-            <Link href="/" target="_blank" className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-on-night-soft transition hover:bg-white/10 hover:text-on-night">
-              <ExternalLink className="size-4" />
-              <span className="hidden sm:inline">View site</span>
-              <span className="sm:hidden">Site</span>
-            </Link>
-            <button
-              type="button"
-              disabled={leaving}
-              onClick={() => { setLeaving(true); void logout(); }}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-on-night-soft transition hover:bg-white/10 hover:text-on-night disabled:opacity-50"
-            >
-              <LogOut className="size-4" />
-              Log out
-            </button>
-          </div>
+          <button type="button" onClick={() => setOpenPath(null)} aria-label="Close menu" className="ml-auto grid size-10 place-items-center rounded-full hover:bg-white/10 md:hidden">
+            <X className="size-5" />
+          </button>
         </div>
-        <nav aria-label="Admin sections" className="no-scrollbar mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 pb-2 sm:px-5">
-          {TABS.map(({ href, label }) => {
+
+        <nav aria-label="Admin sections" className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
+          {TABS.map(({ href, label: name, icon: Icon }) => {
             const active = href === '/admin' ? path === '/admin' : path.startsWith(href);
+            const count = name === 'Forms' ? unread : name === 'Orders' ? attention : 0;
             return (
               <Link
                 key={href}
                 href={href}
+                title={collapsed ? name : undefined}
                 aria-current={active ? 'page' : undefined}
-                className={cn(
-                  'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition',
-                  active ? 'bg-gold text-night' : 'text-on-night-soft hover:bg-white/10 hover:text-on-night',
-                )}
+                className={cn(ROW, active ? 'bg-gold text-night' : IDLE)}
               >
-                {label}
-                {label === 'Forms' && unread > 0 && (
-                  <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[11px] leading-5 font-bold', active ? 'bg-night text-gold' : 'bg-gold text-night')}>{unread}</span>
+                <Icon className="size-5 shrink-0" />
+                <span className={label}>{name}</span>
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      'ml-auto grid min-w-5 place-items-center rounded-full px-1.5 text-[11px] leading-5 font-bold',
+                      active ? 'bg-night text-gold' : 'bg-gold text-night',
+                      collapsed && 'md:absolute md:top-0.5 md:right-0.5 md:min-w-4 md:px-1 md:text-[10px] md:leading-4',
+                    )}
+                  >
+                    {count}
+                  </span>
                 )}
               </Link>
             );
           })}
         </nav>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 pt-6 pb-20 sm:px-6 sm:pt-8">{children}</main>
+
+        <div className="shrink-0 space-y-1 border-t border-white/10 px-3 py-3">
+          <Link href="/" target="_blank" title={collapsed ? 'View site' : undefined} className={cn(ROW, IDLE)}>
+            <ExternalLink className="size-5 shrink-0" />
+            <span className={label}>View site</span>
+          </Link>
+          <button
+            type="button"
+            disabled={leaving}
+            onClick={() => { setLeaving(true); void logout(); }}
+            title={collapsed ? 'Log out' : undefined}
+            className={cn(ROW, IDLE, 'disabled:opacity-50')}
+          >
+            <LogOut className="size-5 shrink-0" />
+            <span className={label}>Log out</span>
+          </button>
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : undefined}
+            className={cn(ROW, IDLE, 'hidden md:flex')}
+          >
+            {collapsed ? <PanelLeftOpen className="size-5 shrink-0" /> : <PanelLeftClose className="size-5 shrink-0" />}
+            <span className={label}>Collapse</span>
+          </button>
+        </div>
+      </aside>
+
+      <div className={cn('transition-[padding] duration-300', collapsed ? 'md:pl-[4.5rem]' : 'md:pl-60')}>
+        <main className="mx-auto max-w-6xl px-4 pt-6 pb-20 sm:px-6 sm:pt-8">{children}</main>
+      </div>
     </div>
   );
 }

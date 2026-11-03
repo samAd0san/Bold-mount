@@ -2,13 +2,21 @@
 
 import * as React from 'react';
 import { Loader2 } from 'lucide-react';
-import { SIGNED_OUT } from '@/components/admin/api';
+import { adminFetch, SIGNED_OUT, SignedOut } from '@/components/admin/api';
 import { AdminShell } from '@/components/admin/admin-shell';
 import { PinScreen } from '@/components/admin/pin-screen';
 import { Button } from '@/components/admin/ui';
 
 type Session = { admin: boolean; pinLength: number };
-type Ctx = { pinLength: number; unread: number; setUnread: (n: number) => void; recheck: () => Promise<void>; logout: () => Promise<void> };
+type Ctx = {
+  pinLength: number;
+  unread: number;
+  setUnread: (n: number) => void;
+  attention: number;
+  refreshAttention: () => void;
+  recheck: () => Promise<void>;
+  logout: () => Promise<void>;
+};
 
 const AdminCtx = React.createContext<Ctx | null>(null);
 
@@ -29,6 +37,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
   const [down, setDown] = React.useState(false);
   const [unread, setUnread] = React.useState(0);
+  const [attention, setAttention] = React.useState(0);
 
   const recheck = React.useCallback(
     () =>
@@ -52,6 +61,13 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
       window.removeEventListener(SIGNED_OUT, h);
     };
   }, [recheck]);
+
+  // Orders with a refund waiting or failed; the Orders page calls this again after each change.
+  const refreshAttention = React.useCallback(() => {
+    adminFetch<{ count: number }>('/api/admin/orders/attention')
+      .then((d) => setAttention(d.count))
+      .catch((e) => { if (!(e instanceof SignedOut)) setAttention(0); });
+  }, []);
 
   const logout = React.useCallback(async () => {
     await fetch('/api/admin/logout', { method: 'POST' }).catch(() => {});
@@ -79,7 +95,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
   if (!session.admin) return <PinScreen length={session.pinLength} onDone={recheck} />;
 
   return (
-    <AdminCtx.Provider value={{ pinLength: session.pinLength, unread, setUnread, recheck, logout }}>
+    <AdminCtx.Provider value={{ pinLength: session.pinLength, unread, setUnread, attention, refreshAttention, recheck, logout }}>
       <AdminShell>{children}</AdminShell>
     </AdminCtx.Provider>
   );

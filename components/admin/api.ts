@@ -60,9 +60,6 @@ export function clock(iso?: string, withTime = true) {
   });
 }
 
-export const slugify = (s: string) =>
-  s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
-
 const digitsOf = (s: string) => s.replace(/[^\d]/g, '');
 
 /** True for things like "98765 43210" or "+91 98765 43210". */

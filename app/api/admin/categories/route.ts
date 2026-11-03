@@ -1,9 +1,9 @@
 import { adminOnly } from '@/lib/server/admin-auth';
 import { CategoryInput, refreshStorefront } from '@/lib/server/catalog-admin';
 import { connectDb } from '@/lib/server/db';
-import { fail, handle, ok, readJson } from '@/lib/server/http';
+import { handle, ok, readJson } from '@/lib/server/http';
 import { CategoryModel, ProductModel, toCategory } from '@/lib/server/models';
-import { slugify } from '@/lib/server/slug';
+import { uniqueSlug } from '@/lib/server/slug';
 
 export const GET = handle(async (req: Request) => {
   const denied = await adminOnly(req);
@@ -21,10 +21,8 @@ export const POST = handle(async (req: Request) => {
   const denied = await adminOnly(req, true);
   if (denied) return denied;
   const body = CategoryInput.parse(await readJson(req));
-  const slug = body.slug || slugify(body.name);
-  if (!slug) return fail(400, 'Please use letters or numbers in the name.');
   await connectDb();
-  if (await CategoryModel.exists({ slug })) return fail(409, 'Another category already uses that link name.');
+  const slug = await uniqueSlug(body.name, 'category', (s) => CategoryModel.exists({ slug: s }));
   const last = await CategoryModel.findOne({}, { sort: 1 }).sort({ sort: -1 }).lean();
   const created = await CategoryModel.create({ ...body, slug, short: body.short || body.name, sort: body.sort ?? (last?.sort ?? 0) + 1 });
   refreshStorefront();

@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Check, Plus, Trash2 } from 'lucide-react';
-import { adminFetch, slugify, useFetch } from '@/components/admin/api';
+import { adminFetch, useFetch } from '@/components/admin/api';
 import { ImagesEditor } from '@/components/admin/image-fields';
 import { Button, btn, Card, Checkbox, ConfirmDelete, ErrorNote, Field, Input, PageHead, Select, Skeleton, Switch, Textarea } from '@/components/admin/ui';
 import { PRODUCT_TAGS, type Category, type Product, type ProductImage, type ProductTag } from '@/lib/types';
@@ -16,7 +16,6 @@ type VariantRow = { key: string; id?: string; label: string; price: string; comp
 type DetailRow = { key: string; label: string; value: string };
 type Draft = {
   name: string;
-  slug: string;
   category: string;
   tagline: string;
   description: string;
@@ -36,13 +35,12 @@ const NONE: Errors = {};
 const TAG_LABEL: Record<ProductTag, string> = { bestseller: 'Bestseller', gift: 'Gift', new: 'New' };
 
 const blank = (category: string): Draft => ({
-  name: '', slug: '', category, tagline: '', description: '', highlights: '', details: [], images: [],
+  name: '', category, tagline: '', description: '', highlights: '', details: [], images: [],
   variants: [{ key: rid(), label: '', price: '', compareAt: '' }], tags: [], badge: '', origin: '', active: true, sort: '',
 });
 
 const draftFrom = (p: Product): Draft => ({
   name: p.name,
-  slug: p.slug,
   category: p.category,
   tagline: p.tagline ?? '',
   description: p.description ?? '',
@@ -87,7 +85,6 @@ export function ProductEditor({ id }: { id?: string }) {
 function ProductForm({ id, categories, initial }: { id?: string; categories: Category[]; initial: Draft }) {
   const router = useRouter();
   const [d, setD] = React.useState<Draft>(initial);
-  const [slugEdited, setSlugEdited] = React.useState(!!id);
   const [tried, setTried] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
@@ -103,7 +100,6 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
     const e: Errors = {};
     if (!d.name.trim()) e.name = 'Give the product a name.';
     if (!d.category) e.category = 'Pick a category.';
-    if (slugEdited && d.slug && !/^[a-z0-9-]+$/.test(d.slug)) e.slug = 'Use lowercase letters, numbers and dashes only.';
     d.variants.forEach((v, i) => {
       const price = Number(v.price);
       const compare = Number(v.compareAt);
@@ -126,7 +122,6 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
     }
     const payload = {
       name: d.name.trim(),
-      slug: d.slug.trim() || slugify(d.name),
       category: d.category,
       tagline: d.tagline.trim(),
       description: d.description.trim(),
@@ -176,27 +171,13 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
       <Card className="flex flex-col gap-4">
         <h2 className="text-[15px] font-semibold text-navy">Basics</h2>
         <Field label="Name" error={errors.name}>
-          <Input
-            value={d.name}
-            onChange={(e) => {
-              const name = e.target.value;
-              setD((s) => ({ ...s, name, ...(slugEdited ? {} : { slug: slugify(name) }) }));
-              setSaved(false);
-            }}
-            placeholder="e.g. Ajwa Dates"
-            autoComplete="off"
-          />
+          <Input value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Ajwa Dates" autoComplete="off" />
         </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Category" error={errors.category}>
-            <Select value={d.category} onChange={(e) => set('category', e.target.value)}>
-              {categories.map((c) => <option key={c.id} value={c.slug}>{c.name}{c.active ? '' : ' (hidden)'}</option>)}
-            </Select>
-          </Field>
-          <Field label="Slug" hint="The end of the web address." error={errors.slug}>
-            <Input value={d.slug} onChange={(e) => { setSlugEdited(true); set('slug', e.target.value.toLowerCase()); }} autoComplete="off" />
-          </Field>
-        </div>
+        <Field label="Category" error={errors.category}>
+          <Select value={d.category} onChange={(e) => set('category', e.target.value)}>
+            {categories.map((c) => <option key={c.id} value={c.slug}>{c.name}{c.active ? '' : ' (hidden)'}</option>)}
+          </Select>
+        </Field>
         <Field label="Tagline" hint="One short line under the name.">
           <Input value={d.tagline} onChange={(e) => set('tagline', e.target.value)} />
         </Field>

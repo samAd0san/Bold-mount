@@ -20,11 +20,8 @@ const url = z
   .max(500)
   .refine((v) => v === '' || v.startsWith('/') || /^https:\/\//.test(v), 'Image links must start with https:// or /.');
 
-// An empty slug is allowed; the route fills it in from the name.
-const slugField = text(80).transform((v) => slugify(v));
-
+// No slug field: the web address is made from the name when the item is created and then never changes.
 export const CategoryInput = z.object({
-  slug: slugField.optional(),
   name: z.string('Please enter a name.').trim().min(1, 'Please enter a name.').max(80),
   short: text(40).optional(),
   tagline: text(120).optional(),
@@ -60,7 +57,6 @@ const Image = z.object({
 
 // No `.default()` here on purpose: PATCH reuses this shape via .partial() and a default would reset fields that were not sent.
 export const ProductInput = z.object({
-  slug: slugField.optional(),
   name: z.string('Please enter a name.').trim().min(1, 'Please enter a name.').max(120),
   category: z.string('Please choose a category.').trim().min(1, 'Please choose a category.'),
   tags: z.array(z.enum(PRODUCT_TAGS, 'Unknown tag.')).max(5).optional(),
