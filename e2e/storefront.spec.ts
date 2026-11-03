@@ -44,10 +44,20 @@ test('5 quick taps on the logo open the admin PIN pad; 4 taps do not', async ({ 
   const logo = page.getByRole('link', { name: 'Bold Mount home' });
   for (let i = 0; i < 4; i++) await logo.click();
   await expect(page).toHaveURL(/\/$/);
-  await page.waitForTimeout(4200); // taps older than 4 seconds are forgotten
+  await page.waitForTimeout(2500); // a pause over 2 seconds starts the count again
   for (let i = 0; i < 5; i++) await logo.click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole('heading', { name: 'Enter your PIN' })).toBeVisible();
+});
+
+test('logo taps at a normal human pace (about one a second) still open the admin', async ({ page }) => {
+  await page.goto('/contact');
+  const logo = page.getByRole('link', { name: 'Bold Mount home' });
+  for (let i = 0; i < 5; i++) {
+    await logo.click();
+    await page.waitForTimeout(1200);
+  }
+  await expect(page).toHaveURL(/\/admin$/);
 });
 
 test('contact form reaches admin Forms, can be marked read and deleted', async ({ page }) => {

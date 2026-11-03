@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { addToCart, adminLogin, overflowing, signInAs, TALBEENAH } from './helpers';
 
 const WIDTHS = [360, 390, 768, 1024, 1440];
-const STORE = ['/', '/shop', TALBEENAH, '/dates', '/honey', '/wearings', '/category/talbeenah', '/cart', '/account', '/contact', '/faq', '/about', '/umrah', '/zakat', '/khidmat-e-khalq', '/policies/shipping', '/policies/refund-cancellation'];
+const STORE = ['/', '/shop', TALBEENAH, '/dates', '/honey', '/wearings', '/category/talbeenah', '/cart', '/orders', '/contact', '/faq', '/about', '/umrah', '/zakat', '/khidmat-e-khalq', '/policies/shipping', '/policies/refund-cancellation'];
 const ADMIN = ['/admin', '/admin/orders', '/admin/products', '/admin/products/new', '/admin/categories', '/admin/users', '/admin/forms', '/admin/settings'];
 
 for (const width of WIDTHS) {
@@ -29,7 +29,13 @@ for (const width of WIDTHS) {
       await check('phone menu');
       await page.keyboard.press('Escape');
     }
-    await page.goto('/account', { waitUntil: 'networkidle' });
+    await page.goto('/orders', { waitUntil: 'networkidle' });
+    const trackLink = page.getByRole('link', { name: 'Track order' }).first();
+    if (await trackLink.count()) {
+      await trackLink.click();
+      await page.waitForURL(/\/orders\/[0-9a-f]{24}$/);
+      await check('track order page');
+    }
     const cancel = page.getByRole('button', { name: 'Cancel order' }).first();
     if (await cancel.count()) {
       await cancel.click();

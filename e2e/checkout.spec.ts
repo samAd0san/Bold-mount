@@ -75,6 +75,11 @@ test('a cancelled payment says nothing was charged and is marked failed', async 
   await expect(page.locator('main')).toContainText(/nothing was charged/i);
   await expect(payButton(page)).toBeEnabled();
 
+  // The customer isn't told an unpaid order is on its way.
+  await page.goto('/orders');
+  await expect(page.getByRole('region', { name: 'Ongoing' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Order history' })).toContainText('Payment not completed');
+
   await adminLogin(page);
   await expect.poll(async () => (await orders(page)).find((o) => o.customer.name === 'Hamza Qureshi')?.payment).toBe('failed');
 });
@@ -106,8 +111,14 @@ test('a signed-in customer sees their paid order under My orders', async ({ page
   await payWithTestBank(page, 'Success');
   await expect(page.getByText('Payment received')).toBeVisible({ timeout: 45_000 });
 
-  await page.goto('/account');
+  // "Track this order" on the thank-you screen goes straight to the order.
+  await page.getByRole('link', { name: 'Track this order' }).click();
+  await expect(page).toHaveURL(/\/orders\/[0-9a-f]{24}$/);
+  await expect(page.locator('main')).toContainText('Status: Placed');
+  await expect(page.locator('main')).toContainText('Paid online');
+
+  await page.goto('/account'); // old link still works
+  await expect(page).toHaveURL(/\/orders$/);
   await expect(page.locator('main')).toContainText('Bilal Ahmed');
-  await expect(page.locator('main')).toContainText(/BM-\d+/);
-  await expect(page.locator('main')).toContainText(/paid/i);
+  await expect(page.getByRole('region', { name: 'Ongoing' })).toContainText(/BM-\d+/);
 });

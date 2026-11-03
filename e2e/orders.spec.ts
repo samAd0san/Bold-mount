@@ -19,14 +19,16 @@ async function whatsappOrder(page: Page, context: BrowserContext, name: string):
   await signInAs(context, { name, email: `${name.toLowerCase().replace(/\W+/g, '.')}@example.com` });
   await addToCart(page, '/product/ajwa-dates');
   await page.goto('/cart');
+  const mine = async () => (await api<{ orders: Order[] }>(page, '/api/orders/mine')).data.orders.length;
+  const before = await mine();
   await page.evaluate(() => { window.open = () => null; });
   await fillCheckout(page, { ...CUSTOMER, name });
   await page.getByRole('button', { name: 'Order on WhatsApp instead' }).click();
-  await expect.poll(async () => (await api<{ orders: Order[] }>(page, '/api/orders/mine')).data.orders.length).toBeGreaterThan(0);
+  await expect.poll(mine).toBeGreaterThan(before);
   return (await api<{ orders: Order[] }>(page, '/api/orders/mine')).data.orders[0];
 }
 
-const orderCard = (page: Page, number: string) => page.locator('main li, main article').filter({ hasText: number }).first();
+const track = (page: Page, order: Order) => page.goto(`/orders/${order.id}`);
 const adminRow = (page: Page, number: string) => page.locator('main li').filter({ hasText: number }).first();
 const setStatus =(page: Page, id: string, status: string) => api(page, `/api/admin/orders/${id}`, { method: 'PATCH', body: { status } });
 const adminOrder = async (page: Page, id: string) =>
@@ -34,9 +36,8 @@ const adminOrder = async (page: Page, id: string) =>
 
 test('My orders tracks the order: placed → confirmed → dispatched → delivered', async ({ page, context }) => {
   const order = await whatsappOrder(page, context, 'Imran Sheikh');
-  await page.goto('/account');
-  const card = orderCard(page, order.number);
-  const progress = card.getByRole('list', { name: 'Order progress' });
+  await track(page, order);
+  const progress = page.getByRole('list', { name: 'Order progress' });
   for (const step of ['Placed', 'Confirmed', 'Dispatched', 'Delivered']) await expect(progress).toContainText(step);
 
   const customer = page;
@@ -44,7 +45,8 @@ test('My orders tracks the order: placed → confirmed → dispatched → delive
   await adminLogin(admin);
   await setStatus(admin, order.id, 'dispatched');
   await customer.reload();
-  await expect(orderCard(customer, order.number).getByRole('button', { name: 'Cancel order' })).toHaveCount(0);
+  await expect(customer.locator('main')).toContainText('Status: Dispatched');
+  await expect(customer.getByRole('button', { name: 'Cancel order' })).toHaveCount(0);
   // Once it has left the shop, the server refuses too.
   expect((await api(customer, `/api/orders/${order.id}/cancel`, { method: 'POST', body: {} })).status).toBe(409);
   await admin.close();
@@ -52,20 +54,20 @@ test('My orders tracks the order: placed → confirmed → dispatched → delive
 
 test('customer cancels a WhatsApp order before dispatch', async ({ page, context }) => {
   const order = await whatsappOrder(page, context, 'Sana Mirza');
-  await page.goto('/account');
-  await orderCard(page, order.number).getByRole('button', { name: 'Cancel order' }).click();
+  await track(page, order);
+  await page.getByRole('button', { name: 'Cancel order' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes, cancel my order' }).click();
-  await expect(orderCard(page, order.number)).toContainText('Cancelled by you');
+  await expect(page.locator('main')).toContainText('Cancelled by you');
   const { data } = await api<{ orders: Order[] }>(page, '/api/orders/mine');
   expect(data.orders.find((o) => o.id === order.id)).toMatchObject({ status: 'cancelled', cancelledBy: 'customer' });
 });
 
 test('customer cancels a paid order: full refund goes back through Razorpay automatically', async ({ page, context }) => {
   const order = await paidOrder(page, context, 'Faisal Khan');
-  await page.goto('/account');
-  await orderCard(page, order.number).getByRole('button', { name: 'Cancel order' }).click();
+  await track(page, order);
+  await page.getByRole('button', { name: 'Cancel order' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes, cancel my order' }).click();
-  await expect(orderCard(page, order.number)).toContainText(/Refund of ₹299 sent/);
+  await expect(page.locator('main')).toContainText(/Refund of ₹299 sent/);
 
   const admin = await context.browser()!.newPage();
   await adminLogin(admin);
@@ -86,8 +88,9 @@ test('delivered order: customer asks for a refund, admin refunds part of it', as
   await setStatus(admin, order.id, 'delivered');
   const before = (await api<{ revenue: number }>(admin, '/api/admin/stats?period=today')).data.revenue;
 
-  await page.goto('/account');
-  const card = orderCard(page, order.number);
+  await track(page, order);
+  const card = page.locator('main');
+  await expect(card).toContainText('Status: Delivered');
   await expect(card.getByRole('button', { name: 'Cancel order' })).toHaveCount(0);
   await card.getByRole('button', { name: 'Request a refund' }).click();
   const form = page.getByRole('dialog');
@@ -112,7 +115,7 @@ test('delivered order: customer asks for a refund, admin refunds part of it', as
   expect(before - after).toBe(150);
 
   await page.reload();
-  await expect(orderCard(page, order.number)).toContainText(/Refund of ₹150 sent/);
+  await expect(page.locator('main')).toContainText(/Refund of ₹150 sent/);
   await admin.close();
 });
 
@@ -134,9 +137,9 @@ test('admin declines a refund request with a reply the customer can read', async
   await row.getByRole('button', { name: 'Decline refund' }).click();
   await expect.poll(async () => (await adminOrder(admin, order.id)).refund?.status).toBe('declined');
 
-  await page.goto('/account');
-  await expect(orderCard(page, order.number)).toContainText(/Refund declined/);
-  await expect(orderCard(page, order.number)).toContainText('Opened food can only be refunded');
+  await track(page, order);
+  await expect(page.locator('main')).toContainText(/Refund declined/);
+  await expect(page.locator('main')).toContainText('Opened food can only be refunded');
   await admin.close();
 });
 
