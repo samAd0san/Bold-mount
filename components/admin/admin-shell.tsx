@@ -109,23 +109,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           collapsed ? 'md:w-[4.5rem]' : 'md:w-60',
         )}
       >
-        <div className={cn('relative flex h-16 shrink-0 items-center gap-2 px-4', collapsed && 'md:justify-center md:px-0')}>
+        <div className={cn('flex h-16 shrink-0 items-center gap-2 px-4', collapsed && 'md:gap-0 md:px-2')}>
           <Link href="/admin" aria-label="Admin home" className="flex min-w-0 items-center gap-2.5">
-            <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized className={cn('h-9 w-auto', collapsed && 'md:h-auto md:w-11')} />
+            <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized className={cn('h-9 w-auto', collapsed && 'md:h-auto md:w-9')} />
             <span className={cn('rounded-md bg-gold px-1.5 py-0.5 text-[11px] font-bold tracking-wider text-night uppercase', collapsed && 'md:hidden')}>Admin</span>
           </Link>
           <button type="button" onClick={() => setOpenPath(null)} aria-label="Close menu" className="ml-auto grid size-10 place-items-center rounded-full hover:bg-white/10 md:hidden">
             <X className="size-5" />
           </button>
-          {/* Desktop only: a small arrow on the sidebar's edge, beside the logo. */}
+          {/* Desktop only: collapse/expand arrow beside the logo. */}
           <button
             type="button"
             onClick={toggle}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="absolute top-1/2 -right-3 hidden size-6 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-navy text-on-night shadow-md transition hover:bg-gold hover:text-night md:grid"
+            className={cn(
+              'ml-auto hidden place-items-center rounded-lg text-on-night-soft transition hover:bg-white/10 hover:text-on-night md:grid',
+              collapsed ? 'h-8 w-5' : 'size-8',
+            )}
           >
-            {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+            {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-5" />}
           </button>
         </div>
 
