@@ -35,7 +35,8 @@ export async function refundPayment(paymentId: string, rupees: number, orderNumb
       'Content-Type': 'application/json',
       Authorization: `Basic ${Buffer.from(`${keyId()}:${keySecret()}`).toString('base64')}`,
     },
-    body: JSON.stringify({ amount: Math.round(rupees * 100), speed: 'normal', receipt: orderNumber, notes: { order: orderNumber } }),
+    // No `receipt`: Razorpay wants it unique per refund, and an order can be refunded in parts.
+    body: JSON.stringify({ amount: Math.round(rupees * 100), speed: 'normal', notes: { order: orderNumber } }),
     signal: AbortSignal.timeout(15_000),
     cache: 'no-store',
   });
