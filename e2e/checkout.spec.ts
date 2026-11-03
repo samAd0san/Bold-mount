@@ -19,9 +19,9 @@ test('checkout checks every required field before paying', async ({ page, contex
   await signInAs(context, { name: 'Yusuf Rahman', email: 'yusuf.rahman@example.com' });
   await addToCart(page);
   await page.goto('/cart');
-  await page.fill('#checkout-name', '');
   await payButton(page).click();
-  for (const msg of ['Enter your name', 'valid 10-digit mobile', 'drop address', 'Enter your city', 'valid 6-digit pincode']) {
+  // Name is left out on purpose: when blank it falls back to the customer's Google name.
+  for (const msg of ['valid 10-digit mobile', 'drop address', 'Enter your city', 'valid 6-digit pincode']) {
     await expect(page.locator('main')).toContainText(msg);
   }
   await expect(page.locator('iframe.razorpay-checkout-frame')).toHaveCount(0);

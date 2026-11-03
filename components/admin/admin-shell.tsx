@@ -5,14 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  ChevronLeft,
+  ChevronRight,
   ExternalLink,
   Inbox,
   LayoutDashboard,
   LogOut,
   Menu,
   Package,
-  PanelLeftClose,
-  PanelLeftOpen,
   ReceiptText,
   Settings,
   Tags,
@@ -109,14 +109,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           collapsed ? 'md:w-[4.5rem]' : 'md:w-60',
         )}
       >
-        <div className="flex h-16 shrink-0 items-center gap-2 px-4">
+        <div className={cn('relative flex h-16 shrink-0 items-center gap-2 px-4', collapsed && 'md:justify-center md:px-0')}>
           <Link href="/admin" aria-label="Admin home" className="flex min-w-0 items-center gap-2.5">
-            <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized className={cn('h-9 w-auto', collapsed && 'md:hidden')} />
-            <Image src={BRAND.mark} alt="" width={40} height={40} className={cn('hidden size-10 object-contain', collapsed && 'md:block')} />
+            <Image src={BRAND.logoIvorySm} alt="Bold Mount" width={294} height={160} unoptimized className={cn('h-9 w-auto', collapsed && 'md:h-auto md:w-11')} />
             <span className={cn('rounded-md bg-gold px-1.5 py-0.5 text-[11px] font-bold tracking-wider text-night uppercase', collapsed && 'md:hidden')}>Admin</span>
           </Link>
           <button type="button" onClick={() => setOpenPath(null)} aria-label="Close menu" className="ml-auto grid size-10 place-items-center rounded-full hover:bg-white/10 md:hidden">
             <X className="size-5" />
+          </button>
+          {/* Desktop only: a small arrow on the sidebar's edge, beside the logo. */}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="absolute top-1/2 -right-3 hidden size-6 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-navy text-on-night shadow-md transition hover:bg-gold hover:text-night md:grid"
+          >
+            {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
           </button>
         </div>
 
@@ -164,16 +173,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           >
             <LogOut className="size-5 shrink-0" />
             <span className={label}>Log out</span>
-          </button>
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            title={collapsed ? 'Expand sidebar' : undefined}
-            className={cn(ROW, IDLE, 'hidden md:flex')}
-          >
-            {collapsed ? <PanelLeftOpen className="size-5 shrink-0" /> : <PanelLeftClose className="size-5 shrink-0" />}
-            <span className={label}>Collapse</span>
           </button>
         </div>
       </aside>
