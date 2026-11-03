@@ -19,7 +19,7 @@ import { whatsappGeneralLink } from '@/lib/whatsapp';
 export const metadata: Metadata = {
   title: 'Shop',
   description:
-    'Shop Bold Mount: premium roasted Talbeenah, hand-picked dates, raw Sidr honey, modest wear and gift boxes — order in a few taps on WhatsApp.',
+    'Shop Bold Mount: premium roasted Talbeenah, hand-picked dates, raw Sidr honey, modest wear and gift boxes — pay securely online with UPI, cards or netbanking.',
 };
 
 export const revalidate = 60;
@@ -37,7 +37,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         eyebrow="The Bold Mount store"
         title="Shop"
         emphasis="all"
-        intro="Talbeenah, hand-picked dates, raw Sidr honey and modest wear — add to cart, then pay online or order on WhatsApp."
+        intro="Talbeenah, hand-picked dates, raw Sidr honey and modest wear — add to cart, then pay securely online."
         image={STOCK.datesHero}
         crumbs={[{ label: 'Shop' }]}
       />

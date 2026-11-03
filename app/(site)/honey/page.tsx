@@ -15,7 +15,7 @@ import { getProduct, productsByCategory } from '@/lib/catalog';
 export const metadata: Metadata = {
   title: 'Raw Sidr Honey',
   description:
-    'Pure, raw and unheated Sidr (Ber) honey — thick, buttery and deeply flavoured, with nothing added. The perfect sweetener for Talbeenah. Order on WhatsApp.',
+    'Pure, raw and unheated Sidr (Ber) honey — thick, buttery and deeply flavoured, with nothing added. The perfect sweetener for Talbeenah. Pay online with UPI, cards or netbanking.',
 };
 
 export const revalidate = 60;

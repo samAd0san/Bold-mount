@@ -122,6 +122,7 @@ export function CartDrawer() {
               <Link href="/cart" onClick={() => setOpen(false)} className={buttonClass('navy', 'w-full py-3.5')}>
                 Checkout
               </Link>
+              <p className="text-center text-xs text-ink-soft">Pay online with UPI, cards or netbanking.</p>
             </div>
           </>
         )}

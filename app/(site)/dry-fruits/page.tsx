@@ -12,7 +12,7 @@ import { DRY_FRUITS } from '@/lib/media';
 export const metadata: Metadata = {
   title: 'Dry Fruits',
   description:
-    'Whole almonds, cashews and walnut kernels, plus soft dry fruit barfi squares — for daily snacking, guests and gifting. Order on WhatsApp.',
+    'Whole almonds, cashews and walnut kernels, plus soft dry fruit barfi squares — for daily snacking, guests and gifting. Pay online with UPI, cards or netbanking.',
 };
 
 export const revalidate = 60;

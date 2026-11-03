@@ -142,7 +142,7 @@ export function CartView() {
 
       <section id="delivery" aria-labelledby="delivery-title" className={`scroll-mt-36 p-5 md:p-8 lg:col-start-1 lg:row-start-2 ${CARD}`}>
         <h2 id="delivery-title" className="text-xl text-ink">Delivery details</h2>
-        <p className="mt-1.5 mb-6 text-sm text-ink-soft">Where should we deliver your order? Pay online, or send the order to us on WhatsApp.</p>
+        <p className="mt-1.5 mb-6 text-sm text-ink-soft">Tell us where to deliver, then pay online with UPI, cards or netbanking.</p>
         <CheckoutForm
           items={items}
           onClear={() => {

@@ -1,10 +1,9 @@
 import type { ComponentType } from 'react';
-import { HandHeart, Leaf, MapPin, PackageCheck, Truck } from 'lucide-react';
+import { HandHeart, Leaf, Lock, MapPin, PackageCheck, Truck } from 'lucide-react';
 import { formatINR } from '@/lib/format';
 import { SITE } from '@/lib/site';
 import { Container } from '@/components/ui/container';
 import { SectionHeading } from '@/components/ui/section-heading';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { Reveal } from '@/components/motion/reveal';
 
 // Only promises the brand already makes (lib/site.ts) — no numbers, ratings or certifications.
@@ -15,9 +14,9 @@ const FEATURES: { icon: ComponentType<{ size?: number; className?: string }>; ti
   {
     icon: Truck,
     title: 'Doorstep delivery',
-    text: `Free above ${formatINR(SITE.freeShippingAbove)}. Share your location on WhatsApp.`,
+    text: `Free above ${formatINR(SITE.freeShippingAbove)}, right to your door.`,
   },
-  { icon: WhatsAppGlyph, title: 'Order easily on WhatsApp', text: 'No sign-up — just send a message.' },
+  { icon: Lock, title: 'Pay securely online', text: 'UPI, cards or netbanking — no sign-up needed.' },
   { icon: HandHeart, title: 'Every order gives', text: 'A share of every order feeds a family.' },
 ];
 

@@ -5,10 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { discountPct, formatINR } from '@/lib/format';
-import { whatsappProductLink } from '@/lib/whatsapp';
 import { useCart } from '@/store/cart';
 import { buttonClass } from '@/components/ui/button-styles';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { cn } from '@/lib/utils';
 import { QtyStepper } from './qty-stepper';
 
@@ -18,7 +16,7 @@ function optionName(product: Product): string {
   return product.variants.every((v) => /^(XS|S|M|L|XL|XXL|\d+)$/.test(v.label)) ? 'Size' : 'Colour';
 }
 
-/** Price (follows the chosen variant), variant pills, quantity and the three ways to buy. */
+/** Price (follows the chosen variant), variant pills, quantity, add to cart and buy now (pay online at checkout). */
 export function ProductPurchase({ product }: { product: Product }) {
   const router = useRouter();
   const add = useCart((s) => s.add);
@@ -29,12 +27,6 @@ export function ProductPurchase({ product }: { product: Product }) {
   const variant = product.variants.find((v) => v.id === variantId) ?? product.variants[0];
   const off = discountPct(variant.price, variant.compareAt);
   const option = optionName(product);
-  const waLink = whatsappProductLink(
-    product.name,
-    qty > 1 ? `${variant.label} × ${qty}` : variant.label,
-    variant.price * qty,
-    product.slug,
-  );
 
   const buyNow = () => {
     add(product, variant, qty);
@@ -89,17 +81,7 @@ export function ProductPurchase({ product }: { product: Product }) {
       <button type="button" onClick={buyNow} className={buttonClass('gold', 'mt-3 h-12 w-full')}>
         Buy now
       </button>
-      <a
-        href={waLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={buttonClass(
-          'outline',
-          'mt-3 h-12 w-full border-whatsapp-ink/40 text-whatsapp-ink hover:border-whatsapp hover:bg-whatsapp hover:text-white',
-        )}
-      >
-        <WhatsAppGlyph size={18} /> Order on WhatsApp
-      </a>
+      <p className="mt-3 text-center text-xs text-ink-soft">Pay online at checkout with UPI, cards or netbanking.</p>
     </div>
   );
 }

@@ -17,6 +17,6 @@ export const SITE = {
 
 export const ANNOUNCEMENTS = [
   `Free delivery on orders above ₹${SITE.freeShippingAbove}`,
-  'Doorstep delivery — share your location on WhatsApp',
+  'Pay securely online — UPI, cards or netbanking',
   'A share of every order feeds a family in need',
 ];

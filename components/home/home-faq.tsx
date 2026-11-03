@@ -12,7 +12,7 @@ import { Reveal } from '@/components/motion/reveal';
 const FAQS = [
   {
     q: 'How do I place an order?',
-    a: 'Add what you like to the cart and check out — pay online with UPI, cards or Google Pay, or send the order on WhatsApp, already filled in. Either way we confirm the details with you.',
+    a: 'Add what you like to the cart and check out, paying online with UPI (Google Pay, PhonePe), cards or netbanking. Your order is placed once the payment goes through, and we confirm delivery with you.',
   },
   {
     q: 'How does delivery work?',
@@ -41,7 +41,7 @@ export function HomeFaq() {
           {/* Replaces the old closing CTA band: the next step for anyone whose question isn't listed. */}
           <div className="mt-8 rounded-2xl bg-navy p-6 text-on-night">
             <p className="text-lg font-semibold">Still have a question?</p>
-            <p className="mt-1 text-sm text-on-night-soft">Orders, Zakat, Umrah Badal or anything else — we&apos;re one message away.</p>
+            <p className="mt-1 text-sm text-on-night-soft">Questions, Zakat, Umrah Badal or anything else — we&apos;re one message away.</p>
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className={buttonClass('whatsapp')}>
                 <WhatsAppGlyph size={17} /> Chat on WhatsApp

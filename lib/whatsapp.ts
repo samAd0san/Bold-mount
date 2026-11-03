@@ -10,17 +10,6 @@ export function whatsappGeneralLink(): string {
   return whatsappLink('Assalamu alaikum Bold Mount, I have a question.');
 }
 
-export function whatsappProductLink(name: string, variant: string, price: number, slug: string): string {
-  return whatsappLink(
-    [
-      'Assalamu alaikum Bold Mount, I would like to order:',
-      '',
-      `${name} (${variant}) — ${formatINR(price)}`,
-      `${SITE.url}/product/${slug}`,
-    ].join('\n'),
-  );
-}
-
 export type OrderLine = { name: string; variant: string; price: number; qty: number };
 
 /** Full order message for checkout; `customer` lines are appended as "Label: value", then an optional closing line. */

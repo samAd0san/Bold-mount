@@ -1,10 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { ArrowRight, Home, MapPin, Navigation } from 'lucide-react';
+import { ArrowRight, Home, Lock, MapPin, Navigation } from 'lucide-react';
 import { formatINR } from '@/lib/format';
 import { PRODUCT_IMG } from '@/lib/media';
 import { SITE } from '@/lib/site';
+import { deliveryFor } from '@/lib/shop';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
 import { buttonClass } from '@/components/ui/button-styles';
@@ -35,28 +36,48 @@ function PackIllustration() {
         ))}
       </div>
       <span className="mt-2 block rounded-full bg-gold py-1.5 text-center text-[10px] font-semibold text-night">
-        Add to order
+        Add to cart
       </span>
     </div>
   );
 }
 
-function ChatIllustration() {
+// Sample basket for the pay card: one 500 g Talbeenah plus the real delivery rule.
+const SAMPLE_SUBTOTAL = 449;
+const SAMPLE_TOTAL = SAMPLE_SUBTOTAL + deliveryFor(SAMPLE_SUBTOTAL);
+const PAY_METHODS = ['UPI', 'Card', 'Netbanking'];
+
+function PayIllustration() {
   return (
-    <div className="w-44 overflow-hidden rounded-xl bg-pearl shadow-card ring-1 ring-line">
-      <div className="flex items-center gap-1.5 border-b border-line px-2.5 py-1.5">
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-whatsapp text-night">
-          <WhatsAppGlyph size={12} />
-        </span>
+    <div className="w-44 overflow-hidden rounded-xl bg-pearl leading-tight shadow-card ring-1 ring-line">
+      <div className="flex items-center justify-between border-b border-line px-2.5 py-2">
         <span className="text-[10px] font-semibold text-ink">Bold Mount</span>
+        <span className="flex items-center gap-1 text-[9px] text-ink-soft">
+          <Lock size={9} /> Pay online
+        </span>
       </div>
       <div className="p-2.5">
-        <div className="relative rounded-lg rounded-tr-none bg-whatsapp/25 p-2 text-[10px] leading-snug text-ink">
-          <p className="font-semibold">Assalamu alaikum Bold Mount, I would like to order:</p>
-          <p className="mt-1.5">• Talbeenah (500 g) × 1</p>
-          <p>• Ajwa dates (500 g) × 1</p>
+        <p className="text-[9px] text-ink-soft">Order total</p>
+        <p className="text-base font-semibold tabular-nums text-navy">{formatINR(SAMPLE_TOTAL)}</p>
+        <div className="mt-2 space-y-1">
+          {PAY_METHODS.map((label, i) => (
+            <span
+              key={label}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-semibold',
+                i === 0 ? 'bg-navy/10 text-navy ring-1 ring-navy' : 'border border-line text-ink-soft',
+              )}
+            >
+              <span className={cn('flex h-2.5 w-2.5 shrink-0 items-center justify-center rounded-full border', i === 0 ? 'border-navy' : 'border-ink-soft/50')}>
+                {i === 0 && <span className="h-1.5 w-1.5 rounded-full bg-navy" />}
+              </span>
+              {label}
+            </span>
+          ))}
         </div>
-        <p className="mt-1.5 text-right text-[9px] text-ink-soft">Sent ✓✓</p>
+        <span className="mt-2 block rounded-full bg-gold py-1.5 text-center text-[10px] font-semibold text-night">
+          Pay {formatINR(SAMPLE_TOTAL)}
+        </span>
       </div>
     </div>
   );
@@ -89,18 +110,18 @@ const STEPS: { title: string; text: string; art: ReactNode }[] = [
     art: <PackIllustration />,
   },
   {
-    title: 'Send on WhatsApp',
-    text: 'Your cart turns into a ready-written message. One tap and it is with us.',
-    art: <ChatIllustration />,
+    title: 'Pay securely online',
+    text: 'UPI, Google Pay, PhonePe, cards or netbanking. Payments are handled by Razorpay.',
+    art: <PayIllustration />,
   },
   {
     title: 'Delivered to your door',
-    text: `Share your location and we confirm delivery with you. Free above ${formatINR(SITE.freeShippingAbove)}.`,
+    text: `We deliver to your door and confirm the time with you. Free above ${formatINR(SITE.freeShippingAbove)}, otherwise ${formatINR(SITE.deliveryFee)}.`,
     art: <PinIllustration />,
   },
 ];
 
-/** "How ordering works": three numbered cards with small UI mock-ups, then the two ways to start. */
+/** "How ordering works": three numbered cards with small UI mock-ups, then shop (primary) or ask on WhatsApp. */
 export function JourneyCards() {
   return (
     <section className="py-10 md:py-20">
@@ -156,9 +177,9 @@ export function JourneyCards() {
             href={whatsappGeneralLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className={buttonClass('whatsapp', 'px-8 py-3.5')}
+            className={buttonClass('outline', 'border-whatsapp-ink/40 px-8 py-3.5 text-whatsapp-ink hover:border-whatsapp hover:bg-whatsapp hover:text-white')}
           >
-            <WhatsAppGlyph size={18} /> Ask on WhatsApp
+            <WhatsAppGlyph size={18} /> Have a question? Ask on WhatsApp
           </a>
         </Reveal>
       </Container>

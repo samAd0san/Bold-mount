@@ -67,7 +67,7 @@ export function LocationShare({ value, onChange }: { value: Coords | null; onCha
       {failed && !value && (
         <p role="status" className="mt-2.5 flex items-start gap-1.5 text-xs font-medium text-gold-ink">
           <AlertCircle size={13} className="mt-px shrink-0" aria-hidden />
-          Couldn’t get your location — you can type your address or share a location pin in WhatsApp.
+          Couldn’t get your location — you can type your address instead.
         </p>
       )}
     </div>

@@ -6,7 +6,7 @@ import { Container } from '@/components/ui/container';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { Reveal } from '@/components/motion/reveal';
 
-/** Gold pre-footer band: WhatsApp first, the shop second. */
+/** Gold pre-footer band: WhatsApp for questions, the shop for buying. */
 export function CtaBand() {
   return (
     <section className="bg-gold bg-lattice-ink">
@@ -17,7 +17,7 @@ export function CtaBand() {
               Questions? We’re <span className="text-navy">one message</span> away.
             </h2>
             <p className="mt-3 text-ink/80">
-              Orders, Zakat, Umrah Badal or anything else — message us on WhatsApp or call{' '}
+              Questions, Zakat, Umrah Badal or anything else — message us on WhatsApp or call{' '}
               <a href={`tel:+${SITE.whatsapp}`} className="font-semibold whitespace-nowrap text-ink underline-offset-4 hover:underline">
                 {SITE.phoneDisplay}
               </a>

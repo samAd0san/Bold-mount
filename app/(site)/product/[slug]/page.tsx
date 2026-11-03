@@ -1,14 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Check, ChevronDown, ChevronRight, MapPin, PackageCheck, Truck } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Lock, MapPin, PackageCheck, Truck } from 'lucide-react';
 import { getCategory, getProduct, getProducts, relatedProducts } from '@/lib/catalog';
 import { categoryHref } from '@/lib/shop';
 import { SITE } from '@/lib/site';
 import { formatINR } from '@/lib/format';
 import { Container } from '@/components/ui/container';
 import { SectionHeading } from '@/components/ui/section-heading';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { Reveal } from '@/components/motion/reveal';
 import { ProductRail } from '@/components/product/product-rail';
 import { ProductGallery } from '@/components/product/product-gallery';
@@ -57,14 +56,14 @@ export default async function ProductPage({ params }: Props) {
   const details = [
     ...(product.details ?? []),
     {
-      label: 'Delivery & ordering',
-      value: `Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders above ${formatINR(SITE.freeShippingAbove)}. Pay online (UPI, cards) or send your order on WhatsApp — we confirm availability and delivery with you before we dispatch. We deliver to your door — just share your address or location.`,
+      label: 'Delivery & payment',
+      value: `Pay online at checkout with UPI, Google Pay, PhonePe, cards or netbanking. Payments are handled by Razorpay, so we never see or store your card details. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders above ${formatINR(SITE.freeShippingAbove)}. We deliver to your door and confirm the delivery time with you before we dispatch.`,
     },
   ];
   const assurances = [
     { icon: Truck, label: `Free delivery above ${formatINR(SITE.freeShippingAbove)}` },
     { icon: PackageCheck, label: product.category === 'wearings' ? 'Carefully packed' : 'Freshly packed' },
-    { icon: WhatsAppGlyph, label: 'Order support on WhatsApp' },
+    { icon: Lock, label: 'Secure online payment' },
   ];
 
   const jsonLd = {

@@ -93,7 +93,7 @@ export function MissionPanel() {
           <div aria-hidden="true" className="relative z-10 mt-12 grid grid-cols-2 gap-3 sm:mx-auto sm:max-w-md xl:contents">
             <RfFloatCard className="xl:absolute xl:left-8 xl:top-14 xl:z-10 xl:w-52 2xl:left-16" duration={6}>
               <Row lead={<Thumb src={PRODUCT_IMG.talbeenahPouch} />} title="Talbeenah · 500 g" sub="Your order" />
-              <Pill tone="green">Confirmed on WhatsApp</Pill>
+              <Pill tone="green">Paid online</Pill>
             </RfFloatCard>
 
             <RfFloatCard className="xl:absolute xl:right-8 xl:top-28 xl:z-10 xl:w-52 2xl:right-16" delay={0.15} duration={7}>

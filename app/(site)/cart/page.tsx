@@ -6,7 +6,7 @@ import { CartView } from '@/components/product/cart-view';
 
 export const metadata: Metadata = {
   title: 'Cart',
-  description: 'Review your Bold Mount order, then pay online or send it to us on WhatsApp.',
+  description: 'Review your Bold Mount order, then pay securely online with UPI, cards or netbanking.',
   robots: { index: false, follow: true },
 };
 

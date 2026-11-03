@@ -3,16 +3,13 @@ import Image from 'next/image';
 import { Check } from 'lucide-react';
 import { Container } from '@/components/ui/container';
 import { buttonClass } from '@/components/ui/button-styles';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { Reveal } from '@/components/motion/reveal';
 import { formatINR } from '@/lib/format';
 import { lowestPrice } from '@/lib/shop';
-import { whatsappProductLink } from '@/lib/whatsapp';
 import type { Product } from '@/lib/types';
 
-/** Spotlight for one product: floating pack shot, "from" price, highlights, choose-pack + WhatsApp. */
+/** Spotlight for one product: floating pack shot, "from" price, highlights and a choose-pack button (payment happens at checkout). */
 export function FeaturedProduct({ product, eyebrow = 'Featured' }: { product: Product; eyebrow?: string }) {
-  const first = product.variants[0];
   const img = product.images[0];
 
   return (
@@ -69,15 +66,8 @@ export function FeaturedProduct({ product, eyebrow = 'Featured' }: { product: Pr
               <Link href={`/product/${product.slug}`} className={buttonClass('gold')}>
                 Choose pack
               </Link>
-              <a
-                href={whatsappProductLink(product.name, first.label, first.price, product.slug)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonClass('whatsapp')}
-              >
-                <WhatsAppGlyph size={18} /> Order on WhatsApp
-              </a>
             </div>
+            <p className="mt-3 text-sm text-ink-soft">Pay online at checkout with UPI, cards or netbanking.</p>
           </Reveal>
         </div>
       </Container>

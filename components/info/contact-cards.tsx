@@ -24,7 +24,7 @@ export function ContactCards() {
             <p className="text-sm text-ink-soft">{SITE.phoneDisplay}</p>
           </div>
         </div>
-        <p className="mt-4 text-sm leading-relaxed text-ink-soft">The quickest way to reach us. Orders and requests are all handled here.</p>
+        <p className="mt-4 text-sm leading-relaxed text-ink-soft">The quickest way to reach us. Questions, service requests and help with an order are all handled here.</p>
         <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className={buttonClass('whatsapp', 'mt-5 w-full sm:w-auto')}>
           <WhatsAppGlyph size={18} /> Chat on WhatsApp
         </a>

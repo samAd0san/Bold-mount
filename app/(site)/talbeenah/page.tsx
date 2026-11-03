@@ -21,7 +21,7 @@ import { whatsappGeneralLink } from '@/lib/whatsapp';
 export const metadata: Metadata = {
   title: 'Talbeenah — the Sunnah superfood',
   description:
-    'Premium roasted Talbeenah: slow-roasted whole-barley porridge mix, the comforting food recommended by the Prophet ﷺ (Sahih al-Bukhari 5417). What it is, how to make it, and packs to order.',
+    'Premium roasted Talbeenah: slow-roasted whole-barley porridge mix, the comforting food recommended by the Prophet ﷺ (Sahih al-Bukhari 5417). What it is, how to make it, and packs to buy online.',
 };
 
 export const revalidate = 60;
@@ -64,7 +64,7 @@ const FAQ: FaqItem[] = [
     q: 'How do I order?',
     a: (
       <>
-        Add a pack to your cart and pay online or send the order on WhatsApp, or message us directly on{' '}
+        Add a pack to your cart and pay securely online with UPI, cards or netbanking. Have a question first? Message us on{' '}
         <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className="font-semibold text-navy underline-offset-4 hover:underline">
           {SITE.phoneDisplay}
         </a>

@@ -10,7 +10,7 @@ import { productsByCategory } from '@/lib/catalog';
 export const metadata: Metadata = {
   title: 'Premium Dates — Ajwa, Medjool, Safawi & more',
   description:
-    'Hand-picked dates from Madinah, Jordan, Iraq, Tunisia and Saudi Arabia — Ajwa, Medjool, Safawi, Mabroom, Sukkary and a gift hamper. Order on WhatsApp.',
+    'Hand-picked dates from Madinah, Jordan, Iraq, Tunisia and Saudi Arabia — Ajwa, Medjool, Safawi, Mabroom, Sukkary and a gift hamper. Pay online with UPI, cards or netbanking.',
 };
 
 export const revalidate = 60;
