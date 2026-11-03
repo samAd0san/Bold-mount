@@ -2,10 +2,15 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { ChevronRight, Phone, X } from 'lucide-react';
+import { ChevronRight, LogOut, PackageSearch, Phone, X } from 'lucide-react';
 import { BRAND } from '@/lib/media';
-import { SHOP_SECTIONS, SERVE_SECTIONS, type Section } from '@/lib/sections';
+import { SERVE_SECTIONS, shopSections, type Section } from '@/lib/sections';
+import type { Category } from '@/lib/types';
+import { Avatar } from '@/components/auth/avatar';
+import { signInHref, signOut, useAccount } from '@/components/auth/use-account';
+import { GoogleMark } from '@/components/auth/google-button';
 import { SITE } from '@/lib/site';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
@@ -35,14 +40,56 @@ function Group({ title, items, onClose }: { title: string; items: Section[]; onC
   );
 }
 
+/** Sign in with Google, or the signed-in customer's name with "My orders" / "Sign out". Hidden if Google isn't set up. */
+function Account({ onClose }: { onClose: () => void }) {
+  const { ready, user, google } = useAccount();
+  const pathname = usePathname();
+  if (!ready || (!user && !google)) return null;
+  if (!user) {
+    return (
+      <a
+        href={signInHref(pathname)}
+        className="flex items-center justify-center gap-3 rounded-full bg-white py-3 text-sm font-semibold text-[#1f1f1f]"
+      >
+        <GoogleMark /> Sign in with Google
+      </a>
+    );
+  }
+  return (
+    <div className="rounded-2xl bg-white/5 p-4">
+      <div className="flex items-center gap-3">
+        <Avatar user={user} size={40} />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-on-night">{user.name || 'Your account'}</p>
+          <p className="truncate text-xs text-on-night-soft">{user.email}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <Link href="/account" onClick={onClose} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 text-sm text-on-night hover:border-gold hover:text-gold">
+          <PackageSearch size={16} /> My orders
+        </Link>
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 text-sm text-on-night hover:border-gold hover:text-gold"
+        >
+          <LogOut size={16} /> Sign out
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function MobileMenu({
   open,
   onClose,
   links,
+  categories,
 }: {
   open: boolean;
   onClose: () => void;
   links: { label: string; href: string }[];
+  categories: Category[];
 }) {
   useEffect(() => {
     if (!open) return;
@@ -85,7 +132,8 @@ export function MobileMenu({
               </Link>
             ))}
           </nav>
-          <Group title="Shop" items={SHOP_SECTIONS} onClose={onClose} />
+          <Account onClose={onClose} />
+          <Group title="Shop" items={shopSections(categories)} onClose={onClose} />
           <Group title="Serve & Give" items={SERVE_SECTIONS} onClose={onClose} />
         </div>
 

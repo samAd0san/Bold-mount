@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local-only images kept out of the site (faces, superseded photos)
 /archive/
+
+# keep the template of required env vars in git
+!.env.example

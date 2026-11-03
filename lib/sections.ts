@@ -9,11 +9,14 @@ import {
   BriefcaseBusiness,
   BookOpen,
   Landmark,
+  ShoppingBag,
   type LucideIcon,
 } from 'lucide-react';
-import { DRY_FRUITS, PRODUCT_IMG, STOCK } from './media';
+import { PRODUCT_IMG, STOCK } from './media';
+import { categoryHref } from './shop';
+import type { Category } from './types';
 
-// The nine things Bold Mount offers — drives the header rail, menus, home tiles and footer.
+// A tile in the header rail, menus, home tiles and footer: a shop category (from the DB) or a serve page (static, below).
 export interface Section {
   slug: string;
   href: string;
@@ -27,67 +30,7 @@ export interface Section {
   cta: string;
 }
 
-export const SECTIONS: Section[] = [
-  {
-    slug: 'talbeenah',
-    href: '/talbeenah',
-    kind: 'shop',
-    title: 'Talbeenah',
-    short: 'Talbeenah',
-    tagline: 'The Sunnah superfood',
-    blurb: 'Slow-roasted barley porridge mix that soothes the heart and fuels the day.',
-    image: PRODUCT_IMG.talbeenahPhoto,
-    icon: Wheat,
-    cta: 'Shop Talbeenah',
-  },
-  {
-    slug: 'dates',
-    href: '/dates',
-    kind: 'shop',
-    title: 'Premium Dates',
-    short: 'Dates',
-    tagline: 'Hand-picked from blessed lands',
-    blurb: 'Ajwa, Medjool, Safawi and more — sourced from Madinah, Jordan and beyond.',
-    image: PRODUCT_IMG.dates.ajwa,
-    icon: TreePalm,
-    cta: 'Shop Dates',
-  },
-  {
-    slug: 'honey',
-    href: '/honey',
-    kind: 'shop',
-    title: 'Sidr Honey',
-    short: 'Honey',
-    tagline: 'Raw, rich and unheated',
-    blurb: 'Pure Sidr honey — "a drink of varying colours, wherein is healing for people."',
-    image: PRODUCT_IMG.honeySidr,
-    icon: Droplets,
-    cta: 'Shop Honey',
-  },
-  {
-    slug: 'dry-fruits',
-    href: '/dry-fruits',
-    kind: 'shop',
-    title: 'Dry Fruits',
-    short: 'Dry Fruits',
-    tagline: 'Almonds, cashews, walnuts & barfi',
-    blurb: 'Crunchy whole nuts and a soft mixed dry-fruit barfi — for daily snacking, guests and gifting.',
-    image: DRY_FRUITS.tile,
-    icon: Nut,
-    cta: 'Shop Dry Fruits',
-  },
-  {
-    slug: 'wearings',
-    href: '/wearings',
-    kind: 'shop',
-    title: 'Modest Wear',
-    short: 'Wearings',
-    tagline: 'Simple, dignified, comfortable',
-    blurb: 'Thobes, kurtas, kufis, abayas and hijabs for everyday and Jumu‘ah.',
-    image: STOCK.wear.kurta,
-    icon: Shirt,
-    cta: 'Shop Wearings',
-  },
+export const SERVE_SECTIONS: Section[] = [
   {
     slug: 'khidmat-e-khalq',
     href: '/khidmat-e-khalq',
@@ -150,11 +93,36 @@ export const SECTIONS: Section[] = [
   },
 ];
 
-export const SHOP_SECTIONS = SECTIONS.filter((s) => s.kind === 'shop');
-export const SERVE_SECTIONS = SECTIONS.filter((s) => s.kind === 'serve');
+const SHOP_ICONS: Record<string, LucideIcon> = { talbeenah: Wheat, dates: TreePalm, honey: Droplets, 'dry-fruits': Nut, wearings: Shirt };
 
+// Round-photo tiles where the image is a transparent product cut-out (contained), not a photo (fills the circle).
+export const CUTOUT_IMAGES = new Set<string>([PRODUCT_IMG.talbeenahPouch, PRODUCT_IMG.honeySidr, ...Object.values(PRODUCT_IMG.dates)]);
+
+export const categoryIcon = (slug: string): LucideIcon => SHOP_ICONS[slug] ?? ShoppingBag;
+
+export function categorySection(c: Category): Section {
+  return {
+    slug: c.slug,
+    href: categoryHref(c.slug),
+    kind: 'shop',
+    title: c.name,
+    short: c.short,
+    tagline: c.tagline,
+    blurb: c.blurb,
+    image: c.image,
+    icon: categoryIcon(c.slug),
+    cta: `Shop ${c.short}`,
+  };
+}
+
+export const shopSections = (categories: Category[]) => categories.map(categorySection);
+
+/** Shop categories first, then the five serve pages — the order used everywhere. */
+export const allSections = (categories: Category[]) => [...shopSections(categories), ...SERVE_SECTIONS];
+
+/** A serve section by slug (shop categories come from the database instead). */
 export function getSection(slug: string): Section {
-  const s = SECTIONS.find((x) => x.slug === slug);
+  const s = SERVE_SECTIONS.find((x) => x.slug === slug);
   if (!s) throw new Error(`Unknown section: ${slug}`);
   return s;
 }

@@ -1,5 +1,6 @@
 import { SITE } from './site';
 import { formatINR } from './format';
+import { deliveryFor } from './shop';
 
 export function whatsappLink(text: string): string {
   return `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
@@ -25,7 +26,7 @@ export type OrderLine = { name: string; variant: string; price: number; qty: num
 /** Full order message for checkout; `customer` lines are appended as "Label: value", then an optional closing line. */
 export function whatsappOrderLink(lines: OrderLine[], customer: Record<string, string> = {}, closing?: string): string {
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
-  const delivery = subtotal >= SITE.freeShippingAbove ? 'Free' : 'To be confirmed';
+  const fee = deliveryFor(subtotal);
   const details = Object.entries(customer).filter(([, v]) => v.trim());
   return whatsappLink(
     [
@@ -34,7 +35,8 @@ export function whatsappOrderLink(lines: OrderLine[], customer: Record<string, s
       ...lines.map((l) => `• ${l.name} (${l.variant}) × ${l.qty} — ${formatINR(l.price * l.qty)}`),
       '',
       `Subtotal: ${formatINR(subtotal)}`,
-      `Delivery: ${delivery}`,
+      `Delivery: ${fee ? formatINR(fee) : 'Free'}`,
+      `Total: ${formatINR(subtotal + fee)}`,
       ...(details.length ? ['', ...details.map(([k, v]) => `${k}: ${v}`)] : []),
       ...(closing ? ['', closing] : []),
     ].join('\n'),

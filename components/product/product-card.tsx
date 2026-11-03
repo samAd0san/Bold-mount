@@ -1,13 +1,17 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { discountPct, formatINR } from '@/lib/format';
-import { getSection } from '@/lib/sections';
+import { useCategories } from '@/components/layout/categories-context';
 import { QuickAdd } from './quick-add';
 import { cn } from '@/lib/utils';
 
 // Square studio card (Darkwood-style): cream tile, discount badge, label, name, price, quick add.
 export function ProductCard({ product }: { product: Product }) {
+  const categories = useCategories();
+  const label = product.origin ?? categories.find((c) => c.slug === product.category)?.short ?? '';
   const v = product.variants[0];
   const off = discountPct(v.price, v.compareAt);
   const from = product.variants.length > 1 && new Set(product.variants.map((x) => x.price)).size > 1;
@@ -40,7 +44,7 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
 
       <div className="mt-3 flex flex-1 flex-col">
-        <p className="text-xs text-ink-soft">{product.origin ?? getSection(product.section).short}</p>
+        <p className="text-xs text-ink-soft">{label}</p>
         <Link href={`/product/${product.slug}`} className="mt-0.5 line-clamp-2 font-medium leading-snug text-ink hover:text-navy">
           {product.name}
         </Link>

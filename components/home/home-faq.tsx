@@ -12,11 +12,11 @@ import { Reveal } from '@/components/motion/reveal';
 const FAQS = [
   {
     q: 'How do I place an order?',
-    a: 'Add what you like to the cart and check out — your order opens in WhatsApp, already filled in. Send it and we confirm the details with you there.',
+    a: 'Add what you like to the cart and check out — pay online with UPI, cards or Google Pay, or send the order on WhatsApp, already filled in. Either way we confirm the details with you.',
   },
   {
     q: 'How does delivery work?',
-    a: `We deliver to your door. Share your drop address or location on WhatsApp and we confirm the time and any charge before dispatch. Delivery is free on orders above ${formatINR(SITE.freeShippingAbove)}.`,
+    a: `We deliver to your door. Share your drop address or location at checkout and we confirm the time before dispatch. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders of ${formatINR(SITE.freeShippingAbove)} or more.`,
   },
   {
     q: 'How do I prepare Talbeenah?',

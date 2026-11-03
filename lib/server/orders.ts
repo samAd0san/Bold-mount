@@ -1,0 +1,84 @@
+import 'server-only';
+import { z } from 'zod';
+import { db } from '@/lib/server/db';
+import { CategoryModel, ProductModel } from '@/lib/server/models';
+import { deliveryFor } from '@/lib/shop';
+import type { OrderItem } from '@/lib/types';
+
+// Indian mobile → "+91 98480 22338"; accepts spaces, dashes, +91, 91 or 0 in front.
+function cleanMobile(raw: string): string | null {
+  let d = raw.replace(/\D/g, '');
+  if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
+  else if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
+  return /^[6-9]\d{9}$/.test(d) ? `+91 ${d.slice(0, 5)} ${d.slice(5)}` : null;
+}
+
+const Customer = z.object({
+  name: z.string().trim().min(2, 'Please enter your name.').max(80),
+  mobile: z.string().trim().transform((v, ctx) => {
+    const m = cleanMobile(v);
+    if (!m) ctx.addIssue({ code: 'custom', message: 'Please enter a valid 10-digit mobile number.' });
+    return m ?? v;
+  }),
+  address: z.string().trim().min(5, 'Please enter your full address.').max(300),
+  city: z.string().trim().min(2, 'Please enter your city.').max(80),
+  pincode: z.string().trim().regex(/^\d{6}$/, 'Please enter a 6-digit pincode.'),
+  note: z.string().trim().max(500).optional().default(''),
+  location: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).optional(),
+});
+
+export const OrderBody = z.object({
+  method: z.enum(['online', 'whatsapp'], 'Please choose how to pay.'),
+  items: z
+    .array(z.object({
+      slug: z.string().trim().min(1).max(80),
+      variantId: z.string().trim().min(1).max(60),
+      qty: z.number('Quantity must be a number.').int().min(1, 'Quantity must be at least 1.').max(50, 'You can order up to 50 of one item.'),
+    }))
+    .min(1, 'Your cart is empty.')
+    .max(40, 'That is too many different items for one order.'),
+  customer: Customer,
+});
+
+export type PricedCart = { items: OrderItem[]; subtotal: number; delivery: number; total: number };
+
+/** Builds the order lines from the live catalog; prices, names and photos always come from the database, never the client. */
+export async function priceCart(lines: { slug: string; variantId: string; qty: number }[]): Promise<PricedCart | { error: string }> {
+  const wanted = new Map<string, number>(); // "slug|variantId" → qty (same line twice = one line)
+  for (const l of lines) wanted.set(`${l.slug}|${l.variantId}`, (wanted.get(`${l.slug}|${l.variantId}`) ?? 0) + l.qty);
+
+  const slugs = [...new Set(lines.map((l) => l.slug))];
+  const [products, categories] = await Promise.all([
+    ProductModel.find({ slug: { $in: slugs }, active: true }).lean(),
+    CategoryModel.find({ active: true }, { slug: 1 }).lean(),
+  ]);
+  const live = new Set(categories.map((c) => c.slug));
+  const bySlug = new Map(products.filter((p) => live.has(p.category)).map((p) => [p.slug, p]));
+
+  const items: OrderItem[] = [];
+  for (const [key, qty] of wanted) {
+    const [slug, variantId] = key.split('|');
+    const product = bySlug.get(slug);
+    if (!product) return { error: 'One of the items in your cart is no longer available. Please refresh and try again.' };
+    const variant = product.variants.find((v) => v.id === variantId);
+    const price = variant?.price ?? 0;
+    if (!variant || !(price > 0)) return { error: `The size you chose for ${product.name} is no longer available.` };
+    const image = product.images[0]?.src;
+    items.push({ slug, name: product.name, variant: variant.label ?? variantId, price, qty, ...(image ? { image } : {}) });
+  }
+  const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const delivery = deliveryFor(subtotal);
+  return { items, subtotal, delivery, total: subtotal + delivery };
+}
+
+/** Next order number: BM-1001, BM-1002… from one counter doc. */
+export async function nextOrderNumber(): Promise<string> {
+  const counters = (await db()).collection<{ _id: string; seq: number }>('counters');
+  // Seeding is a separate step so the first order is 1001; a racing duplicate-key error just means someone else seeded it.
+  await counters.updateOne({ _id: 'order' }, { $setOnInsert: { seq: 1000 } }, { upsert: true }).catch((e: { code?: number }) => {
+    if (e?.code !== 11000) throw e;
+  });
+  const doc = await counters.findOneAndUpdate({ _id: 'order' }, { $inc: { seq: 1 } }, { returnDocument: 'after' });
+  if (!doc) throw new Error('Order counter missing');
+  return `BM-${doc.seq}`;
+}

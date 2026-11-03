@@ -11,6 +11,8 @@ export const SITE = {
   email: 'boldmount22@gmail.com',
   location: 'India',
   freeShippingAbove: 999,
+  // PLACEHOLDER delivery charge below the free-delivery threshold — set Bold Mount's real charge.
+  deliveryFee: 50,
 } as const;
 
 export const ANNOUNCEMENTS = [

@@ -15,7 +15,7 @@ export interface FaqGroup {
 
 const FREE = formatINR(SITE.freeShippingAbove);
 
-// Answers stay in step with the site: orders via cart → WhatsApp; timelines and payment are confirmed there.
+// Answers stay in step with the site: pay online or order on WhatsApp; delivery time is confirmed with each customer.
 export const FAQ_GROUPS: FaqGroup[] = [
   {
     id: 'orders',
@@ -23,12 +23,12 @@ export const FAQ_GROUPS: FaqGroup[] = [
     items: [
       {
         q: 'How do I place an order?',
-        a: 'Add what you like to your cart, then send the cart to us on WhatsApp. It opens as a ready-made message, so you only press send. We confirm everything with you personally.',
+        a: 'Add what you like to your cart, then check out. Pay online (UPI, Google Pay, cards), or send the cart to us on WhatsApp as a ready-made message. Either way we confirm everything with you personally.',
         link: { label: 'Start shopping', href: '/shop' },
       },
       {
         q: 'How does delivery work?',
-        a: 'We deliver to your door ourselves. Share your drop address or location at checkout or on WhatsApp, and we confirm the delivery time and any charge with you there before we dispatch.',
+        a: 'We deliver to your door ourselves. Share your drop address or location at checkout or on WhatsApp, and we confirm the delivery time with you before we dispatch.',
         link: { label: 'Read Delivery & Returns', href: '/policies/shipping' },
       },
       {
@@ -37,19 +37,19 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'Do you deliver to my area?',
-        a: 'Share your drop address or location pin on WhatsApp and we will confirm delivery to you, along with the time and any charge.',
+        a: 'Share your drop address or location pin on WhatsApp and we will confirm delivery to you, along with the time.',
       },
       {
         q: 'Is delivery free?',
-        a: `Delivery is free on orders above ${FREE}. For smaller orders we tell you the delivery charge on WhatsApp before your order is final.`,
+        a: `Delivery is ${formatINR(SITE.deliveryFee)} per order, and free on orders of ${FREE} or more. The charge is shown in your cart before you pay.`,
       },
       {
         q: 'How do I pay?',
-        a: 'We share payment details with you on WhatsApp once your order is confirmed.',
+        a: 'At checkout you can pay online with UPI, Google Pay, cards or Apple Pay — it is processed securely by Razorpay. If you order on WhatsApp instead, we share payment details with you there once your order is confirmed.',
       },
       {
         q: 'How long will my order take to arrive?',
-        a: 'It depends on what you order and where you are. Once you share your drop address or location, we confirm the delivery time with you on WhatsApp before we dispatch.',
+        a: 'It depends on what you order and where you are. Once you share your drop address or location, we confirm the delivery time with you before we dispatch.',
       },
       {
         q: 'Can I return something?',

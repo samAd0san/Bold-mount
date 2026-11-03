@@ -7,6 +7,7 @@ import type { Product, Variant } from '@/lib/types';
 export interface CartItem {
   key: string; // slug:variantId — one line per pack size
   slug: string;
+  variantId: string;
   name: string;
   variant: string;
   price: number;
@@ -41,6 +42,7 @@ export const useCart = create<CartState>()(
                 {
                   key,
                   slug: product.slug,
+                  variantId: variant.id,
                   name: product.name,
                   variant: variant.label,
                   price: variant.price,
@@ -59,8 +61,19 @@ export const useCart = create<CartState>()(
       clear: () => set({ items: [] }),
       setOpen: (open) => set({ open }),
     }),
-    // Drawer open-state is per visit; only the items persist.
-    { name: 'boldmount-cart', partialize: (s) => ({ items: s.items }) },
+    {
+      // Drawer open-state is per visit; only the items persist.
+      name: 'boldmount-cart',
+      version: 1,
+      partialize: (s) => ({ items: s.items }),
+      // v0 carts had no variantId; it is the tail of the "slug:variantId" key.
+      migrate: (persisted) => {
+        const old = (persisted as { items?: CartItem[] } | null)?.items ?? [];
+        return {
+          items: old.map((i) => ({ ...i, variantId: i.variantId ?? (i.key.startsWith(`${i.slug}:`) ? i.key.slice(i.slug.length + 1) : '') })),
+        };
+      },
+    },
   ),
 );
 

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { SearchX, X } from 'lucide-react';
 import { buttonClass } from '@/components/ui/button-styles';
-import { PRODUCTS, giftProducts, lowestPrice, productsBySection } from '@/lib/products';
+import { lowestPrice } from '@/lib/shop';
 import { discountPct } from '@/lib/format';
 import type { Product } from '@/lib/types';
 import { PRICE_OPTIONS, clearFilters, shopHref, type ShopPrice, type ShopQuery, type ShopSort } from './shop-query';
@@ -27,16 +27,16 @@ const SORTERS: Record<ShopSort, ((a: Product, b: Product) => number) | null> = {
   newest: (a, b) => Number(b.tags.includes('new')) - Number(a.tags.includes('new')),
 };
 
-// Every search word must appear somewhere in the product's name, tagline, origin, section or description.
+// Every search word must appear somewhere in the product's name, tagline, origin, category or description.
 const matchesSearch = (p: Product, text?: string) => {
   if (!text) return true;
-  const hay = `${p.name} ${p.tagline} ${p.origin ?? ''} ${p.section} ${p.description}`.toLowerCase();
+  const hay = `${p.name} ${p.tagline} ${p.origin ?? ''} ${p.category.replace(/-/g, ' ')} ${p.description}`.toLowerCase();
   return text.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
 };
 
 /** Search and category first, then price / sale / gift, then sort. Ties keep catalogue order (sort is stable). */
-export function applyShopQuery(q: ShopQuery): Product[] {
-  const base = !q.filter ? PRODUCTS : q.filter === 'gifts' ? giftProducts() : productsBySection(q.filter);
+export function applyShopQuery(q: ShopQuery, products: Product[]): Product[] {
+  const base = !q.filter ? products : q.filter === 'gifts' ? products.filter((p) => p.tags.includes('gift')) : products.filter((p) => p.category === q.filter);
   const list = base.filter(
     (p) => matchesSearch(p, q.q) && inPrice(p, q.price) && (!q.sale || onSale(p)) && (!q.gift || p.tags.includes('gift')),
   );

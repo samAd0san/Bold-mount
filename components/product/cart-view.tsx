@@ -8,14 +8,16 @@ import { useCart, cartCount, cartSubtotal } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
 import { formatINR } from '@/lib/format';
 import { SITE } from '@/lib/site';
-import { getSection } from '@/lib/sections';
+import { deliveryFor } from '@/lib/shop';
+import type { Order } from '@/lib/types';
 import { buttonClass } from '@/components/ui/button-styles';
 import { QtyStepper } from './qty-stepper';
 import { CheckoutForm } from './checkout-form';
+import { OrderConfirmation } from './order-confirmation';
 
 const CARD = 'rounded-2xl bg-pearl ring-1 ring-line ring-inset';
 
-/** Cart lines, order summary and the WhatsApp checkout form (cart lives in localStorage, so render after hydration). */
+/** Cart lines, order summary and the checkout form (cart lives in localStorage, so render after hydration). */
 export function CartView() {
   const hydrated = useHydrated();
   const items = useCart((s) => s.items);
@@ -23,6 +25,9 @@ export function CartView() {
   const remove = useCart((s) => s.remove);
   const clear = useCart((s) => s.clear);
   const [cleared, setCleared] = useState(false);
+  const [placed, setPlaced] = useState<Order | null>(null);
+
+  if (placed) return <OrderConfirmation order={placed} />;
 
   if (!hydrated) {
     return (
@@ -39,7 +44,8 @@ export function CartView() {
   const count = cartCount(items);
   const subtotal = cartSubtotal(items);
   const savings = items.reduce((s, i) => s + (i.compareAt && i.compareAt > i.price ? (i.compareAt - i.price) * i.qty : 0), 0);
-  const free = subtotal >= SITE.freeShippingAbove;
+  const delivery = deliveryFor(subtotal);
+  const free = delivery === 0;
   const progress = Math.min(100, (subtotal / SITE.freeShippingAbove) * 100);
 
   return (
@@ -125,25 +131,26 @@ export function CartView() {
           )}
           <div className="flex justify-between gap-4">
             <dt className="text-ink-soft">Delivery</dt>
-            <dd className={free ? 'font-medium text-whatsapp-ink' : 'text-right text-ink'}>{free ? 'Free' : 'Confirmed on WhatsApp'}</dd>
+            <dd className={free ? 'font-medium text-whatsapp-ink' : 'tabular-nums text-ink'}>{free ? 'Free' : formatINR(delivery)}</dd>
           </div>
           <div className="flex items-baseline justify-between gap-4 border-t border-line pt-4">
             <dt className="text-base font-semibold text-ink">Total</dt>
-            <dd className="text-right">
-              <span className="text-2xl font-semibold tabular-nums text-navy">{formatINR(subtotal)}</span>
-              {!free && <span className="block text-xs text-ink-soft">+ delivery</span>}
-            </dd>
+            <dd className="text-2xl font-semibold tabular-nums text-navy">{formatINR(subtotal + delivery)}</dd>
           </div>
         </dl>
       </aside>
 
       <section id="delivery" aria-labelledby="delivery-title" className={`scroll-mt-36 p-5 md:p-8 lg:col-start-1 lg:row-start-2 ${CARD}`}>
         <h2 id="delivery-title" className="text-xl text-ink">Delivery details</h2>
-        <p className="mt-1.5 mb-6 text-sm text-ink-soft">Where should we deliver your order? Your details go to WhatsApp with your cart.</p>
+        <p className="mt-1.5 mb-6 text-sm text-ink-soft">Where should we deliver your order? Pay online, or send the order to us on WhatsApp.</p>
         <CheckoutForm
           items={items}
           onClear={() => {
             setCleared(true);
+            clear();
+          }}
+          onPaid={(order) => {
+            setPlaced(order);
             clear();
           }}
         />
@@ -153,8 +160,6 @@ export function CartView() {
 }
 
 function EmptyCart({ cleared }: { cleared: boolean }) {
-  const talbeenah = getSection('talbeenah');
-  const dates = getSection('dates');
   return (
     <div className={`mx-auto max-w-xl px-6 py-14 text-center md:py-16 ${CARD}`}>
       <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sand text-navy">
@@ -167,11 +172,11 @@ function EmptyCart({ cleared }: { cleared: boolean }) {
           : 'Start with our bestselling Talbeenah or a box of hand-picked dates.'}
       </p>
       <div className="mt-7 flex flex-wrap justify-center gap-3">
-        <Link href={talbeenah.href} className={buttonClass('gold')}>
-          {talbeenah.cta}
+        <Link href="/talbeenah" className={buttonClass('gold')}>
+          Shop Talbeenah
         </Link>
-        <Link href={dates.href} className={buttonClass('outline')}>
-          {dates.cta}
+        <Link href="/dates" className={buttonClass('outline')}>
+          Shop Dates
         </Link>
       </div>
       <Link href="/shop" className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-navy underline-offset-4 hover:underline">

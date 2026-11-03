@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
+import { notFound } from 'next/navigation';
 import { PageHero } from '@/components/ui/page-hero';
 import { Container } from '@/components/ui/container';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { buttonClass } from '@/components/ui/button-styles';
 import { ProductGrid } from '@/components/product/product-grid';
 import { Reveal } from '@/components/motion/reveal';
-import { productsBySection } from '@/lib/products';
-import { getSection } from '@/lib/sections';
-import type { Product, ShopSection } from '@/lib/types';
+import { getCategory, productsByCategory } from '@/lib/catalog';
+import type { Product } from '@/lib/types';
 
 interface Intro {
   eyebrow?: string;
@@ -38,7 +38,7 @@ export function IntroBlock({ eyebrow, title, body, aside }: Intro) {
 }
 
 /** Shared layout for the shop categories: hero, optional intro, page-specific bands, product grid, then extras. */
-export function CategoryPage({
+export async function CategoryPage({
   slug,
   heroImage,
   heroEyebrow,
@@ -52,7 +52,7 @@ export function CategoryPage({
   divided = false,
   children,
 }: {
-  slug: ShopSection;
+  slug: string; // category slug; 404s when it's missing or hidden in /admin
   heroImage?: string;
   heroEyebrow?: string;
   heroIntro?: string;
@@ -65,21 +65,22 @@ export function CategoryPage({
   divided?: boolean; // hairline above the grid when the band before it is also cream
   children?: ReactNode;
 }) {
-  const section = getSection(slug);
-  const list = products ?? productsBySection(slug);
+  const category = await getCategory(slug);
+  if (!category) notFound();
+  const list = products ?? (await productsByCategory(slug));
 
   return (
     <>
       <PageHero
-        eyebrow={heroEyebrow ?? section.tagline}
-        title={section.title}
-        intro={heroIntro ?? section.blurb}
-        image={heroImage ?? section.image}
-        crumbs={[{ label: 'Shop', href: '/shop' }, { label: section.short }]}
+        eyebrow={heroEyebrow ?? category.tagline}
+        title={category.name}
+        intro={heroIntro ?? category.blurb}
+        image={heroImage ?? category.image}
+        crumbs={[{ label: 'Shop', href: '/shop' }, { label: category.short }]}
       >
         {heroActions ?? (
           <a href="#products" className={buttonClass('gold')}>
-            {section.cta}
+            Shop {category.short}
           </a>
         )}
       </PageHero>
@@ -92,7 +93,7 @@ export function CategoryPage({
           <div className={divided ? 'border-t border-line pt-14 md:pt-20' : undefined}>
             <SectionHeading
               eyebrow={`${list.length} ${list.length === 1 ? 'product' : 'products'}`}
-              title={gridTitle ?? `Shop ${section.short}`}
+              title={gridTitle ?? `Shop ${category.short}`}
               intro={gridIntro}
               link={{ label: 'Shop all', href: '/shop' }}
             />

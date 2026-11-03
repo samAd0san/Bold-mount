@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import { Mail, MapPin, Phone } from 'lucide-react';
 import { BRAND } from '@/lib/media';
-import { SHOP_SECTIONS, SERVE_SECTIONS } from '@/lib/sections';
+import { SERVE_SECTIONS, shopSections } from '@/lib/sections';
+import type { Category } from '@/lib/types';
 import { SITE } from '@/lib/site';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
@@ -17,7 +18,7 @@ const HELP = [
   { label: 'Photo credits', href: '/credits' },
 ];
 
-export function SiteFooter() {
+export function SiteFooter({ categories }: { categories: Category[] }) {
   return (
     <footer className="bg-lattice bg-night text-on-night">
       <div className="mx-auto max-w-site px-5 pt-14 pb-8 md:px-8 md:pt-20 lg:px-12">
@@ -53,14 +54,14 @@ export function SiteFooter() {
             </a>
           </div>
 
-          <FooterColumn heading="Shop" links={[...SHOP_SECTIONS.map((s) => ({ label: s.title, href: s.href })), { label: 'Gift Boxes', href: '/shop?filter=gifts' }]} />
+          <FooterColumn heading="Shop" links={[...shopSections(categories).map((s) => ({ label: s.title, href: s.href })), { label: 'Gift Boxes', href: '/shop?filter=gifts' }]} />
           <FooterColumn heading="Serve & Give" links={SERVE_SECTIONS.map((s) => ({ label: s.title, href: s.href }))} />
           <FooterColumn heading="Help" links={HELP} />
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-on-night-soft md:flex-row">
           <p>© {new Date().getFullYear()} Bold Mount. All rights reserved.</p>
-          <p>Every order is confirmed personally on WhatsApp</p>
+          <p>We confirm every order personally</p>
         </div>
       </div>
     </footer>

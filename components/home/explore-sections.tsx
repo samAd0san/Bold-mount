@@ -1,17 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { PRODUCT_IMG } from '@/lib/media';
-import { SECTIONS } from '@/lib/sections';
+import { getCategories } from '@/lib/catalog';
+import { CUTOUT_IMAGES, allSections } from '@/lib/sections';
 import { cn } from '@/lib/utils';
 import { Container } from '@/components/ui/container';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Reveal } from '@/components/motion/reveal';
 
-// Transparent product cut-outs sit inside the circle; photos fill it.
-const CUTOUTS = new Set<string>([PRODUCT_IMG.talbeenahPouch, PRODUCT_IMG.honeySidr, ...Object.values(PRODUCT_IMG.dates)]);
-
-/** Every section as a round photo tile: 5 per row on phones and tablets, one row on desktop. */
-export function ExploreSections() {
+/** Every shop category and serve page as a round photo tile: 5 per row on phones and tablets, one row on desktop. */
+export async function ExploreSections() {
+  const sections = allSections(await getCategories());
   return (
     <section className="pt-8 pb-4 md:pt-20 md:pb-12">
       <Container>
@@ -19,7 +17,7 @@ export function ExploreSections() {
           <SectionHeading align="center" eyebrow="Shop & serve" title="Explore" emphasis="Bold Mount" className="mb-4 md:mb-12" />
         </Reveal>
         <ul className="flex flex-wrap justify-center gap-y-3 sm:gap-y-7 md:gap-y-10">
-          {SECTIONS.map((s, i) => (
+          {sections.map((s, i) => (
             <li key={s.slug} className="w-1/5 px-1 sm:px-1.5 lg:w-[10%] lg:px-2">
               <Reveal delay={i * 0.04}>
                 <Link href={s.href} className="group flex flex-col items-center text-center">
@@ -31,7 +29,7 @@ export function ExploreSections() {
                       sizes="(min-width: 1024px) 128px, (min-width: 640px) 112px, 60px"
                       className={cn(
                         'transition-transform duration-700 ease-expo group-hover:scale-110',
-                        CUTOUTS.has(s.image) ? 'object-contain p-2.5 sm:p-3' : 'object-cover',
+                        CUTOUT_IMAGES.has(s.image) ? 'object-contain p-2.5 sm:p-3' : 'object-cover',
                       )}
                     />
                   </span>
