@@ -38,7 +38,7 @@ function Group({ title, items, onClose }: { title: string; items: Section[]; onC
   );
 }
 
-/** Sign in with Google, or the signed-in customer's name with "My orders" / "Sign out". Hidden if Google isn't set up. */
+/** Sign in with Google, or the signed-in customer's name with "Your orders" / "Sign out". Hidden if Google isn't set up. */
 function Account({ onClose }: { onClose: () => void }) {
   const { ready, user, google } = useAccount();
   const pathname = usePathname();
@@ -63,8 +63,8 @@ function Account({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div className="mt-3 flex gap-2">
-        <Link href="/account" onClick={onClose} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 text-sm text-on-night hover:border-gold hover:text-gold">
-          <PackageSearch size={16} /> My orders
+        <Link href="/orders" onClick={onClose} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 text-sm text-on-night hover:border-gold hover:text-gold">
+          <PackageSearch size={16} /> Your orders
         </Link>
         <button
           type="button"

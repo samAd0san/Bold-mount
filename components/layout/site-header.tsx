@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { Menu, Search, ShoppingBag, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Menu, PackageSearch, Search, ShoppingBag, X } from 'lucide-react';
 import { BRAND } from '@/lib/media';
 import { useCart, cartCount } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
@@ -48,22 +48,26 @@ function SearchBox({ className, autoFocus, onDone }: { className?: string; autoF
   );
 }
 
-/** Hidden shortcut for the owner: 5 quick taps on the logo open the admin PIN pad. */
+// Kept outside React so the count survives anything that remounts the header between taps.
+let logoTaps: number[] = [];
+
+/** Hidden shortcut for the owner: 5 taps on the logo, each within 2 seconds of the last, open the admin PIN pad. */
 function useAdminTaps() {
   const router = useRouter();
-  const taps = useRef<number[]>([]);
   return (e: React.MouseEvent) => {
     const now = Date.now();
-    taps.current = [...taps.current.filter((t) => now - t < 4000), now];
-    if (taps.current.length < 5) return;
+    const last = logoTaps[logoTaps.length - 1] ?? 0;
+    logoTaps = now - last < 2000 ? [...logoTaps, now] : [now];
+    if (logoTaps.length < 5) return;
     e.preventDefault();
-    taps.current = [];
+    logoTaps = [];
     router.push('/admin');
   };
 }
 
 export function SiteHeader({ categories }: { categories: Category[] }) {
   const onLogoTap = useAdminTaps();
+  const onOrdersPage = usePathname().startsWith('/orders');
   const hydrated = useHydrated();
   const count = useCart((s) => cartCount(s.items));
   const openCart = useCart((s) => s.setOpen);
@@ -108,6 +112,15 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
               {searchOpen ? <X size={21} /> : <Search size={21} />}
             </button>
             <AccountMenu className="hidden lg:flex" />
+            <Link
+              href="/orders"
+              aria-label="Your orders"
+              aria-current={onOrdersPage ? 'page' : undefined}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream lg:w-auto lg:gap-2 lg:px-3.5"
+            >
+              <PackageSearch size={22} aria-hidden />
+              <span className="hidden text-[0.95rem] font-semibold whitespace-nowrap lg:inline">Your orders</span>
+            </Link>
             <button
               type="button"
               onClick={() => openCart(true)}

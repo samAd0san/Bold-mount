@@ -42,8 +42,8 @@ export function OrderConfirmation({ order }: { order: Order }) {
         <Link href="/shop" className={buttonClass('gold')}>
           Continue shopping
         </Link>
-        <Link href="/account" className={buttonClass('outline')}>
-          Track it in My orders
+        <Link href={`/orders/${order.id}`} className={buttonClass('outline')}>
+          Track this order
         </Link>
       </div>
     </div>

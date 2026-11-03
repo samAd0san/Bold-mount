@@ -51,11 +51,11 @@ export function AccountMenu({ className }: { className?: string }) {
           </div>
           <div className="border-t border-line pt-1">
             <Link
-              href="/account"
+              href="/orders"
               onClick={() => setOpen(false)}
               className="flex min-h-11 items-center gap-2.5 rounded-xl px-2.5 text-sm font-medium text-ink hover:bg-cream"
             >
-              <PackageSearch size={17} className="text-gold-ink" /> My orders
+              <PackageSearch size={17} className="text-gold-ink" /> Your orders
             </Link>
             <button
               type="button"

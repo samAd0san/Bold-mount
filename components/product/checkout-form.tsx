@@ -13,6 +13,7 @@ import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { GoogleMark } from '@/components/auth/google-button';
 import { signInHref, signOut, useAccount } from '@/components/auth/use-account';
+import { refreshOrders } from '@/components/auth/use-orders';
 import { cn } from '@/lib/utils';
 import { LocationShare, mapsUrl, type Coords } from './location-share';
 import { loadRazorpay, type RazorpayResponse } from './razorpay';
@@ -261,7 +262,10 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
     if (savedWhatsApp.current !== fingerprint) {
       savedWhatsApp.current = fingerprint;
       void postJson('/api/orders', { method: 'whatsapp', items: lines, customer }, true).then((res) => {
-        if (res.ok) return;
+        if (res.ok) {
+          void refreshOrders();
+          return;
+        }
         // Let "Send again" retry the save; a 401 also means they must sign in again.
         savedWhatsApp.current = '';
         if (res.status === 401) {

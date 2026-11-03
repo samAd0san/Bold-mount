@@ -53,17 +53,17 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'Can I return something?',
-        a: 'For hygiene and safety, we cannot take back food that has been opened or used. If food arrives damaged, leaking, wrong, missing an item or past its date, request a refund from My orders within 48 hours of delivery and send us photos on WhatsApp. We will replace it or refund it. Modest wear can be returned within 7 days of delivery if it is unworn and unwashed, with its tags.',
+        a: 'For hygiene and safety, we cannot take back food that has been opened or used. If food arrives damaged, leaking, wrong, missing an item or past its date, request a refund from Your orders within 48 hours of delivery and send us photos on WhatsApp. We will replace it or refund it. Modest wear can be returned within 7 days of delivery if it is unworn and unwashed, with its tags.',
         link: { label: 'Read Refund & Cancellation', href: '/policies/refund-cancellation' },
       },
       {
         q: 'Can I cancel?',
-        a: 'Yes, any time before your order is dispatched. Sign in, open My orders and press “Cancel order”. If you paid online, the full amount, including delivery, goes back to your original payment method. Banks usually take 5–7 working days, and UPI is often sooner. Once an order is dispatched it cannot be cancelled, so message us if there is a problem.',
-        link: { label: 'Go to My orders', href: '/account' },
+        a: 'Yes, any time before your order is dispatched. Sign in, open Your orders, choose the order and press “Cancel order”. If you paid online, the full amount, including delivery, goes back to your original payment method. Banks usually take 5–7 working days, and UPI is often sooner. Once an order is dispatched it cannot be cancelled, so message us if there is a problem.',
+        link: { label: 'Go to your orders', href: '/orders' },
       },
       {
         q: 'How do refunds work?',
-        a: 'Online payments go back to the original payment method through Razorpay. If you cancel before dispatch, a paid online order is refunded automatically. For a problem with a delivered order, request a refund from My orders and we reply within 2 working days; approved refunds are sent within 5–7 working days. WhatsApp orders paid by UPI or bank transfer go back to the same account.',
+        a: 'Online payments go back to the original payment method through Razorpay. If you cancel before dispatch, a paid online order is refunded automatically. For a problem with a delivered order, request a refund from Your orders and we reply within 2 working days; approved refunds are sent within 5–7 working days. WhatsApp orders paid by UPI or bank transfer go back to the same account.',
         link: { label: 'Read Refund & Cancellation', href: '/policies/refund-cancellation' },
       },
       {

@@ -1,5 +1,6 @@
 import { AnnouncementBar } from '@/components/layout/announcement-bar';
 import { SiteHeader } from '@/components/layout/site-header';
+import { OngoingOrderStrip } from '@/components/layout/ongoing-order-strip';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { CartDrawer } from '@/components/layout/cart-drawer';
 import { FloatingActions } from '@/components/layout/floating-actions';
@@ -15,6 +16,7 @@ export async function SiteChrome({ children }: { children: React.ReactNode }) {
     <CategoriesProvider categories={categories}>
       <AnnouncementBar />
       <SiteHeader categories={categories} />
+      <OngoingOrderStrip />
       {/* Side-sliding reveals start off-screen; clip (unlike hidden) keeps sticky elements working. */}
       <main className="overflow-x-clip">{children}</main>
       <SiteFooter categories={categories} />

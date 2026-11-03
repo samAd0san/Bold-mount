@@ -60,7 +60,7 @@ export const POLICIES: Policy[] = [
         ordered: true,
         list: [
           'Take a clear photo of the item and its packaging.',
-          'Request a refund from My orders within 48 hours of delivery.',
+          'Request a refund from Your orders within 48 hours of delivery.',
           'Send the photos to us on WhatsApp with your order number.',
           'We will replace the item or refund it.',
         ],
@@ -72,16 +72,16 @@ export const POLICIES: Policy[] = [
     title: 'Refund & Cancellation',
     intro: 'How to cancel an order, and when you can get a refund.',
     description:
-      'Cancel your Bold Mount order from My orders any time before it is dispatched, with a full refund if you paid online. What happens if we cancel, how damaged or wrong food items and modest-wear returns are handled, and how refunds are paid.',
+      'Cancel your Bold Mount order from Your orders any time before it is dispatched, with a full refund if you paid online. What happens if we cancel, how damaged or wrong food items and modest-wear returns are handled, and how refunds are paid.',
     blocks: [
       {
         heading: 'Cancelling your order',
-        paragraphs: ['You can cancel your order yourself from My orders, any time before it is dispatched.'],
+        paragraphs: ['You can cancel your order yourself from Your orders, any time before it is dispatched.'],
         list: [
           'If you paid online, we refund the full amount, including delivery, to your original payment method. Banks usually take 5–7 working days, and UPI is often sooner.',
           'Once your order is dispatched, it cannot be cancelled. If there is a problem, message us.',
         ],
-        link: { label: 'Go to My orders', href: '/account' },
+        link: { label: 'Go to your orders', href: '/orders' },
       },
       {
         heading: 'If we cancel',
@@ -93,7 +93,7 @@ export const POLICIES: Policy[] = [
         heading: 'Food items',
         paragraphs: [
           'This covers Talbeenah, dates, honey and dry fruits. For hygiene and safety, we cannot take back food that has been opened or used.',
-          'If your order arrives damaged, leaking, wrong, missing an item or past its date, request a refund from My orders within 48 hours of delivery and send us photos on WhatsApp. We will replace it or refund it.',
+          'If your order arrives damaged, leaking, wrong, missing an item or past its date, request a refund from Your orders within 48 hours of delivery and send us photos on WhatsApp. We will replace it or refund it.',
         ],
       },
       {
@@ -217,7 +217,7 @@ export const POLICIES: Policy[] = [
       },
       {
         heading: 'Cancellations and refunds',
-        paragraphs: ['You can cancel an order from My orders before it is dispatched. How cancellations and refunds work is covered in our Refund & Cancellation policy.'],
+        paragraphs: ['You can cancel an order from Your orders before it is dispatched. How cancellations and refunds work is covered in our Refund & Cancellation policy.'],
         link: { label: 'Read Refund & Cancellation', href: '/policies/refund-cancellation' },
       },
       {

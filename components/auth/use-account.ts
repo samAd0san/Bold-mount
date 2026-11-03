@@ -6,7 +6,7 @@ import { postJson } from '@/lib/client-api';
 
 type Snapshot = { ready: boolean; user: Customer | null; google: boolean };
 
-// One shared copy for the whole tab, so the header, checkout and My orders agree without refetching.
+// One shared copy for the whole tab, so the header, checkout and Your orders agree without refetching.
 const SERVER: Snapshot = { ready: false, user: null, google: false };
 let snap: Snapshot = SERVER;
 let inflight: Promise<void> | null = null;

@@ -11,6 +11,7 @@ import { SITE } from '@/lib/site';
 import { deliveryFor } from '@/lib/shop';
 import type { Order } from '@/lib/types';
 import { buttonClass } from '@/components/ui/button-styles';
+import { refreshOrders } from '@/components/auth/use-orders';
 import { QtyStepper } from './qty-stepper';
 import { CheckoutForm } from './checkout-form';
 import { OrderConfirmation } from './order-confirmation';
@@ -152,6 +153,7 @@ export function CartView() {
           onPaid={(order) => {
             setPlaced(order);
             clear();
+            void refreshOrders();
           }}
         />
       </section>
