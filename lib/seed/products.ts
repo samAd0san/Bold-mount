@@ -1,5 +1,8 @@
-import type { Product, ShopSection, Variant } from './types';
-import { CAMPAIGN, DRY_FRUITS, PRODUCT_IMG, STOCK } from './media';
+import type { Product, Variant } from '../types';
+import { CAMPAIGN, DRY_FRUITS, PRODUCT_IMG, STOCK } from '../media';
+
+// Seed data only (npm run seed): the live catalog is in MongoDB and edited from /admin.
+export type SeedProduct = Omit<Product, 'id' | 'active' | 'sort' | 'details'> & { details?: Product['details'] };
 
 // PLACEHOLDER PRICES — sanity-checked against Organo Mart (Oct 2026); replace with Bold Mount's real price list.
 const packs = (rows: [string, number, number?][]): Variant[] =>
@@ -13,12 +16,12 @@ const DATE_DETAILS = [
   { label: 'Ingredients', value: '100% whole dates — nothing added' },
 ];
 
-export const PRODUCTS: Product[] = [
+export const SEED_PRODUCTS: SeedProduct[] = [
   // ── Talbeenah ─────────────────────────────────────────────
   {
     slug: 'premium-roasted-talbeenah',
     name: 'Premium Roasted Talbeenah',
-    section: 'talbeenah',
+    category: 'talbeenah',
     tags: ['bestseller'],
     badge: 'Bestseller',
     tagline: 'Slow-roasted barley porridge mix — the Sunnah superfood',
@@ -49,7 +52,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'talbeenah-duo',
     name: 'Talbeenah Duo (2 × 500 g)',
-    section: 'talbeenah',
+    category: 'talbeenah',
     tags: ['gift'],
     tagline: 'Two pouches — one for home, one to gift',
     description:
@@ -64,7 +67,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'sunnah-trio-gift-box',
     name: 'Sunnah Trio Gift Box',
-    section: 'talbeenah',
+    category: 'talbeenah',
     tags: ['gift', 'bestseller'],
     badge: 'Gift',
     tagline: 'Talbeenah, Sidr honey and Ajwa dates — together',
@@ -83,7 +86,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'ajwa-dates',
     name: 'Ajwa Dates — Madinah Premium',
-    section: 'dates',
+    category: 'dates',
     tags: ['bestseller'],
     badge: 'Bestseller',
     origin: 'Madinah, Saudi Arabia',
@@ -104,7 +107,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'medjool-dates',
     name: 'Medjool Dates — Jordanian',
-    section: 'dates',
+    category: 'dates',
     tags: ['bestseller'],
     origin: 'Jordan Valley',
     tagline: 'Large, succulent, caramel-like',
@@ -124,7 +127,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'safawi-kalmi-dates',
     name: 'Safawi (Kalmi) Madeenah',
-    section: 'dates',
+    category: 'dates',
     tags: [],
     origin: 'Madinah, Saudi Arabia',
     tagline: 'Deep black, soft and mineral-rich',
@@ -144,7 +147,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'mabroom-dates',
     name: 'Mabroom Premium Saudi',
-    section: 'dates',
+    category: 'dates',
     tags: [],
     origin: 'Saudi Arabia',
     tagline: 'Slender, firm and high in fibre',
@@ -164,7 +167,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'sukkary-dates',
     name: 'Sukkary — The Golden Date',
-    section: 'dates',
+    category: 'dates',
     tags: [],
     origin: 'Al-Qassim, Saudi Arabia',
     tagline: 'Crisp, golden and naturally sweet',
@@ -184,7 +187,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'zahdi-dates',
     name: 'Zahdi Iraqi',
-    section: 'dates',
+    category: 'dates',
     tags: [],
     origin: 'Iraq',
     tagline: 'A nutty, semi-dry classic',
@@ -204,7 +207,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'deglet-noor-dates',
     name: 'Tunisian Deglet Noor',
-    section: 'dates',
+    category: 'dates',
     tags: [],
     origin: 'Tunisia',
     tagline: 'The "date of light"',
@@ -224,7 +227,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'suqai-dates',
     name: 'Suqai',
-    section: 'dates',
+    category: 'dates',
     tags: [],
     origin: 'Saudi Arabia',
     tagline: 'Two-tone, crisp-tipped and mildly sweet',
@@ -244,7 +247,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'safawi-madina-dates',
     name: 'Safawi Madina',
-    section: 'dates',
+    category: 'dates',
     tags: [],
     origin: 'Madinah, Saudi Arabia',
     tagline: 'Rich and nourishing',
@@ -263,7 +266,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'premium-dates-hamper',
     name: 'Premium Dates Hamper',
-    section: 'dates',
+    category: 'dates',
     tags: ['gift'],
     badge: 'Gift',
     tagline: 'Ajwa, Safawi and Medjool — 3 × 500 g',
@@ -281,7 +284,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'pure-sidr-honey',
     name: 'Pure Sidr Honey',
-    section: 'honey',
+    category: 'honey',
     tags: ['bestseller'],
     badge: 'Raw',
     tagline: 'Raw, unheated honey from Sidr (Ber) blossom',
@@ -307,7 +310,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'premium-almonds',
     name: 'Premium Almonds (Badam)',
-    section: 'dry-fruits',
+    category: 'dry-fruits',
     tags: ['new'],
     tagline: 'Whole, crunchy and naturally sweet',
     description:
@@ -330,7 +333,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'whole-cashews',
     name: 'Whole Cashews (Kaju)',
-    section: 'dry-fruits',
+    category: 'dry-fruits',
     tags: ['new'],
     tagline: 'Creamy, buttery and whole',
     description:
@@ -353,7 +356,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'walnut-kernels',
     name: 'Walnut Kernels (Akhrot)',
-    section: 'dry-fruits',
+    category: 'dry-fruits',
     tags: ['new'],
     tagline: 'Light, mellow halves',
     description:
@@ -375,7 +378,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'dry-fruit-barfi',
     name: 'Dry Fruit Barfi',
-    section: 'dry-fruits',
+    category: 'dry-fruits',
     tags: ['new'],
     badge: 'New',
     tagline: 'Soft squares packed with mixed dry fruits',
@@ -394,7 +397,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'classic-white-thobe',
     name: 'Classic White Thobe',
-    section: 'wearings',
+    category: 'wearings',
     tags: ['new'],
     badge: 'New',
     tagline: 'Breathable, ankle-length, Jumu‘ah-ready',
@@ -407,7 +410,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'cotton-kurta-pyjama',
     name: 'Cotton Kurta Pyjama Set',
-    section: 'wearings',
+    category: 'wearings',
     tags: ['new'],
     tagline: 'Everyday comfort in pure cotton',
     description: 'A classic straight-cut kurta with matching pyjama in light cotton — easy for salah, gatherings and daily wear.',
@@ -418,7 +421,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'knitted-kufi-cap',
     name: 'Knitted Kufi Cap',
-    section: 'wearings',
+    category: 'wearings',
     tags: [],
     tagline: 'Light, stretchable prayer cap',
     description: 'A soft knitted kufi that sits comfortably through long prayers. Light enough to keep in a pocket.',
@@ -429,7 +432,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'classic-abaya',
     name: 'Classic Everyday Abaya',
-    section: 'wearings',
+    category: 'wearings',
     tags: ['new'],
     tagline: 'Flowing, modest and easy to wear',
     description: 'A graceful open-front abaya in a flowing, non-sheer fabric with wide sleeves — simple enough for every day.',
@@ -440,7 +443,7 @@ export const PRODUCTS: Product[] = [
   {
     slug: 'premium-jersey-hijab',
     name: 'Premium Jersey Hijab',
-    section: 'wearings',
+    category: 'wearings',
     tags: [],
     tagline: 'Soft stretch, stays in place',
     description: 'A soft, opaque jersey hijab with a gentle stretch that drapes beautifully and stays in place all day.',
@@ -449,22 +452,3 @@ export const PRODUCTS: Product[] = [
     variants: sizes(['Black', 'Navy', 'Beige'], 399, 449),
   },
 ];
-
-export function getProduct(slug: string): Product | undefined {
-  return PRODUCTS.find((p) => p.slug === slug);
-}
-
-export function productsBySection(section: ShopSection): Product[] {
-  return PRODUCTS.filter((p) => p.section === section);
-}
-
-export const bestsellers = () => PRODUCTS.filter((p) => p.tags.includes('bestseller'));
-export const giftProducts = () => PRODUCTS.filter((p) => p.tags.includes('gift'));
-
-export function relatedProducts(product: Product, limit = 4): Product[] {
-  const same = PRODUCTS.filter((p) => p.slug !== product.slug && p.section === product.section);
-  const others = PRODUCTS.filter((p) => p.slug !== product.slug && p.section !== product.section && p.tags.includes('bestseller'));
-  return [...same, ...others].slice(0, limit);
-}
-
-export const lowestPrice = (p: Product) => Math.min(...p.variants.map((v) => v.price));

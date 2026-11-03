@@ -1,0 +1,126 @@
+import 'server-only';
+import mongoose, { Schema, type InferSchemaType, type Model } from 'mongoose';
+import type { Category, FormEntry, Order, Product } from '@/lib/types';
+
+// Collections in the "boldmount" db: categories, products, orders, users, forms, plus visits/settings/counters (raw driver).
+
+const CategorySchema = new Schema(
+  {
+    slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
+    name: { type: String, required: true, trim: true },
+    short: { type: String, default: '', trim: true },
+    tagline: { type: String, default: '', trim: true },
+    blurb: { type: String, default: '', trim: true },
+    image: { type: String, default: '' },
+    active: { type: Boolean, default: true },
+    sort: { type: Number, default: 0 },
+  },
+  { timestamps: true },
+);
+
+const ProductSchema = new Schema(
+  {
+    slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
+    name: { type: String, required: true, trim: true },
+    category: { type: String, required: true, index: true },
+    tags: { type: [String], default: [] },
+    tagline: { type: String, default: '' },
+    description: { type: String, default: '' },
+    highlights: { type: [String], default: [] },
+    details: { type: [{ _id: false, label: String, value: String }], default: [] },
+    images: { type: [{ _id: false, src: String, alt: String, cover: Boolean }], default: [] },
+    variants: { type: [{ _id: false, id: String, label: String, price: Number, compareAt: Number }], default: [] },
+    origin: String,
+    badge: String,
+    active: { type: Boolean, default: true },
+    sort: { type: Number, default: 0 },
+  },
+  { timestamps: true },
+);
+
+const OrderSchema = new Schema(
+  {
+    number: { type: String, required: true, unique: true },
+    items: { type: [{ _id: false, slug: String, name: String, variant: String, price: Number, qty: Number, image: String }], default: [] },
+    subtotal: Number,
+    delivery: Number,
+    total: Number,
+    customer: {
+      name: String,
+      mobile: String,
+      address: String,
+      city: String,
+      pincode: String,
+      note: String,
+      location: { type: { _id: false, lat: Number, lng: Number }, default: undefined },
+    },
+    userId: { type: String, index: true },
+    method: { type: String, enum: ['online', 'whatsapp'], required: true },
+    payment: { type: String, enum: ['pending', 'paid', 'failed', 'on-whatsapp'], default: 'pending' },
+    status: { type: String, enum: ['new', 'confirmed', 'delivered', 'cancelled'], default: 'new' },
+    razorpayOrderId: { type: String, index: true },
+    razorpayPaymentId: String,
+    paidAt: Date,
+  },
+  { timestamps: true },
+);
+
+const UserSchema = new Schema(
+  {
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    name: { type: String, default: '' },
+    avatar: String,
+    googleId: { type: String, index: true },
+    lastLoginAt: Date,
+  },
+  { timestamps: true },
+);
+
+const FormSchema = new Schema(
+  {
+    form: { type: String, required: true },
+    page: { type: String, default: '' },
+    fields: { type: [{ _id: false, label: String, value: String }], default: [] },
+    read: { type: Boolean, default: false },
+    client: String, // hashed IP+UA, for the rate limit
+  },
+  { timestamps: true },
+);
+
+// Reuse compiled models across dev hot reloads.
+const model = <S extends Schema>(name: string, schema: S, collection: string) =>
+  (mongoose.models[name] as Model<InferSchemaType<S>>) ?? mongoose.model(name, schema, collection);
+
+export const CategoryModel = model('Category', CategorySchema, 'categories');
+export const ProductModel = model('Product', ProductSchema, 'products');
+export const OrderModel = model('Order', OrderSchema, 'orders');
+export const UserModel = model('User', UserSchema, 'users');
+export const FormModel = model('Form', FormSchema, 'forms');
+
+/* eslint-disable @typescript-eslint/no-explicit-any -- lean() docs are plain objects; mapped field by field below. */
+const iso = (d: any) => (d ? new Date(d).toISOString() : undefined);
+
+export const toCategory = (d: any): Category => ({
+  id: String(d._id), slug: d.slug, name: d.name, short: d.short || d.name, tagline: d.tagline ?? '', blurb: d.blurb ?? '',
+  image: d.image ?? '', active: d.active !== false, sort: d.sort ?? 0,
+});
+
+export const toProduct = (d: any): Product => ({
+  id: String(d._id), slug: d.slug, name: d.name, category: d.category, tags: d.tags ?? [], tagline: d.tagline ?? '',
+  description: d.description ?? '', highlights: d.highlights ?? [], details: d.details ?? [],
+  images: (d.images ?? []).map((i: any) => ({ src: i.src, alt: i.alt ?? '', ...(i.cover ? { cover: true } : {}) })),
+  variants: (d.variants ?? []).map((v: any) => ({ id: v.id, label: v.label, price: v.price, ...(v.compareAt ? { compareAt: v.compareAt } : {}) })),
+  ...(d.origin ? { origin: d.origin } : {}), ...(d.badge ? { badge: d.badge } : {}),
+  active: d.active !== false, sort: d.sort ?? 0,
+});
+
+export const toOrder = (d: any): Order => ({
+  id: String(d._id), number: d.number, items: d.items ?? [], subtotal: d.subtotal, delivery: d.delivery, total: d.total,
+  customer: d.customer, ...(d.userId ? { userId: d.userId } : {}), method: d.method, payment: d.payment, status: d.status,
+  ...(d.razorpayOrderId ? { razorpayOrderId: d.razorpayOrderId } : {}), ...(d.razorpayPaymentId ? { razorpayPaymentId: d.razorpayPaymentId } : {}),
+  createdAt: iso(d.createdAt)!, ...(d.paidAt ? { paidAt: iso(d.paidAt) } : {}),
+});
+
+export const toForm = (d: any): FormEntry => ({
+  id: String(d._id), form: d.form, page: d.page ?? '', fields: d.fields ?? [], read: !!d.read, createdAt: iso(d.createdAt)!,
+});
