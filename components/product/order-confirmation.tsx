@@ -11,7 +11,10 @@ import { buttonClass } from '@/components/ui/button-styles';
 export function OrderConfirmation({ order }: { order: Order }) {
   const ref = useRef<HTMLDivElement>(null);
   // The form was far down the page; bring the confirmation into view.
-  useEffect(() => ref.current?.scrollIntoView({ block: 'start' }), []);
+  // Braces matter: newer browsers return a Promise from scrollIntoView, which React rejects as a cleanup.
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: 'start' });
+  }, []);
   return (
     <div ref={ref} role="status" className="mx-auto max-w-xl scroll-mt-36 rounded-2xl bg-pearl px-6 py-12 text-center ring-1 ring-line ring-inset md:py-14">
       <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-whatsapp/15 text-whatsapp-ink">
