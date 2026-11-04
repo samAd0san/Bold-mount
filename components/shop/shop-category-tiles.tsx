@@ -53,13 +53,15 @@ export function ShopCategoryTiles({ query, categories }: { query: ShopQuery; cat
                       : 'ring-1 ring-line group-hover:ring-2 group-hover:ring-gold-deep/60',
                   )}
                 >
-                  <Image
-                    src={t.image}
-                    alt=""
-                    fill
-                    sizes="80px"
-                    className={t.cutout ? 'object-contain p-2' : cn('object-cover', t.crop)}
-                  />
+                  {t.image && (
+                    <Image
+                      src={t.image}
+                      alt=""
+                      fill
+                      sizes="80px"
+                      className={t.cutout ? 'object-contain p-2' : cn('object-cover', t.crop)}
+                    />
+                  )}
                 </span>
                 <span className={cn('text-sm leading-tight whitespace-nowrap', on ? 'font-bold text-ink' : 'font-medium text-ink-soft group-hover:text-ink')}>
                   {t.label}

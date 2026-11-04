@@ -1,68 +1,74 @@
 'use client';
 
-import { Check, ChevronDown, MapPin } from 'lucide-react';
+import * as React from 'react';
+import { Eye } from 'lucide-react';
 import { CategoriesProvider } from '@/components/layout/categories-context';
 import { ProductCard } from '@/components/product/product-card';
 import { ProductGallery } from '@/components/product/product-gallery';
-import { ProductPurchase } from '@/components/product/product-purchase';
+import { ProductInfo } from '@/components/product/product-info';
 import type { Category, Product } from '@/lib/types';
 
-/** Look-only copy of the product's shop tile and page, built from the real storefront parts; nothing in it can be clicked. */
+/**
+ * Wraps a live preview built from the real shop parts so it can be clicked like the shop.
+ * Links go nowhere (onLink can scroll to another part of the preview); cart buttons only show a note, so the admin's own cart stays empty.
+ */
+export function PreviewFrame({ testId, onLink, children }: { testId: string; onLink?: (link: HTMLAnchorElement) => boolean; children: React.ReactNode }) {
+  const [note, setNote] = React.useState<string | null>(null);
+  const timer = React.useRef<ReturnType<typeof setTimeout>>(undefined);
+  React.useEffect(() => () => clearTimeout(timer.current), []);
+
+  const guard = (e: React.MouseEvent) => {
+    const el = (e.target as Element).closest('a, [data-cart-action]');
+    if (!el) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (el instanceof HTMLAnchorElement && onLink?.(el)) return;
+    setNote(el.matches('[data-cart-action]') ? 'Just a preview. Customers add to cart here.' : 'Just a preview. Customers open this in the shop.');
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setNote(null), 2500);
+  };
+
+  return (
+    <div data-testid={testId} onClickCapture={guard} className="relative flex flex-col gap-6">
+      {note && (
+        <p role="status" className="sticky top-2 z-10 -mb-4 flex items-center gap-2 self-center rounded-full bg-night px-3.5 py-1.5 text-xs font-semibold text-on-night shadow-card">
+          <Eye className="size-3.5 shrink-0" />
+          {note}
+        </p>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/** The product's shop tile and page, built from the real storefront parts, so everything works as in the shop: sizes, quantity, pictures, detail rows. */
 export function ProductPreview({ product, categories }: { product: Product; categories: Category[] }) {
   const category = categories.find((c) => c.slug === product.category);
+  const pageRef = React.useRef<HTMLElement>(null);
+  // Tapping the tile "opens" the product: the page preview below scrolls into view.
+  const openPage = () => {
+    pageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return true;
+  };
+
   return (
     <CategoriesProvider categories={categories}>
-      <div inert data-testid="product-preview" className="flex flex-col gap-6">
+      <PreviewFrame testId="product-preview" onLink={openPage}>
         <section>
-          <p className="mb-2 text-xs font-semibold text-ink-soft">In the shop list</p>
+          <p className="mb-2 text-xs font-semibold text-ink-soft">In the shop list (tap it to see its page)</p>
           <div className="w-[13rem] max-w-full">
             <ProductCard product={product} />
           </div>
         </section>
 
-        <section>
+        <section ref={pageRef} className="scroll-mt-4">
           <p className="mb-2 text-xs font-semibold text-ink-soft">Its own page (as on a phone)</p>
-          <div className="rounded-2xl bg-cream p-4 ring-1 ring-line ring-inset">
+          <div className="flex flex-col gap-6 rounded-2xl bg-cream p-4 ring-1 ring-line ring-inset">
             <ProductGallery images={product.images} />
-            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
-              {product.badge && <span className="rounded-full bg-gold px-2.5 py-1 text-[0.68rem] font-bold tracking-wide text-night uppercase">{product.badge}</span>}
-              {product.origin ? (
-                <span className="flex items-center gap-1 text-sm text-ink-soft"><MapPin size={14} className="text-gold-ink" /> {product.origin}</span>
-              ) : (
-                <span className="eyebrow">{category?.name}</span>
-              )}
-            </div>
-            <h3 className="mt-3 text-2xl leading-[1.1] break-words text-ink">{product.name}</h3>
-            {product.tagline && <p className="mt-2 leading-relaxed text-ink-soft">{product.tagline}</p>}
-            <div className="rule-gold my-5" />
-            <ProductPurchase product={product} />
-            {(product.description || product.highlights.length > 0) && (
-              <div className="mt-8">
-                <h4 className="text-lg text-ink">About this product</h4>
-                {product.description && <p className="mt-2 text-sm leading-relaxed whitespace-pre-line text-ink-soft">{product.description}</p>}
-                <ul className="mt-4 space-y-2.5">
-                  {product.highlights.map((h, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-ink">
-                      <span className="mt-0.5 flex size-[18px] shrink-0 items-center justify-center rounded-full bg-gold"><Check size={11} strokeWidth={3} className="text-night" /></span>
-                      <span className="leading-relaxed">{h}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {product.details.length > 0 && (
-              <ul className="mt-6 divide-y divide-line overflow-hidden rounded-2xl bg-pearl ring-1 ring-line ring-inset">
-                {product.details.map((d, i) => (
-                  <li key={i} className="flex min-h-12 items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
-                    {d.label}
-                    <ChevronDown size={16} className="shrink-0 text-ink-soft" />
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ProductInfo product={product} categoryName={category?.name} preview />
           </div>
         </section>
-      </div>
+      </PreviewFrame>
     </CategoriesProvider>
   );
 }

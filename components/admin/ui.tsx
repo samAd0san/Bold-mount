@@ -78,6 +78,16 @@ export function Field({ label, hint, tip, error, children, className }: { label:
   );
 }
 
+/** A card heading, with an optional "i" tip beside it. */
+export function CardTitle({ children, tip }: { children: string; tip?: React.ReactNode }) {
+  return (
+    <h2 className="flex items-center gap-1 text-[15px] font-semibold text-navy">
+      {children}
+      {tip && <InfoTip label={`What is “${children}”?`}>{tip}</InfoTip>}
+    </h2>
+  );
+}
+
 /** A plain bold label with an "i" tip, for groups that are not a single input (tags, pictures, switches). */
 export function TipLabel({ children, tip, className }: { children: string; tip: React.ReactNode; className?: string }) {
   return (

@@ -7,7 +7,7 @@ import { Check, Eye, Plus, Trash2 } from 'lucide-react';
 import { adminFetch, useFetch } from '@/components/admin/api';
 import { ImagesEditor } from '@/components/admin/image-fields';
 import { ProductPreview } from '@/components/admin/product-preview';
-import { Button, btn, Card, Checkbox, ConfirmDelete, ErrorNote, Field, InfoTip, Input, Modal, PageHead, Select, Skeleton, Switch, Textarea, TipLabel } from '@/components/admin/ui';
+import { Button, btn, Card, CardTitle, Checkbox, ConfirmDelete, ErrorNote, Field, Input, Modal, PageHead, Select, Skeleton, Switch, Textarea, TipLabel } from '@/components/admin/ui';
 import { PRODUCT_TAGS, type Category, type Product, type ProductImage, type ProductTag } from '@/lib/types';
 
 let rowId = 0;
@@ -130,15 +130,6 @@ export function ProductEditor({ id }: { id?: string }) {
   );
 }
 
-function CardTitle({ children, tip }: { children: string; tip: string }) {
-  return (
-    <h2 className="flex items-center gap-1 text-[15px] font-semibold text-navy">
-      {children}
-      <InfoTip label={`What is “${children}”?`}>{tip}</InfoTip>
-    </h2>
-  );
-}
-
 function ProductForm({ id, categories, initial }: { id?: string; categories: Category[]; initial: Draft }) {
   const router = useRouter();
   const [d, setD] = React.useState<Draft>(initial);
@@ -234,7 +225,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start">
         <div className="flex min-w-0 flex-col gap-5">
           <Card className="flex flex-col gap-4">
-            <h2 className="text-[15px] font-semibold text-navy">Basics</h2>
+            <CardTitle>Basics</CardTitle>
             <Field label="Name" tip={TIP.name} error={errors.name}>
               <Input value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Ajwa Dates" autoComplete="off" />
             </Field>
@@ -255,7 +246,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
           </Card>
 
           <Card className="flex flex-col gap-3">
-            <h2 className="text-[15px] font-semibold text-navy">Price</h2>
+            <CardTitle>Price</CardTitle>
             <p className="-mt-1 text-xs text-ink-soft">One price is enough. If you sell it in sizes or packs (250 g, 500 g, S, M…), add a row for each.</p>
             {d.variants.map((v, i) => (
               <div key={v.key} className="grid grid-cols-2 gap-x-2 gap-y-3 rounded-xl border bg-white p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] sm:items-start">
@@ -307,7 +298,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
           </Card>
 
           <Card className="flex flex-col gap-4">
-            <h2 className="text-[15px] font-semibold text-navy">Shop settings</h2>
+            <CardTitle>Shop settings</CardTitle>
             <div>
               <TipLabel tip={TIP.tags} className="mb-1">Tags</TipLabel>
               <div className="flex flex-wrap gap-x-5">

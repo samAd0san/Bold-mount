@@ -7,7 +7,9 @@ import { cn } from '@/lib/utils';
 
 // Images are stacked and cross-faded so switching never flashes an empty tile.
 export function ProductGallery({ images }: { images: ProductImage[] }) {
-  const [active, setActive] = useState(0);
+  const [picked, setActive] = useState(0);
+  // The admin preview can remove pictures while one is picked; fall back to the last one.
+  const active = Math.min(picked, images.length - 1);
   if (!images.length) return <div className="aspect-square rounded-2xl bg-pearl ring-1 ring-line ring-inset" />;
 
   return (
@@ -15,7 +17,7 @@ export function ProductGallery({ images }: { images: ProductImage[] }) {
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-pearl ring-1 ring-line ring-inset">
         {images.map((img, i) => (
           <Image
-            key={img.src}
+            key={`${i}-${img.src}`}
             src={img.src}
             alt={img.alt}
             fill
@@ -32,10 +34,10 @@ export function ProductGallery({ images }: { images: ProductImage[] }) {
       </div>
 
       {images.length > 1 && (
-        <div className="mt-3 flex gap-3">
+        <div className="mt-3 flex flex-wrap gap-3">
           {images.map((img, i) => (
             <button
-              key={img.src}
+              key={`${i}-${img.src}`}
               type="button"
               onClick={() => setActive(i)}
               aria-label={`Show image ${i + 1} of ${images.length}`}

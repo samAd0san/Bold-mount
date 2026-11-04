@@ -78,11 +78,11 @@ export function ProductPurchase({ product }: { product: Product }) {
 
       <div className="mt-7 flex gap-3">
         <QtyStepper value={qty} onChange={setQty} className="h-12" />
-        <button type="button" onClick={() => add(product, variant, qty)} className={buttonClass('navy', 'h-12 flex-1')}>
+        <button type="button" data-cart-action onClick={() => add(product, variant, qty)} className={buttonClass('navy', 'h-12 flex-1')}>
           <ShoppingBag size={17} /> Add to cart
         </button>
       </div>
-      <button type="button" onClick={buyNow} className={buttonClass('gold', 'mt-3 h-12 w-full')}>
+      <button type="button" data-cart-action onClick={buyNow} className={buttonClass('gold', 'mt-3 h-12 w-full')}>
         Buy now
       </button>
       <p className="mt-3 text-center text-xs text-ink-soft">Pay online at checkout with UPI, cards or netbanking.</p>

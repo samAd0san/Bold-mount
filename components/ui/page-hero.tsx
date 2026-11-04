@@ -23,7 +23,7 @@ export function PageHero({
 }) {
   return (
     <section className="relative isolate overflow-hidden bg-night text-on-night">
-      <Image src={image} alt="" fill priority sizes="100vw" className="-z-10 object-cover opacity-90" />
+      {image && <Image src={image} alt="" fill priority sizes="100vw" className="-z-10 object-cover opacity-90" />}
       <div className="absolute inset-0 -z-10 scrim-l" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-night/70 to-transparent" />
       <Container className="flex min-h-[340px] flex-col justify-end py-10 md:min-h-[440px] md:py-16">

@@ -52,9 +52,14 @@ for (const width of WIDTHS) {
       await page.goto(path, { waitUntil: 'networkidle' });
       await check(path);
     }
-    await page.goto('/admin/categories');
-    await page.getByRole('button', { name: 'Add category' }).click();
-    await check('add category dialog');
+    await page.goto('/admin/categories/new');
+    await check('new category page');
+    if (width < 1280) {
+      await page.getByRole('button', { name: 'Preview', exact: true }).click();
+      await page.waitForTimeout(400);
+      await check('category preview');
+      await page.keyboard.press('Escape');
+    }
 
     await page.goto('/admin/products/new');
     await page.getByLabel('Price ₹', { exact: true }).fill('449');

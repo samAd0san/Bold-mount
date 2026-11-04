@@ -12,6 +12,7 @@ export function QuickAdd({ product }: { product: Product }) {
   return (
     <button
       type="button"
+      data-cart-action
       onClick={() => add(product, v)}
       aria-label={`Add ${product.name}${v.label ? ` (${v.label})` : ''} to cart`}
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy text-on-night transition-colors hover:bg-gold hover:text-night"

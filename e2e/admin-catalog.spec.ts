@@ -207,16 +207,17 @@ test('help tips: every field has one; tap to open, hover with a mouse, typing is
   await page.getByRole('heading', { name: 'Basics' }).click();
   await expect(tipText(page)).toHaveCount(0);
 
-  await page.goto('/admin/categories');
-  await page.getByRole('button', { name: 'Add category' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Add category' });
+  await page.goto('/admin/categories/new');
   for (const field of ['Name', 'Short label', 'Tagline', 'Blurb', 'Picture', 'Sort order', 'Show in the shop']) {
-    await expect(dialog.getByRole('button', { name: `What is “${field}”?`, exact: true }), field).toBeVisible();
+    await expect(page.getByRole('button', { name: `What is “${field}”?`, exact: true }), field).toBeVisible();
   }
-  // Tips work inside the pop-up too, and tapping one does not close the pop-up.
-  await dialog.getByRole('button', { name: 'What is “Short label”?' }).click();
+  await page.getByRole('button', { name: 'What is “Short label”?' }).click();
   await expect(tipText(page)).toContainText('the round category buttons in the shop');
-  await expect(dialog).toBeVisible();
+  // Phones: the category preview opens from the bottom bar, like the product one.
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.getByRole('heading', { name: 'Basics' }).click();
+  await page.getByRole('button', { name: 'Preview', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Preview' })).toBeVisible();
 });
 
 test('preview: the product and category previews follow what you type; phones get a Preview button', async ({ page }) => {
@@ -244,9 +245,42 @@ test('preview: the product and category previews follow what you type; phones ge
   await expect(preview).toContainText('from ₹1,299');
   await expect(preview.locator('fieldset')).toContainText('Pack size: 250 g');
   await expect(preview.locator('fieldset')).toContainText('500 g');
-  // Look only: its buttons can't be pressed, so nothing goes into the real cart.
-  await expect(preview).toHaveAttribute('inert', '');
-  await expect(preview).toContainText('Add to cart');
+  // It behaves like the shop: picking a size changes the price, and the quantity buttons work.
+  const purchase = preview.locator('fieldset');
+  await purchase.getByRole('button', { name: '500 g' }).click();
+  await expect(purchase.locator('legend')).toHaveText('Pack size: 500 g');
+  await expect(purchase.getByRole('button', { name: '500 g' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(preview).toContainText('₹2,399');
+  await sizeBox(page).nth(1).fill('500 g pouch');
+  await expect(purchase.locator('legend')).toHaveText('Pack size: 500 g pouch');
+  await preview.getByRole('button', { name: 'Increase quantity' }).click();
+  await expect(preview.getByRole('group', { name: /quantity/i })).toContainText('2');
+  // Several pictures: tapping a thumbnail shows it; removing it in the form never leaves the picture blank.
+  await page.getByLabel('Image link').fill('/images/products/talbeenah-duo.webp');
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await preview.getByRole('button', { name: 'Show image 2 of 2' }).click();
+  await expect(preview.getByRole('button', { name: 'Show image 2 of 2' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(preview.locator('img[aria-hidden="false"]').first()).toHaveAttribute('src', /talbeenah-duo/);
+  await page.getByRole('button', { name: 'Remove picture 2' }).click();
+  await expect(preview.locator('img[aria-hidden="false"]').first()).toHaveAttribute('src', /gift-sunnah-trio/);
+  // Detail rows open to show their text, just like the product page (with "Delivery & payment" added for every product).
+  await page.getByRole('button', { name: 'Add a detail' }).click();
+  await page.getByLabel('Detail label').fill('Storage');
+  await page.getByLabel('Detail value').fill('Keep in a cool, dry place.');
+  await preview.getByText('Storage', { exact: true }).click();
+  await expect(preview.getByText('Keep in a cool, dry place.')).toBeVisible();
+  await preview.getByText('Delivery & payment').click();
+  await expect(preview.getByText(/Payments are handled by Razorpay/)).toBeVisible();
+  // Tapping the shop tile "opens" its page: the page preview scrolls into view and the admin stays put.
+  await preview.getByRole('link', { name: 'Ajwa Dates Gift Tin' }).first().click();
+  await expect(page).toHaveURL(/\/admin\/products\/new$/);
+  await expect(preview.getByText('Its own page (as on a phone)')).toBeInViewport();
+  // Add to cart, Buy now and quick add can't fill the admin's own cart: they show a note instead.
+  for (const name of ['Add to cart', 'Buy now', /^Add Ajwa Dates Gift Tin/]) {
+    await preview.getByRole('button', { name }).first().click();
+    await expect(preview.getByRole('status')).toContainText('Just a preview');
+  }
+  expect(await page.evaluate(() => Object.values(localStorage).join(' '))).not.toContain('Ajwa Dates Gift Tin');
 
   // Phones and tablets: the preview opens from the bottom bar.
   await page.setViewportSize({ width: 390, height: 800 });
@@ -258,14 +292,32 @@ test('preview: the product and category previews follow what you type; phones ge
   await expect(sheet).toBeHidden();
 
   await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/admin/categories/new');
+  await page.getByLabel('Name', { exact: true }).fill('Prayer Mats');
+  await page.getByLabel('Short label', { exact: true }).fill('Mats');
+  await page.getByLabel('Tagline', { exact: true }).fill('Soft, thick and easy to carry');
+  await page.getByLabel('Blurb', { exact: true }).fill('Padded prayer mats for home and travel.');
+  const cat = page.getByTestId('category-preview').first();
+  for (const text of ['Shop by category', 'Mats', 'Soft, thick and easy to carry', 'Prayer Mats', 'Padded prayer mats for home and travel.', 'Shop Mats', 'No products yet']) await expect(cat).toContainText(text);
+  // Its round button sits among the real ones, in sort order (empty sort = last before Gift Boxes).
+  const tiles = cat.getByRole('navigation', { name: 'Shop by category' }).getByRole('link');
+  await expect(tiles.first()).toHaveText('All');
+  await expect(tiles.nth(-2)).toHaveText('Mats');
+  await expect(tiles.last()).toHaveText('Gift Boxes');
+  await page.getByLabel('Sort order', { exact: true }).fill('0');
+  await expect(tiles.nth(1)).toHaveText('Mats');
+  // Tapping "Shop Mats" jumps to its products and the admin stays put; hiding it removes its button.
+  await cat.getByRole('link', { name: 'Shop Mats' }).click();
+  await expect(cat.getByText('No products yet')).toBeInViewport();
+  await expect(page).toHaveURL(/\/admin\/categories\/new$/);
+  await page.getByRole('switch', { name: 'Show in the shop' }).click();
+  await expect(cat).toContainText('Hidden: customers won’t see this button or page.');
+  await expect(tiles.filter({ hasText: 'Mats' })).toHaveCount(0);
+
+  // An existing category previews its real products.
   await page.goto('/admin/categories');
-  await page.getByRole('button', { name: 'Add category' }).click();
-  const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Name', { exact: true }).fill('Prayer Mats');
-  await dialog.getByLabel('Short label', { exact: true }).fill('Mats');
-  await dialog.getByLabel('Tagline', { exact: true }).fill('Soft, thick and easy to carry');
-  await dialog.getByLabel('Blurb', { exact: true }).fill('Padded prayer mats for home and travel.');
-  const cat = dialog.getByTestId('category-preview');
-  for (const text of ['Mats', 'Soft, thick and easy to carry', 'Prayer Mats', 'Padded prayer mats for home and travel.', 'Shop Mats']) await expect(cat).toContainText(text);
-  await dialog.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('link', { name: 'Edit Talbeenah' }).click();
+  const existing = page.getByTestId('category-preview').first();
+  await expect(existing).toContainText('Premium Roasted Talbeenah');
+  await expect(existing).not.toContainText('No products yet');
 });

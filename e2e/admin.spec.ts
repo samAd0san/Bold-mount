@@ -58,32 +58,38 @@ test('phone: menu button opens the sidebar and it closes after picking a page', 
   await expect(nav).toBeHidden();
 });
 
-test('category: added with just a name, the web address is made for you', async ({ page }) => {
+test('category: its own page with a name is enough, the web address is made for you', async ({ page }) => {
   await adminLogin(page);
   await page.goto('/admin/categories');
+  await page.getByRole('link', { name: 'Add category' }).click();
+  await expect(page).toHaveURL(/\/admin\/categories\/new$/);
+  await expect(page.getByText('Slug')).toHaveCount(0);
+  await page.getByLabel('Name', { exact: true }).fill('Attar & Oud');
+  await page.getByLabel('Tagline', { exact: true }).fill('Alcohol-free fragrance oils');
   await page.getByRole('button', { name: 'Add category' }).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.getByText('Slug')).toHaveCount(0);
-  await dialog.getByLabel('Name', { exact: true }).fill('Attar & Oud');
-  await dialog.getByLabel('Tagline', { exact: true }).fill('Alcohol-free fragrance oils');
-  await dialog.getByRole('button', { name: 'Add category' }).click();
+  await expect(page).toHaveURL(/\/admin\/categories$/);
   await expect(page.locator('main')).toContainText('/attar-oud');
 
   // Same name again gets its own address instead of an error.
+  await page.getByRole('link', { name: 'Add category' }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Attar & Oud');
   await page.getByRole('button', { name: 'Add category' }).click();
-  await page.getByRole('dialog').getByLabel('Name', { exact: true }).fill('Attar & Oud');
-  await page.getByRole('dialog').getByRole('button', { name: 'Add category' }).click();
   await expect(page.locator('main')).toContainText('/attar-oud-2');
 
   // Renaming keeps the address, so shared links keep working.
-  await page.getByRole('button', { name: 'Edit Attar & Oud' }).last().click();
-  await page.getByRole('dialog').getByLabel('Name', { exact: true }).fill('Attar Gift Sets');
-  await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('link', { name: 'Edit Attar & Oud' }).last().click();
+  await expect(page).toHaveURL(/\/admin\/categories\/[0-9a-f]{24}$/);
+  await page.getByLabel('Name', { exact: true }).fill('Attar Gift Sets');
+  await page.getByRole('button', { name: 'Save changes' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Saved' })).toBeVisible();
+  await expect(page.locator('main')).toContainText('/attar-oud-2');
+  await page.goto('/admin/categories');
   await expect(page.locator('li', { hasText: 'Attar Gift Sets' })).toContainText('/attar-oud-2');
 
-  await page.getByRole('button', { name: 'Edit Attar Gift Sets' }).click();
+  await page.getByRole('link', { name: 'Edit Attar Gift Sets' }).click();
+  await page.getByRole('button', { name: 'Delete' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).last().click();
+  await expect(page).toHaveURL(/\/admin\/categories$/);
   await expect(page.locator('main')).not.toContainText('Attar Gift Sets');
 
   const res = await page.goto('/category/attar-oud');
