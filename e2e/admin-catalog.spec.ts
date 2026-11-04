@@ -11,7 +11,7 @@ const sizeBox = (page: Page) => page.getByRole('textbox', { name: /^Size or pack
 const tipText = (page: Page) => page.getByRole('tooltip');
 const ICON = readFileSync('public/images/brand/icon-192.png');
 // A picture already online that Cloudinary can fetch: our own live site's icon.
-const LIVE_PICTURE = 'https://bold-mount.vercel.app/images/brand/icon-192.png';
+const LIVE_PICTURE = 'https://www.boldmount.store/images/brand/icon-192.png';
 
 async function booksCategory(page: Page) {
   if (!(await categories(page)).some((c) => c.slug === 'islamic-books')) {
@@ -150,7 +150,7 @@ test('pictures: links, Google picture addresses and copied pictures are saved to
   // A picture link, a pasted Google Images address (data:…), and a copied picture.
   await box.fill(LIVE_PICTURE);
   await page.getByRole('button', { name: 'Add', exact: true }).click();
-  await expect(page.getByText('Picture from bold-mount.vercel.app')).toBeVisible();
+  await expect(page.getByText('Picture from boldmount.store')).toBeVisible();
   await expect(thumbs).toHaveCount(1, { timeout: 30_000 });
   await paste(box, { text: `data:image/png;base64,${ICON.toString('base64')}` });
   await expect(thumbs).toHaveCount(2, { timeout: 30_000 });

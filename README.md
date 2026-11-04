@@ -2,7 +2,7 @@
 
 Storefront and community site for **Bold Mount** — Sunnah superfoods (Talbeenah, premium dates, Sidr honey, dry fruits, modest wear) and community services (Khidmat-e-Khalq, Zakat, volunteer guidance, free Qur’an giveaways, Umrah Badal).
 
-Live: https://bold-mount.vercel.app
+Live: https://www.boldmount.store (boldmount.store and the old bold-mount.vercel.app forward there)
 
 Products and categories live in MongoDB and are edited from **`/admin`** (PIN, default `1111`). Customers can pay online (Razorpay: UPI / Google Pay / PhonePe, cards, netbanking, Apple Pay) or send the order on WhatsApp; both land in the admin. Every form on the site (contact, zakat pledge, volunteer, giveaway, umrah booking) still opens WhatsApp and is also saved for the admin.
 
@@ -78,7 +78,7 @@ Environment variables are listed in `.env.example`. The same values are set in V
 
 Vercel builds automatically from GitHub:
 
-- push to **`main`** → production (bold-mount.vercel.app)
+- push to **`main`** → production (www.boldmount.store)
 - push any other branch → a preview deployment (visible to the Vercel team)
 
 ## Tech
