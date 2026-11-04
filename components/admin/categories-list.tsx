@@ -6,12 +6,14 @@ import { Pencil, Plus } from 'lucide-react';
 import { adminFetch, useFetch } from '@/components/admin/api';
 import { Badge, btn, Empty, ErrorNote, PageHead, Skeleton, Switch, Thumb } from '@/components/admin/ui';
 import type { Category } from '@/lib/types';
+import { useLive } from '@/lib/live';
 import { cn } from '@/lib/utils';
 
 type Row = Category & { products: number };
 
 export function CategoriesList() {
   const { data, error, reload, mutate } = useFetch<{ categories: Row[] }>('/api/admin/categories');
+  useLive('catalog', reload);
   const [problem, setProblem] = React.useState<string | null>(null);
 
   const toggle = async (c: Row, active: boolean) => {

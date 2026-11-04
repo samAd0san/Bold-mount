@@ -7,6 +7,7 @@ import { adminFetch, clock, looksLikePhone, telLink, useFetch, waLink } from '@/
 import { Button, ConfirmDelete, Empty, ErrorNote, PageHead, Skeleton } from '@/components/admin/ui';
 import type { FormEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useLive } from '@/lib/live';
 
 type Data = { unread: number; forms: FormEntry[] };
 
@@ -14,6 +15,7 @@ type Data = { unread: number; forms: FormEntry[] };
 export function FormsList() {
   const { setUnread } = useAdmin();
   const { data, error, reload, mutate } = useFetch<Data>('/api/admin/forms');
+  useLive('admin', (name) => { if (name === 'form' || name === 'resync') reload(); });
   const [deleting, setDeleting] = React.useState<FormEntry | null>(null);
   const [problem, setProblem] = React.useState<string | null>(null);
 

@@ -8,6 +8,7 @@ import { RangeCalendar, rangeText, type DayRange } from '@/components/admin/date
 import { Card, Empty, ErrorNote, InfoTip, PageHead } from '@/components/admin/ui';
 import { formatINR } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { useLive } from '@/lib/live';
 
 type Period = 'today' | 'yesterday' | 'week' | 'custom';
 type Stats = {
@@ -60,6 +61,7 @@ export function Dashboard() {
   const [picking, setPicking] = React.useState(false);
   const query = period === 'custom' && custom ? `period=custom&from=${custom.from}&to=${custom.to}` : `period=${period === 'custom' ? 'today' : period}`;
   const { data, error, loading, reload } = useStats(query);
+  useLive('admin', (name) => { if (name !== 'form') reload(); });
   const word = WORDS[period === 'custom' && !custom ? 'today' : period];
 
   return (

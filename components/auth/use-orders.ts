@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
+import { useLive } from '@/lib/live';
 import type { Order } from '@/lib/types';
 
 type Snapshot = { orders: Order[] | null; failed: boolean; updatedAt: number };
@@ -46,11 +47,12 @@ function subscribe(cb: () => void) {
 }
 
 /**
- * The signed-in customer's orders, kept in step with the admin: refetched when the tab comes back into view,
- * and, with `watch`, on mount and every 30s while the tab is visible. `orders` is null until the first load.
+ * The signed-in customer's orders, kept in step with the admin: refetched the moment the shop changes one (live),
+ * when the tab comes back into view, and, with `watch`, on mount and every 30s as a fallback. `orders` is null until the first load.
  */
 export function useOrders(watch = false): Snapshot {
   const state = useSyncExternalStore(subscribe, () => snap, () => SERVER);
+  useLive('orders', () => void refreshOrders());
   useEffect(() => {
     const sync = () => {
       if (document.visibilityState === 'visible') void refreshOrders(2000);

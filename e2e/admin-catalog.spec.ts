@@ -181,7 +181,7 @@ test('pictures: links, Google picture addresses and copied pictures are saved to
 test('help tips: every field has one; tap to open, hover with a mouse, typing is never interrupted', async ({ page }) => {
   await adminLogin(page);
   await page.goto('/admin/products/new');
-  for (const field of ['Name', 'Category', 'Tagline', 'Description', 'Highlights', 'Price ₹', 'Was ₹ (optional)', 'Size or pack (optional)', 'Pictures', 'Details', 'Tags', 'Badge', 'Origin', 'Sort order', 'Show in the shop']) {
+  for (const field of ['Name', 'Category', 'Tagline', 'Description', 'Highlights', 'Price ₹', 'Was ₹', 'Size or pack (optional)', 'Pictures', 'Details', 'Tags', 'Badge', 'Origin', 'Sort order', 'Show in the shop']) {
     await expect(page.getByRole('button', { name: `What is “${field}”?`, exact: true }), field).toBeVisible();
   }
 
@@ -229,7 +229,7 @@ test('preview: the product and category previews follow what you type; phones ge
   await page.getByLabel('Tagline', { exact: true }).fill('Soft Ajwa from Madinah in a keepsake tin');
   await page.getByLabel('Highlights', { exact: true }).fill('Hand-picked\nKeepsake tin');
   await page.getByLabel('Price ₹', { exact: true }).fill('1299');
-  await page.getByLabel('Was ₹ (optional)', { exact: true }).fill('1499');
+  await page.getByLabel('Was ₹', { exact: true }).fill('1499');
   await page.getByLabel('Badge', { exact: true }).fill('Limited');
   await page.getByLabel('Origin', { exact: true }).fill('Madinah');
   await page.getByLabel('Image link').fill('/images/products/gift-sunnah-trio.webp');

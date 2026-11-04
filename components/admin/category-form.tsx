@@ -13,6 +13,7 @@ import { CategoriesProvider } from '@/components/layout/categories-context';
 import { ProductCard } from '@/components/product/product-card';
 import { ShopCategoryTiles } from '@/components/shop/shop-category-tiles';
 import { buttonClass } from '@/components/ui/button-styles';
+import { useLive } from '@/lib/live';
 import type { Category, Product } from '@/lib/types';
 
 type Row = Category & { products: number };
@@ -37,6 +38,8 @@ export function CategoryEditor({ id }: { id?: string }) {
   const cats = useFetch<{ categories: Row[] }>('/api/admin/categories');
   const category = id ? cats.data?.categories.find((c) => c.id === id) : undefined;
   const prods = useFetch<{ products: Product[] }>(category ? `/api/admin/products?category=${encodeURIComponent(category.slug)}` : null);
+  // Other categories and this one's products feed the preview; the form you're typing in is left alone.
+  useLive('catalog', () => { cats.reload(); prods.reload(); });
   const missing = id && cats.data && !category;
   const error = cats.error ?? (missing ? 'This category no longer exists.' : null);
 
@@ -131,7 +134,8 @@ function CategoryForm({ category, others, products, initial }: { category?: Row;
 
       {/* 25rem leaves the preview about as wide as a phone screen. */}
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start">
-        <div className="flex min-w-0 flex-col gap-5">
+        {/* Layouts inside follow this column's width (@container), not the screen: the sidebar takes room on tablets. */}
+        <div className="@container flex min-w-0 flex-col gap-5">
           <Card className="flex flex-col gap-4">
             <CardTitle>Basics</CardTitle>
             <Field label="Name" tip={TIP.name} error={errors.name}>
@@ -183,7 +187,7 @@ function CategoryForm({ category, others, products, initial }: { category?: Row;
       <div className="sticky bottom-0 z-30 -mx-4 flex items-center gap-2 border-t bg-cream/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
         <Button type="submit" variant="gold" busy={saving}>{category ? 'Save changes' : 'Add category'}</Button>
         <Button variant="outline" className="xl:hidden" onClick={() => setPreviewing(true)}><Eye className="size-4" />Preview</Button>
-        <Link href="/admin/categories" className={btn('ghost', 'md', 'max-sm:hidden')}>Cancel</Link>
+        <Link href="/admin/categories" className={btn('ghost', 'md', 'max-lg:hidden')}>Cancel</Link>
         {saved && <span role="status" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700"><Check className="size-4" /><span className="max-sm:sr-only">Saved</span></span>}
         {category && <Button variant="danger" className="ml-auto max-sm:px-3" aria-label="Delete" onClick={() => setDeleting(true)}><Trash2 className="size-4" /><span className="max-sm:hidden">Delete</span></Button>}
       </div>

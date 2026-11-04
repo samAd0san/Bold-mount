@@ -2,15 +2,17 @@ import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { PRODUCT_TAGS } from '@/lib/types';
+import { notify } from '@/lib/server/live';
 import { slugify } from '@/lib/server/slug';
 
-/** Makes pages served from this process show catalog edits straight away (on Vercel they refresh within a minute on their own). */
+/** After any category/product change: drop the cached shop pages, then tell open pages (shop and admin) to refresh live. */
 export function refreshStorefront() {
   try {
     revalidatePath('/', 'layout');
   } catch (err) {
     console.error('[catalog] revalidate failed', err);
   }
+  notify('catalog', 'changed');
 }
 
 const text = (max: number) => z.string().trim().max(max);

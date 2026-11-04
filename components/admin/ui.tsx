@@ -14,7 +14,8 @@ type Variant = 'navy' | 'gold' | 'outline' | 'ghost' | 'danger';
 type Size = 'md' | 'sm';
 
 export function btn(variant: Variant = 'navy', size: Size = 'md', className?: string) {
-  const sz = size === 'sm' ? 'gap-1.5 px-3.5 py-1.5 text-[13px]' : 'px-5 py-2.5';
+  // Button text never wraps ("Save changes" on two lines looks broken on tablets).
+  const sz = cn('whitespace-nowrap', size === 'sm' ? 'gap-1.5 px-3.5 py-1.5 text-[13px]' : 'px-5 py-2.5');
   if (variant === 'ghost') return cn(buttonClass('outline', cn(sz, 'border-transparent text-navy hover:border-transparent hover:bg-navy/10 hover:text-navy')), className);
   if (variant === 'danger') return cn(buttonClass('outline', cn(sz, 'border-red-700/30 text-red-700 hover:border-red-700 hover:bg-red-700 hover:text-white')), className);
   return cn(buttonClass(variant, sz), className);
@@ -170,7 +171,7 @@ export function Switch({ checked, onChange, label, disabled }: { checked: boolea
 
 export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
   return (
-    <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 text-sm text-ink">
+    <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 text-sm whitespace-nowrap text-ink">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 accent-navy" />
       {children}
     </label>

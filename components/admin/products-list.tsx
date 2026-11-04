@@ -8,6 +8,7 @@ import { Badge, btn, Empty, ErrorNote, Input, PageHead, Select, Skeleton, Switch
 import { formatINR } from '@/lib/format';
 import type { Category, Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useLive } from '@/lib/live';
 
 const priceText = (p: Product) => {
   if (!p.variants.length) return '—';
@@ -20,6 +21,7 @@ const priceText = (p: Product) => {
 export function ProductsList() {
   const products = useFetch<{ products: Product[] }>('/api/admin/products');
   const cats = useFetch<{ categories: Category[] }>('/api/admin/categories');
+  useLive('catalog', () => { products.reload(); cats.reload(); });
   const [q, setQ] = React.useState('');
   const [cat, setCat] = React.useState('');
   const [problem, setProblem] = React.useState<string | null>(null);

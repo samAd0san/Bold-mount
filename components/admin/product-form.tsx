@@ -8,6 +8,7 @@ import { adminFetch, useFetch } from '@/components/admin/api';
 import { ImagesEditor } from '@/components/admin/image-fields';
 import { ProductPreview } from '@/components/admin/product-preview';
 import { Button, btn, Card, CardTitle, Checkbox, ConfirmDelete, ErrorNote, Field, Input, Modal, PageHead, Select, Skeleton, Switch, Textarea, TipLabel } from '@/components/admin/ui';
+import { useLive } from '@/lib/live';
 import { PRODUCT_TAGS, type Category, type Product, type ProductImage, type ProductTag } from '@/lib/types';
 
 let rowId = 0;
@@ -107,6 +108,8 @@ function previewOf(d: Draft): Product {
 export function ProductEditor({ id }: { id?: string }) {
   const cats = useFetch<{ categories: Category[] }>('/api/admin/categories');
   const prod = useFetch<{ product: Product }>(id ? `/api/admin/products/${id}` : null);
+  // A new category added elsewhere shows up in the Category list; the product being edited is left alone.
+  useLive('catalog', cats.reload);
   const error = cats.error ?? prod.error;
   const ready = cats.data && (!id || prod.data);
 
@@ -223,7 +226,8 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
 
       {/* 25rem leaves the preview about as wide as a phone screen. */}
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start">
-        <div className="flex min-w-0 flex-col gap-5">
+        {/* Layouts inside follow this column's width (@container), not the screen: the sidebar takes room on tablets. */}
+        <div className="@container flex min-w-0 flex-col gap-5">
           <Card className="flex flex-col gap-4">
             <CardTitle>Basics</CardTitle>
             <Field label="Name" tip={TIP.name} error={errors.name}>
@@ -249,14 +253,14 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
             <CardTitle>Price</CardTitle>
             <p className="-mt-1 text-xs text-ink-soft">One price is enough. If you sell it in sizes or packs (250 g, 500 g, S, M…), add a row for each.</p>
             {d.variants.map((v, i) => (
-              <div key={v.key} className="grid grid-cols-2 gap-x-2 gap-y-3 rounded-xl border bg-white p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] sm:items-start">
+              <div key={v.key} className="grid grid-cols-2 gap-x-2 gap-y-3 rounded-xl border bg-white p-3 @xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_auto] @xl:items-start">
                 <Field label="Price ₹" tip={TIP.price} error={errors[`v${i}.price`]}>
                   <Input type="number" inputMode="numeric" min={1} value={v.price} onChange={(e) => setVariant(v.key, { price: e.target.value })} placeholder="449" />
                 </Field>
-                <Field label="Was ₹ (optional)" tip={TIP.was} error={errors[`v${i}.compareAt`]}>
-                  <Input type="number" inputMode="numeric" min={1} value={v.compareAt} onChange={(e) => setVariant(v.key, { compareAt: e.target.value })} placeholder="549" />
+                <Field label="Was ₹" tip={TIP.was} error={errors[`v${i}.compareAt`]}>
+                  <Input type="number" inputMode="numeric" min={1} value={v.compareAt} onChange={(e) => setVariant(v.key, { compareAt: e.target.value })} placeholder="Optional" />
                 </Field>
-                <Field label={several ? 'Size or pack' : 'Size or pack (optional)'} tip={TIP.size} error={errors[`v${i}.label`]} className="col-span-2 sm:col-span-1">
+                <Field label={several ? 'Size or pack' : 'Size or pack (optional)'} tip={TIP.size} error={errors[`v${i}.label`]} className="col-span-2 @xl:col-span-1">
                   <Input value={v.label} onChange={(e) => setVariant(v.key, { label: e.target.value })} placeholder={several ? 'e.g. 500 g' : 'e.g. 500 g, or leave empty'} />
                 </Field>
                 {several && (
@@ -264,7 +268,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
                     type="button"
                     onClick={() => set('variants', d.variants.filter((x) => x.key !== v.key))}
                     aria-label={`Remove price row ${i + 1}`}
-                    className="col-span-2 grid size-10 place-items-center justify-self-end rounded-full border border-red-700/30 text-red-700 hover:bg-red-700 hover:text-white sm:col-span-1 sm:mt-[26px]"
+                    className="col-span-2 grid size-10 place-items-center justify-self-end rounded-full border border-red-700/30 text-red-700 hover:bg-red-700 hover:text-white @xl:col-span-1 @xl:mt-[26px]"
                   >
                     <Trash2 className="size-4" />
                   </button>
@@ -286,10 +290,10 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
             <CardTitle tip={TIP.details}>Details</CardTitle>
             <p className="-mt-1 text-xs text-ink-soft">Small facts such as Storage or Ingredients.</p>
             {d.details.map((x) => (
-              <div key={x.key} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]">
+              <div key={x.key} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 @lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]">
                 <Input value={x.label} onChange={(e) => setDetail(x.key, { label: e.target.value })} placeholder="Label, e.g. Storage" aria-label="Detail label" />
-                <button type="button" onClick={() => set('details', d.details.filter((y) => y.key !== x.key))} aria-label="Remove detail" className="grid size-10 place-items-center self-start rounded-full border border-red-700/30 text-red-700 hover:bg-red-700 hover:text-white sm:order-last"><Trash2 className="size-4" /></button>
-                <Input value={x.value} onChange={(e) => setDetail(x.key, { value: e.target.value })} placeholder="Value, e.g. Keep in a cool, dry place" aria-label="Detail value" className="col-span-2 sm:col-span-1" />
+                <button type="button" onClick={() => set('details', d.details.filter((y) => y.key !== x.key))} aria-label="Remove detail" className="grid size-10 place-items-center self-start rounded-full border border-red-700/30 text-red-700 hover:bg-red-700 hover:text-white @lg:order-last"><Trash2 className="size-4" /></button>
+                <Input value={x.value} onChange={(e) => setDetail(x.key, { value: e.target.value })} placeholder="Value, e.g. Keep in a cool, dry place" aria-label="Detail value" className="col-span-2 @lg:col-span-1" />
               </div>
             ))}
             <div>
@@ -307,7 +311,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
                 ))}
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 @lg:grid-cols-3">
               <Field label="Badge" tip={TIP.badge} hint="Small label on the photo.">
                 <Input value={d.badge} onChange={(e) => set('badge', e.target.value)} placeholder="e.g. Bestseller" />
               </Field>
@@ -342,7 +346,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
       <div className="sticky bottom-0 z-30 -mx-4 flex items-center gap-2 border-t bg-cream/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
         <Button type="submit" variant="gold" busy={saving}>{id ? 'Save changes' : 'Add product'}</Button>
         <Button variant="outline" className="xl:hidden" onClick={() => setPreviewing(true)}><Eye className="size-4" />Preview</Button>
-        <Link href="/admin/products" className={btn('ghost', 'md', 'max-sm:hidden')}>Cancel</Link>
+        <Link href="/admin/products" className={btn('ghost', 'md', 'max-lg:hidden')}>Cancel</Link>
         {saved && <span role="status" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700"><Check className="size-4" /><span className="max-sm:sr-only">Saved</span></span>}
         {id && <Button variant="danger" className="ml-auto max-sm:px-3" aria-label="Delete" onClick={() => setDeleting(true)}><Trash2 className="size-4" /><span className="max-sm:hidden">Delete</span></Button>}
       </div>

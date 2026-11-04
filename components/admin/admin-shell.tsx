@@ -24,6 +24,7 @@ import { useAdmin } from '@/components/admin/admin-gate';
 import { adminFetch, SignedOut } from '@/components/admin/api';
 import { BRAND } from '@/lib/media';
 import { cn } from '@/lib/utils';
+import { useLive } from '@/lib/live';
 
 const TABS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -57,6 +58,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = React.useState(readCollapsed);
   const [openPath, setOpenPath] = React.useState<string | null>(null);
   const open = openPath === path; // the phone menu closes itself on navigation
+
+  // Badges follow new orders and messages live.
+  useLive('admin', (name) => {
+    if (name === 'order' || name === 'resync') refreshAttention();
+    if ((name === 'form' || name === 'resync') && !path.startsWith('/admin/forms')) {
+      adminFetch<{ unread: number }>('/api/admin/forms').then((d) => setUnread(d.unread)).catch(() => {});
+    }
+  });
 
   // The Forms page keeps its count fresh itself; everywhere else we ask once per page. Same for orders needing attention.
   React.useEffect(() => {

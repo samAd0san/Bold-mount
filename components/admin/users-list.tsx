@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Users } from 'lucide-react';
 import { clock, useFetch } from '@/components/admin/api';
 import { Empty, ErrorNote, PageHead, Skeleton } from '@/components/admin/ui';
+import { useLive } from '@/lib/live';
 
 type Row = { id: string; name: string; email: string; avatar?: string; createdAt: string; lastLoginAt?: string; orders: number };
 type Data = { total: number; newWeek: number; users: Row[] };
@@ -27,6 +28,7 @@ function Avatar({ user }: { user: Row }) {
 
 export function UsersList() {
   const { data, error, reload } = useFetch<Data>('/api/admin/users');
+  useLive('admin', (name) => { if (name === 'user' || name === 'resync') reload(); });
   return (
     <div className="flex flex-col gap-5">
       <PageHead title="Users" sub="People who signed in with Google." />

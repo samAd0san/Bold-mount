@@ -112,7 +112,7 @@ test('product: add with several prices and photos, edit, rename, duplicate name,
 
   await sizeBox(page).first().fill('6 ml');
   await page.getByLabel('Price ₹', { exact: true }).first().fill('349');
-  await page.getByLabel('Was ₹ (optional)', { exact: true }).first().fill('399');
+  await page.getByLabel('Was ₹', { exact: true }).first().fill('399');
   await page.getByRole('button', { name: 'Add a size or pack' }).click();
   await sizeBox(page).nth(1).fill('12 ml');
   await page.getByLabel('Price ₹', { exact: true }).nth(1).fill('649');

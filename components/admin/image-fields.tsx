@@ -123,10 +123,10 @@ function AddImage({ multiple, onAdd, label }: { multiple?: boolean; onAdd: (src:
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
+      <div className="flex flex-col items-stretch gap-2 @md:flex-row @md:items-start">
         <input ref={fileRef} type="file" accept="image/*" multiple={multiple} className="sr-only" aria-label={label} onChange={(e) => pick(e.target.files)} />
         <Button variant="outline" size="sm" className="self-start" onClick={() => fileRef.current?.click()}><ImagePlus className="size-4" />{label}</Button>
-        <div className="flex w-full min-w-0 gap-2 sm:flex-1">
+        <div className="flex w-full min-w-0 gap-2 @md:flex-1">
           <Input
             value={link}
             onChange={(e) => { setLink(e.target.value); setLinkError(''); }}
@@ -180,7 +180,7 @@ export function ImagesEditor({ images, onChange, defaultAlt }: { images: Product
   return (
     <div className="flex flex-col gap-4">
       {images.length > 0 && (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid gap-3 @2xl:grid-cols-2">
           {images.map((im, i) => (
             <li key={`${im.src}-${i}`} className="flex gap-3 rounded-xl border bg-white p-3">
               <div className="flex flex-col items-center gap-1">

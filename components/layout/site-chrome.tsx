@@ -6,6 +6,7 @@ import { CartDrawer } from '@/components/layout/cart-drawer';
 import { FloatingActions } from '@/components/layout/floating-actions';
 import { CategoriesProvider } from '@/components/layout/categories-context';
 import { Tracker } from '@/components/analytics/tracker';
+import { LiveCatalog } from '@/components/layout/live-catalog';
 import { getCategories } from '@/lib/catalog';
 
 /** Store header, footer, cart drawer and floating buttons around a storefront page (not used by /admin). */
@@ -23,6 +24,7 @@ export async function SiteChrome({ children }: { children: React.ReactNode }) {
       <CartDrawer />
       <FloatingActions />
       <Tracker />
+      <LiveCatalog />
     </CategoriesProvider>
   );
 }

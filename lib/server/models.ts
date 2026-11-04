@@ -1,6 +1,7 @@
 import 'server-only';
 import mongoose, { Schema, type InferSchemaType, type Model } from 'mongoose';
 import type { Category, FormEntry, Order, OrderRefund, Product } from '@/lib/types';
+import { notify } from '@/lib/server/live';
 
 // Collections in the "boldmount" db: categories, products, orders, users, forms, plus visits/settings/counters (raw driver).
 
@@ -104,6 +105,21 @@ const FormSchema = new Schema(
   },
   { timestamps: true },
 );
+
+// Every write to an order, form or user tells open admin/customer pages to refetch; hooking the schema catches every route.
+const orderChanged = (doc: { _id?: unknown; userId?: string | null } | null) => {
+  if (!doc?._id) return;
+  const id = String(doc._id);
+  notify('admin', 'order', { id });
+  if (doc.userId) notify(`orders:${doc.userId}`, 'order', { id });
+};
+OrderSchema.post('save', orderChanged);
+OrderSchema.post('findOneAndUpdate', orderChanged);
+OrderSchema.post('updateOne', async function (res: { modifiedCount?: number }) {
+  if (res?.modifiedCount) orderChanged(await this.model.findById(this.getFilter()._id, { userId: 1 }).lean<{ _id: unknown; userId?: string }>());
+});
+FormSchema.post(['save', 'findOneAndUpdate', 'findOneAndDelete'], () => notify('admin', 'form'));
+UserSchema.post('save', () => notify('admin', 'user'));
 
 // Reuse compiled models across dev hot reloads.
 const model = <S extends Schema>(name: string, schema: S, collection: string) =>

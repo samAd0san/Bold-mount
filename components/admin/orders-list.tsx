@@ -9,6 +9,7 @@ import { Badge, Chips, Empty, ErrorNote, PageHead, Select, Skeleton } from '@/co
 import { formatINR } from '@/lib/format';
 import { ORDER_STATUSES, type Order, type OrderStatus, type PaymentStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useLive } from '@/lib/live';
 
 const STATUS_LABEL: Record<OrderStatus, string> = { new: 'New', confirmed: 'Confirmed', dispatched: 'Dispatched', delivered: 'Delivered', cancelled: 'Cancelled' };
 const PAY: Record<PaymentStatus, { label: string; tone: 'green' | 'amber' | 'red' | 'blue' | 'gray' }> = {
@@ -43,6 +44,7 @@ const summary = (o: Order) => o.items.map((i) => `${i.qty} × ${i.name}${i.varia
 export function OrdersList() {
   const [filter, setFilter] = React.useState<OrderStatus | 'all'>('all');
   const { data, loading, error, reload, mutate } = useFetch<{ orders: Order[] }>(`/api/admin/orders${filter === 'all' ? '' : `?status=${filter}`}`);
+  useLive('admin', (name) => { if (name === 'order' || name === 'resync') reload(); });
   const [open, setOpen] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState<string | null>(null);
   const [problem, setProblem] = React.useState<string | null>(null);
