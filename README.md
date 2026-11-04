@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/images/brand/logo-ivory.png">
+    <img src="public/images/brand/logo.png" alt="Bold Mount" height="120">
+  </picture>
+</p>
+
 # Bold Mount
 
 Storefront and community site for **Bold Mount** — Sunnah superfoods (Talbeenah, premium dates, Sidr honey, dry fruits, modest wear) and community services (Khidmat-e-Khalq, Zakat, volunteer guidance, free Qur’an giveaways, Umrah Badal).
