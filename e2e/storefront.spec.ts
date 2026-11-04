@@ -93,3 +93,43 @@ test('contact form reaches admin Forms, can be marked read and deleted', async (
   const { data } = await api<{ forms: unknown[] }>(page, '/api/admin/forms');
   expect(data.forms).toHaveLength(0);
 });
+
+test('phone: opening a product or category from a scrolled page starts at the top; Back returns; shop filters keep the place', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  const at = () => page.evaluate(() => Math.round(window.scrollY));
+  // Clicked the way a thumb does it: no extra scrolling first, from slightly down the page (the case that opened half-hidden).
+  const tap = (selector: string) => page.evaluate((s) => (document.querySelector(s) as HTMLAnchorElement).click(), selector);
+  const topVisible = async () => {
+    const header = (await page.locator('header').first().boundingBox())!;
+    const crumbs = (await page.getByRole('navigation', { name: 'Breadcrumb' }).first().boundingBox())!;
+    return crumbs.y >= header.y + header.height - 1;
+  };
+
+  await page.goto('/');
+  await page.evaluate(() => window.scrollTo(0, 150));
+  await expect.poll(at).toBe(150);
+  await tap(`main a[href="${TALBEENAH}"]`);
+  await expect(page).toHaveURL(new RegExp(`${TALBEENAH}$`));
+  await expect(page.locator('main h1')).toBeVisible();
+  await expect.poll(at).toBe(0);
+  expect(await topVisible()).toBe(true);
+
+  // Back lands where the visitor was, not at the top.
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect.poll(at).toBeGreaterThan(100);
+
+  // Category links in the sticky bar do the same.
+  await page.evaluate(() => window.scrollTo(0, 250));
+  await tap('header a[href="/dates"]');
+  await expect(page).toHaveURL(/\/dates$/);
+  await expect.poll(at).toBe(0);
+
+  // Changing a shop filter is the same page: it keeps the visitor's place.
+  await page.goto('/shop');
+  await page.evaluate(() => window.scrollTo(0, 400));
+  await tap('nav[aria-label="Shop by category"] a[href*="filter=dates"]');
+  await expect(page).toHaveURL(/filter=dates/);
+  await page.waitForTimeout(500);
+  expect(await at()).toBeGreaterThan(300);
+});

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Albert_Sans, Amiri } from 'next/font/google';
 import './globals.css';
 import { SITE } from '@/lib/site';
+import { ScrollToTop } from '@/components/layout/scroll-to-top';
 
 const albert = Albert_Sans({
   subsets: ['latin'],
@@ -45,7 +46,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${albert.variable} ${amiri.variable}`}>
-      <body>{children}</body>
+      <body>
+        <ScrollToTop />
+        {children}
+      </body>
     </html>
   );
 }
