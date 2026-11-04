@@ -2,7 +2,7 @@
 export const SITE = {
   name: 'Bold Mount',
   tagline: 'Sunnah Superfoods & Service',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bold-mount.vercel.app',
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.boldmount.store',
   description:
     'Premium roasted Talbeenah, hand-picked dates, pure Sidr honey and dry fruits — plus Zakat, Umrah Badal, free Quran giveaways and volunteer guidance for the community.',
   whatsapp: '918125079915',
