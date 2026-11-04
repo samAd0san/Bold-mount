@@ -30,8 +30,10 @@ export const metadata: Metadata = {
     siteName: SITE.name,
     title: 'Bold Mount — Sunnah Superfoods & Service',
     description: SITE.description,
-    images: ['/images/products/talbeenah-real-photo.webp'],
+    // Logo card for WhatsApp/Facebook/X link previews (product pages still show their own photo).
+    images: [{ url: '/images/brand/og-image.png', width: 1200, height: 630, alt: 'Bold Mount — Sunnah Superfoods & Service' }],
   },
+  twitter: { card: 'summary_large_image', images: ['/images/brand/og-image.png'] },
   icons: { icon: '/images/brand/icon-192.png', apple: '/images/brand/icon-512.png' },
 };
 
