@@ -74,7 +74,7 @@ export function CartView() {
                       {item.name}
                     </Link>
                     <p className="mt-1 text-sm text-ink-soft">
-                      {item.variant} · {formatINR(item.price)}
+                      {item.variant && `${item.variant} · `}{formatINR(item.price)}
                     </p>
                   </div>
                   <button

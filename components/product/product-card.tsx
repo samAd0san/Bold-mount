@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { discountPct, formatINR } from '@/lib/format';
 import { useCategories } from '@/components/layout/categories-context';
+import { cheapestVariant } from '@/lib/shop';
 import { QuickAdd } from './quick-add';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +13,8 @@ import { cn } from '@/lib/utils';
 export function ProductCard({ product }: { product: Product }) {
   const categories = useCategories();
   const label = product.origin ?? categories.find((c) => c.slug === product.category)?.short ?? '';
-  const v = product.variants[0];
+  // "from ₹X" must be the lowest price, whatever order the sizes were added in.
+  const v = cheapestVariant(product);
   const off = discountPct(v.price, v.compareAt);
   const from = product.variants.length > 1 && new Set(product.variants.map((x) => x.price)).size > 1;
 

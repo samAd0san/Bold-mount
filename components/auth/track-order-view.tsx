@@ -67,7 +67,7 @@ export function TrackOrderView({ id }: { id: string }) {
           {order.items.map((i) => (
             <li key={`${i.slug}:${i.variant}`} className="flex justify-between gap-4">
               <span className="min-w-0">
-                {i.name} <span className="text-ink-soft">({i.variant}) × {i.qty}</span>
+                {i.name} <span className="text-ink-soft">{i.variant && `(${i.variant}) `}× {i.qty}</span>
               </span>
               <span className="shrink-0 tabular-nums">{formatINR(i.price * i.qty)}</span>
             </li>

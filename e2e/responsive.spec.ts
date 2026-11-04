@@ -56,6 +56,21 @@ for (const width of WIDTHS) {
     await page.getByRole('button', { name: 'Add category' }).click();
     await check('add category dialog');
 
+    await page.goto('/admin/products/new');
+    await page.getByLabel('Price ₹', { exact: true }).fill('449');
+    await page.getByRole('button', { name: 'Add a size or pack' }).click();
+    await check('product form with two prices');
+    await page.getByRole('button', { name: 'What is “Size or pack”?' }).first().click();
+    await check('help tip');
+    await page.keyboard.press('Escape');
+    // Below 1280px the preview opens from the bottom bar instead of sitting beside the form.
+    if (width < 1280) {
+      await page.getByRole('button', { name: 'Preview', exact: true }).click();
+      await page.waitForTimeout(400);
+      await check('product preview');
+      await page.keyboard.press('Escape');
+    }
+
     expect(problems, problems.join('\n')).toEqual([]);
   });
 }

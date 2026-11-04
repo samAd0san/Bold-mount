@@ -5,7 +5,7 @@ export const PRODUCT_TAGS: ProductTag[] = ['bestseller', 'gift', 'new'];
 
 export interface Variant {
   id: string; // e.g. "500g"
-  label: string;
+  label: string; // "500 g", "M"; empty when the product comes in one version only (e.g. a book)
   price: number;
   compareAt?: number;
 }

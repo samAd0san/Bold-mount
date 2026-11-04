@@ -14,11 +14,14 @@ export function refreshStorefront() {
 }
 
 const text = (max: number) => z.string().trim().max(max);
+// The shop can only show the site's own /images and pictures stored on Cloudinary (next.config remotePatterns); pasted links are copied there first.
+const isPicture = (v: string) => /^\/(?!\/)/.test(v) || v.startsWith('https://res.cloudinary.com/');
+const PICTURE_ERROR = 'Add pictures with the Upload button or the link box, so they are saved to the shop.';
 const url = z
   .string()
   .trim()
   .max(500)
-  .refine((v) => v === '' || v.startsWith('/') || /^https:\/\//.test(v), 'Image links must start with https:// or /.');
+  .refine((v) => v === '' || isPicture(v), PICTURE_ERROR);
 
 // No slug field: the web address is made from the name when the item is created and then never changes.
 export const CategoryInput = z.object({
@@ -39,18 +42,24 @@ const optionalPrice = z.preprocess(
   z.number('Prices must be numbers.').int('Prices are whole rupees.').positive().optional(),
 );
 
+// The size/pack label is optional for a single price (a book has no size), but needed to tell several apart.
 const Variant = z
   .object({
     id: text(60).optional(),
-    label: z.string('Every size needs a label.').trim().min(1, 'Every size needs a label.').max(60),
+    label: text(60).default(''),
     price: z.number('Every size needs a price.').int('Prices are whole rupees.').positive('Every price must be more than 0.'),
     compareAt: optionalPrice,
   })
   .refine((v) => v.compareAt === undefined || v.compareAt > v.price, { message: 'The old price must be higher than the selling price.', path: ['compareAt'] });
 
+const Variants = z
+  .array(Variant)
+  .min(1, 'Add a price.')
+  .max(20)
+  .refine((vs) => vs.length === 1 || vs.every((v) => v.label), 'With more than one price, name each size or pack so customers can choose.');
+
 const Image = z.object({
-  src: z.string('Every photo needs a link.').trim().min(1, 'Every photo needs a link.').max(500)
-    .refine((v) => v.startsWith('/') || /^https:\/\//.test(v), 'Photo links must start with https:// or /.'),
+  src: z.string('Every photo needs a link.').trim().min(1, 'Every photo needs a link.').max(500).refine(isPicture, PICTURE_ERROR),
   alt: text(200).default(''),
   cover: z.boolean().optional(),
 });
@@ -69,7 +78,7 @@ export const ProductInput = z.object({
     .transform((a) => a.filter((d) => d.label || d.value))
     .optional(),
   images: z.array(Image).max(12).optional(),
-  variants: z.array(Variant).min(1, 'Add at least one size with a price.').max(20),
+  variants: Variants,
   origin: text(80).optional(),
   badge: text(40).optional(),
   active: z.boolean().optional(),
@@ -78,11 +87,11 @@ export const ProductInput = z.object({
 
 export const ProductPatch = ProductInput.partial();
 
-/** Gives every size a stable id from its label ("500 g" → "500-g"); repeats get -2, -3… */
+/** Gives every size a stable id from its label ("500 g" → "500-g"; no label → "standard"); repeats get -2, -3… */
 export function withVariantIds<T extends { id?: string; label: string }>(variants: T[]): (T & { id: string })[] {
   const seen = new Set<string>();
   return variants.map((v) => {
-    const base = slugify(v.id || v.label) || 'size';
+    const base = slugify(v.id || v.label) || 'standard';
     let id = base;
     for (let n = 2; seen.has(id); n++) id = `${base}-${n}`;
     seen.add(id);

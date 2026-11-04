@@ -127,7 +127,7 @@ export const toProduct = (d: any): Product => ({
   id: String(d._id), slug: d.slug, name: d.name, category: d.category, tags: d.tags ?? [], tagline: d.tagline ?? '',
   description: d.description ?? '', highlights: d.highlights ?? [], details: d.details ?? [],
   images: (d.images ?? []).map((i: any) => ({ src: i.src, alt: i.alt ?? '', ...(i.cover ? { cover: true } : {}) })),
-  variants: (d.variants ?? []).map((v: any) => ({ id: v.id, label: v.label, price: v.price, ...(v.compareAt ? { compareAt: v.compareAt } : {}) })),
+  variants: (d.variants ?? []).map((v: any) => ({ id: v.id, label: v.label ?? '', price: v.price, ...(v.compareAt ? { compareAt: v.compareAt } : {}) })),
   ...(d.origin ? { origin: d.origin } : {}), ...(d.badge ? { badge: d.badge } : {}),
   active: d.active !== false, sort: d.sort ?? 0,
 });

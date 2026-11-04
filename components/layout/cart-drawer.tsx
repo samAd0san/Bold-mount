@@ -89,7 +89,7 @@ export function CartDrawer() {
                   </Link>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{item.name}</p>
-                    <p className="text-xs text-ink-soft">{item.variant}</p>
+                    {item.variant && <p className="text-xs text-ink-soft">{item.variant}</p>}
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <div className="flex items-center rounded-full border border-line">
                         <button type="button" aria-label="Decrease" onClick={() => setQty(item.key, item.qty - 1)} className="flex h-8 w-8 items-center justify-center text-ink-soft hover:text-ink">

@@ -10,10 +10,11 @@ import { buttonClass } from '@/components/ui/button-styles';
 import { cn } from '@/lib/utils';
 import { QtyStepper } from './qty-stepper';
 
-// Wear variants are either sizes (S/M/52…) or colours (Black/Navy…); food variants are pack sizes.
+// Wear variants are sizes (S/M/52…) or colours (Black/Navy…); weights and boxes are pack sizes; anything else (e.g. Paperback) is an option.
 function optionName(product: Product): string {
-  if (product.category !== 'wearings') return 'Pack size';
-  return product.variants.every((v) => /^(XS|S|M|L|XL|XXL|\d+)$/.test(v.label)) ? 'Size' : 'Colour';
+  const labels = product.variants.map((v) => v.label);
+  if (product.category === 'wearings') return labels.every((l) => /^(XS|S|M|L|XL|XXL|\d+)$/.test(l)) ? 'Size' : 'Colour';
+  return labels.every((l) => /\d|pack|box|pouch|jar|bottle/i.test(l)) ? 'Pack size' : 'Option';
 }
 
 /** Price (follows the chosen variant), variant pills, quantity, add to cart and buy now (pay online at checkout). */
@@ -47,30 +48,33 @@ export function ProductPurchase({ product }: { product: Product }) {
         )}
       </div>
 
-      <fieldset className="mt-7">
-        <legend className="text-sm text-ink-soft">
-          {option}: <span className="font-semibold text-ink">{variant.label}</span>
-        </legend>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {product.variants.map((v) => {
-            const selected = v.id === variant.id;
-            return (
-              <button
-                key={v.id}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => setVariantId(v.id)}
-                className={cn(
-                  'min-h-11 min-w-14 rounded-full border px-5 text-sm font-medium transition-colors duration-200',
-                  selected ? 'border-navy bg-navy text-on-night' : 'border-line bg-pearl text-ink hover:border-navy/50',
-                )}
-              >
-                {v.label}
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
+      {/* One version with no size (e.g. a book): nothing to choose. */}
+      {(product.variants.length > 1 || variant.label) && (
+        <fieldset className="mt-7">
+          <legend className="text-sm text-ink-soft">
+            {option}: <span className="font-semibold text-ink">{variant.label}</span>
+          </legend>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {product.variants.map((v) => {
+              const selected = v.id === variant.id;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setVariantId(v.id)}
+                  className={cn(
+                    'min-h-11 min-w-14 rounded-full border px-5 text-sm font-medium transition-colors duration-200',
+                    selected ? 'border-navy bg-navy text-on-night' : 'border-line bg-pearl text-ink hover:border-navy/50',
+                  )}
+                >
+                  {v.label}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
 
       <div className="mt-7 flex gap-3">
         <QtyStepper value={qty} onChange={setQty} className="h-12" />

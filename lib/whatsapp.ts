@@ -21,7 +21,7 @@ export function whatsappOrderLink(lines: OrderLine[], customer: Record<string, s
     [
       'Assalamu alaikum Bold Mount, I would like to place an order:',
       '',
-      ...lines.map((l) => `• ${l.name} (${l.variant}) × ${l.qty} — ${formatINR(l.price * l.qty)}`),
+      ...lines.map((l) => `• ${l.name}${l.variant ? ` (${l.variant})` : ''} × ${l.qty} — ${formatINR(l.price * l.qty)}`),
       '',
       `Subtotal: ${formatINR(subtotal)}`,
       `Delivery: ${fee ? formatINR(fee) : 'Free'}`,

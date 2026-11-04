@@ -16,6 +16,8 @@ import { ProductPurchase } from '@/components/product/product-purchase';
 type Props = { params: Promise<{ slug: string }> };
 
 const ARABIC: Record<string, string> = { talbeenah: 'تلبينة', dates: 'تمر', honey: 'عسل' };
+// "Freshly packed" only makes sense for food; books, wear and anything added later are "Carefully packed".
+const FOOD = new Set(['talbeenah', 'dates', 'honey', 'dry-fruits']);
 
 export const revalidate = 60;
 // Products added in /admin after the build are rendered on first visit.
@@ -62,7 +64,7 @@ export default async function ProductPage({ params }: Props) {
   ];
   const assurances = [
     { icon: Truck, label: `Free delivery above ${formatINR(SITE.freeShippingAbove)}` },
-    { icon: PackageCheck, label: product.category === 'wearings' ? 'Carefully packed' : 'Freshly packed' },
+    { icon: PackageCheck, label: FOOD.has(product.category) ? 'Freshly packed' : 'Carefully packed' },
     { icon: Lock, label: 'Secure online payment' },
   ];
 
@@ -142,20 +144,22 @@ export default async function ProductPage({ params }: Props) {
               ))}
             </ul>
 
-            <div className="mt-10">
-              <h2 className="text-xl text-ink">About this product</h2>
-              <p className="mt-3 leading-relaxed text-ink-soft">{product.description}</p>
-              <ul className="mt-5 space-y-3">
-                {product.highlights.map((h) => (
-                  <li key={h} className="flex items-start gap-3 text-ink">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gold">
-                      <Check size={12} strokeWidth={3} className="text-night" />
-                    </span>
-                    <span className="leading-relaxed">{h}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {(product.description || product.highlights.length > 0) && (
+              <div className="mt-10">
+                <h2 className="text-xl text-ink">About this product</h2>
+                <p className="mt-3 leading-relaxed text-ink-soft">{product.description}</p>
+                <ul className="mt-5 space-y-3">
+                  {product.highlights.map((h) => (
+                    <li key={h} className="flex items-start gap-3 text-ink">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gold">
+                        <Check size={12} strokeWidth={3} className="text-night" />
+                      </span>
+                      <span className="leading-relaxed">{h}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="mt-10 divide-y divide-line overflow-hidden rounded-2xl bg-pearl ring-1 ring-line ring-inset">
               {details.map((d) => (

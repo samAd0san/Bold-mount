@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { createHmac } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import mongoose from 'mongoose';
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 
@@ -109,4 +109,18 @@ export async function overflowing(page: Page) {
     }
     return out.slice(0, 8);
   });
+}
+
+/** Removes a test photo from Cloudinary so test runs leave nothing behind. */
+export async function destroyCloudinary(src: string) {
+  const publicId = src.match(/\/upload\/(?:v\d+\/)?(.+)\.\w+$/)?.[1];
+  const { CLOUDINARY_CLOUD_NAME: cloud, CLOUDINARY_API_KEY: key, CLOUDINARY_API_SECRET: secret } = process.env;
+  if (!publicId || !cloud || !key || !secret) return;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = createHash('sha1').update(`public_id=${publicId}&timestamp=${timestamp}${secret}`).digest('hex');
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/destroy`, {
+    method: 'POST',
+    body: new URLSearchParams({ public_id: publicId, timestamp: String(timestamp), api_key: key, signature }),
+  });
+  expect((await res.json()).result).toBe('ok');
 }

@@ -98,8 +98,8 @@ test('WhatsApp order from checkout opens WhatsApp and is saved', async ({ page, 
   await expect.poll(() => page.evaluate(() => (window as unknown as { __wa: string[] }).__wa.some((u) => u.includes('wa.me')))).toBe(true);
 
   await adminLogin(page);
-  const wa = (await orders(page)).find((o) => o.customer.name === 'Ayesha Siddiqui');
-  expect(wa?.method).toBe('whatsapp');
+  // The order is saved in the background (keepalive) while WhatsApp opens, so give it a moment to land.
+  await expect.poll(async () => (await orders(page)).find((o) => o.customer.name === 'Ayesha Siddiqui')?.method).toBe('whatsapp');
 });
 
 test('a signed-in customer sees their paid order under My orders', async ({ page, context }) => {

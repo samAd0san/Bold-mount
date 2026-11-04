@@ -1,11 +1,12 @@
-import { createHash } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
-import { adminLogin, api, PIN, signInAs } from './helpers';
+import { adminLogin, api, destroyCloudinary, PIN, signInAs } from './helpers';
 
 type Product = { id: string; slug: string; name: string; category: string; images: { src: string }[]; variants: { label: string; price: number; compareAt?: number }[] };
 type Category = { id: string; slug: string; name: string };
 const products = async (page: Page) => (await api<{ products: Product[] }>(page, '/api/admin/products')).data.products;
 const categories = async (page: Page) => (await api<{ categories: Category[] }>(page, '/api/admin/categories')).data.categories;
+// The size box is "Size or pack (optional)" with one price and "Size or pack" with several.
+const sizeBox = (page: Page) => page.getByRole('textbox', { name: /^Size or pack/ });
 
 async function pressPin(page: Page, pin: string) {
   for (const d of pin) await page.getByRole('button', { name: d, exact: true }).click();
@@ -64,7 +65,7 @@ test('category: added with just a name, the web address is made for you', async 
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('Slug')).toHaveCount(0);
   await dialog.getByLabel('Name', { exact: true }).fill('Attar & Oud');
-  await dialog.getByLabel('Tagline').fill('Alcohol-free fragrance oils');
+  await dialog.getByLabel('Tagline', { exact: true }).fill('Alcohol-free fragrance oils');
   await dialog.getByRole('button', { name: 'Add category' }).click();
   await expect(page.locator('main')).toContainText('/attar-oud');
 
@@ -98,16 +99,16 @@ test('product: add with several prices and photos, edit, rename, duplicate name,
   await page.goto('/admin/products/new');
   await expect(page.getByText('Slug', { exact: true })).toHaveCount(0);
   await page.getByLabel('Name', { exact: true }).fill('Rose Attar');
-  await page.getByLabel('Category').selectOption({ label: 'Attar & Oud' });
-  await page.getByLabel('Tagline').fill('Soft Taifi rose');
-  await page.getByLabel('Description').fill('A gentle rose attar in a roll-on bottle.');
-  await page.getByLabel('Highlights').fill('Alcohol-free\nRoll-on bottle');
+  await page.getByLabel('Category', { exact: true }).selectOption({ label: 'Attar & Oud' });
+  await page.getByLabel('Tagline', { exact: true }).fill('Soft Taifi rose');
+  await page.getByLabel('Description', { exact: true }).fill('A gentle rose attar in a roll-on bottle.');
+  await page.getByLabel('Highlights', { exact: true }).fill('Alcohol-free\nRoll-on bottle');
 
-  await page.getByLabel('Size or pack').first().fill('6 ml');
+  await sizeBox(page).first().fill('6 ml');
   await page.getByLabel('Price ₹', { exact: true }).first().fill('349');
-  await page.getByLabel('Was ₹ (optional)').first().fill('399');
-  await page.getByRole('button', { name: 'Add a price' }).click();
-  await page.getByLabel('Size or pack').nth(1).fill('12 ml');
+  await page.getByLabel('Was ₹ (optional)', { exact: true }).first().fill('399');
+  await page.getByRole('button', { name: 'Add a size or pack' }).click();
+  await sizeBox(page).nth(1).fill('12 ml');
   await page.getByLabel('Price ₹', { exact: true }).nth(1).fill('649');
 
   for (const src of ['/images/products/talbeenah-duo.webp', '/images/products/gift-sunnah-trio.webp']) {
@@ -151,8 +152,8 @@ test('product: add with several prices and photos, edit, rename, duplicate name,
   // Same name twice: the second one gets its own address.
   await page.goto('/admin/products/new');
   await page.getByLabel('Name', { exact: true }).fill('Rose Attar Roll-on');
-  await page.getByLabel('Category').selectOption({ label: 'Attar & Oud' });
-  await page.getByLabel('Size or pack').first().fill('6 ml');
+  await page.getByLabel('Category', { exact: true }).selectOption({ label: 'Attar & Oud' });
+  await sizeBox(page).first().fill('6 ml');
   await page.getByLabel('Price ₹', { exact: true }).first().fill('299');
   await page.getByRole('button', { name: 'Add product' }).click();
   await expect(page).toHaveURL(/\/admin\/products$/);
@@ -200,17 +201,3 @@ test('settings: change the PIN, sign in with the new one, change it back', async
   await page.goto('/admin/settings');
   await change('2468', PIN);
 });
-
-// Removes the test photo from Cloudinary so test runs leave nothing behind.
-async function destroyCloudinary(src: string) {
-  const publicId = src.match(/\/upload\/(?:v\d+\/)?(.+)\.\w+$/)?.[1];
-  const { CLOUDINARY_CLOUD_NAME: cloud, CLOUDINARY_API_KEY: key, CLOUDINARY_API_SECRET: secret } = process.env;
-  if (!publicId || !cloud || !key || !secret) return;
-  const timestamp = Math.floor(Date.now() / 1000);
-  const signature = createHash('sha1').update(`public_id=${publicId}&timestamp=${timestamp}${secret}`).digest('hex');
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/destroy`, {
-    method: 'POST',
-    body: new URLSearchParams({ public_id: publicId, timestamp: String(timestamp), api_key: key, signature }),
-  });
-  expect((await res.json()).result).toBe('ok');
-}

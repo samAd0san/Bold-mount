@@ -41,25 +41,50 @@ export function Button({
 export const inputClass =
   'w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-base text-ink placeholder:text-ink-soft/60 transition focus:border-navy focus:outline-none focus:ring-2 focus:ring-gold/70 disabled:opacity-60 sm:text-sm';
 
+// Lets Input/Textarea/Select inside a Field pick up its label, hint and error without wiring ids by hand.
+const FieldCtx = React.createContext<{ id: string; noteId?: string; invalid: boolean } | null>(null);
+
+function useFieldProps(props: { id?: string; 'aria-describedby'?: string; 'aria-invalid'?: React.AriaAttributes['aria-invalid'] }) {
+  const f = React.useContext(FieldCtx);
+  if (!f) return {};
+  return { id: props.id ?? f.id, 'aria-describedby': props['aria-describedby'] ?? f.noteId, 'aria-invalid': props['aria-invalid'] ?? (f.invalid || undefined) };
+}
+
 export const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(function Input({ className, ...props }, ref) {
-  return <input ref={ref} className={cn(inputClass, className)} {...props} />;
+  return <input ref={ref} {...props} {...useFieldProps(props)} className={cn(inputClass, className)} />;
 });
 
 export function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
-  return <textarea className={cn(inputClass, 'min-h-24 resize-y', className)} {...props} />;
+  return <textarea {...props} {...useFieldProps(props)} className={cn(inputClass, 'min-h-24 resize-y', className)} />;
 }
 
 export function Select({ className, ...props }: React.ComponentProps<'select'>) {
-  return <select className={cn(inputClass, 'pr-8', className)} {...props} />;
+  return <select {...props} {...useFieldProps(props)} className={cn(inputClass, 'pr-8', className)} />;
 }
 
-export function Field({ label, hint, error, children, className }: { label: string; hint?: string; error?: string; children: React.ReactNode; className?: string }) {
+/** Bold label, optional "i" tip beside it, the control, then an error or a hint underneath. */
+export function Field({ label, hint, tip, error, children, className }: { label: string; hint?: string; tip?: React.ReactNode; error?: string; children: React.ReactNode; className?: string }) {
+  const id = React.useId();
+  const note = error ?? hint;
   return (
-    <label className={cn('flex flex-col gap-1.5', className)}>
-      <span className="text-[13px] font-semibold text-ink">{label}</span>
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
+      <span className="flex min-h-5 items-center gap-1">
+        <label htmlFor={id} className="text-[13px] font-semibold text-ink">{label}</label>
+        {tip && <InfoTip label={`What is “${label}”?`}>{tip}</InfoTip>}
+      </span>
+      <FieldCtx value={{ id, noteId: note ? `${id}-note` : undefined, invalid: !!error }}>{children}</FieldCtx>
+      {note && <span id={`${id}-note`} className={cn('text-xs', error ? 'font-medium text-red-700' : 'text-ink-soft')}>{note}</span>}
+    </div>
+  );
+}
+
+/** A plain bold label with an "i" tip, for groups that are not a single input (tags, pictures, switches). */
+export function TipLabel({ children, tip, className }: { children: string; tip: React.ReactNode; className?: string }) {
+  return (
+    <span className={cn('flex min-h-5 items-center gap-1 text-[13px] font-semibold text-ink', className)}>
       {children}
-      {error ? <span className="text-xs font-medium text-red-700">{error}</span> : hint ? <span className="text-xs text-ink-soft">{hint}</span> : null}
-    </label>
+      <InfoTip label={`What is “${children}”?`}>{tip}</InfoTip>
+    </span>
   );
 }
 
@@ -165,17 +190,37 @@ export function Chips<T extends string>({ value, options, onChange, className }:
   );
 }
 
-/** Tiny "i" that explains something in one sentence when tapped. */
+/** Tiny "i" that explains something in plain words: tap it on a phone, hover or click it with a mouse. */
 export function InfoTip({ children, label = 'What is this?' }: { children: React.ReactNode; label?: string }) {
+  const [open, setOpen] = React.useState(false);
+  // A click after a hover keeps the tip open; otherwise the click would close what the hover just opened.
+  const pinned = React.useRef(false);
+  const mouse = (e: React.PointerEvent) => e.pointerType === 'mouse';
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={(o) => { pinned.current = o; setOpen(o); }}>
       <Popover.Trigger asChild>
-        <button type="button" aria-label={label} className="-m-1.5 inline-grid size-7 shrink-0 place-items-center rounded-full text-ink-soft/70 transition hover:bg-navy/10 hover:text-navy">
+        <button
+          type="button"
+          aria-label={label}
+          onPointerEnter={(e) => { if (mouse(e)) setOpen(true); }}
+          onPointerLeave={(e) => { if (mouse(e) && !pinned.current) setOpen(false); }}
+          onClick={(e) => { if (open && !pinned.current) { e.preventDefault(); pinned.current = true; } }}
+          className="-my-1.5 inline-grid size-7 shrink-0 place-items-center rounded-full text-ink-soft/70 transition hover:bg-navy/10 hover:text-navy data-[state=open]:bg-navy/10 data-[state=open]:text-navy"
+        >
           <Info className="size-3.5" />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content side="top" sideOffset={6} collisionPadding={12} className="z-50 max-w-64 rounded-xl bg-night px-3 py-2 text-xs leading-snug text-on-night shadow-card">
+        <Popover.Content
+          role="tooltip"
+          side="top"
+          sideOffset={6}
+          collisionPadding={12}
+          // Never pull focus away from the box being typed in.
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          className="z-[60] max-w-[min(18rem,calc(100vw-24px))] rounded-xl bg-night px-3 py-2 text-[13px] leading-snug font-normal text-on-night shadow-card"
+        >
           {children}
           <Popover.Arrow className="fill-night" />
         </Popover.Content>

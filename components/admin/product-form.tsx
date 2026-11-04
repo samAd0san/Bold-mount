@@ -3,10 +3,11 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, Eye, Plus, Trash2 } from 'lucide-react';
 import { adminFetch, useFetch } from '@/components/admin/api';
 import { ImagesEditor } from '@/components/admin/image-fields';
-import { Button, btn, Card, Checkbox, ConfirmDelete, ErrorNote, Field, Input, PageHead, Select, Skeleton, Switch, Textarea } from '@/components/admin/ui';
+import { ProductPreview } from '@/components/admin/product-preview';
+import { Button, btn, Card, Checkbox, ConfirmDelete, ErrorNote, Field, InfoTip, Input, Modal, PageHead, Select, Skeleton, Switch, Textarea, TipLabel } from '@/components/admin/ui';
 import { PRODUCT_TAGS, type Category, type Product, type ProductImage, type ProductTag } from '@/lib/types';
 
 let rowId = 0;
@@ -34,6 +35,25 @@ const NONE: Errors = {};
 
 const TAG_LABEL: Record<ProductTag, string> = { bestseller: 'Bestseller', gift: 'Gift', new: 'New' };
 
+// Plain-words help behind each "i".
+const TIP = {
+  name: 'The name customers see on the shop, in the cart and on their order. The web address is made from it for you.',
+  category: 'The shelf this product sits on. Customers find it on that category’s page and filter. Need a new one? Add it under Categories first.',
+  tagline: 'One short line shown under the name on the product page and in Google results, e.g. “Soft, sticky dates from Madinah”.',
+  description: 'A few sentences about the product, shown under “About this product”. The shop’s search box also looks through it.',
+  highlights: 'Short key points, one per line. Each line gets a gold tick on the product page, e.g. “No added sugar”.',
+  price: 'What the customer pays, in whole rupees (no paise).',
+  was: 'The old price, shown crossed out next to the price with a “% off” badge. Leave it empty if there is no discount. It must be more than the price.',
+  size: 'Only needed if you sell this in more than one size, pack or colour, e.g. 250 g and 500 g, or S, M, L. Customers tap one to choose and the price changes with it. Selling just one version, like a book? Leave it empty.',
+  pictures: 'Add photos from your phone or computer, or paste a picture’s link (press and hold, or right-click, a picture and choose “Copy image address”). The first picture is the main one on the shop tile. Use the arrows to change the order.',
+  details: 'Small facts shown as tap-to-open rows on the product page, e.g. Storage, Ingredients, Weight, Author or Pages.',
+  tags: 'Bestseller puts it in the Bestsellers row on the home page. Gift lists it under Gift Boxes. New brings it to the top when customers sort by Newest.',
+  badge: 'A small gold label on the product’s photo, e.g. “Bestseller” or “Limited”. Leave empty for none.',
+  origin: 'Where it comes from, e.g. “Madinah”. Shown above the name on the tile and the product page, in place of the category name.',
+  sort: 'The order products appear in. Lower numbers come first (1 before 5). Leave empty to put new products last.',
+  active: 'Turn off to hide the product from customers without deleting it. Turn it back on any time.',
+};
+
 const blank = (category: string): Draft => ({
   name: '', category, tagline: '', description: '', highlights: '', details: [], images: [],
   variants: [{ key: rid(), label: '', price: '', compareAt: '' }], tags: [], badge: '', origin: '', active: true, sort: '',
@@ -55,6 +75,34 @@ const draftFrom = (p: Product): Draft => ({
   sort: String(p.sort ?? ''),
 });
 
+const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean);
+
+/** The draft as the shop would show it, for the preview; blank bits get gentle placeholders. */
+function previewOf(d: Draft): Product {
+  const name = d.name.trim() || 'Product name';
+  return {
+    id: 'preview',
+    slug: 'preview',
+    name,
+    category: d.category,
+    tags: d.tags,
+    tagline: d.tagline.trim(),
+    description: d.description.trim(),
+    highlights: lines(d.highlights),
+    details: d.details.map((x) => ({ label: x.label.trim(), value: x.value.trim() })).filter((x) => x.label),
+    images: d.images.map((i) => ({ ...i, alt: i.alt.trim() || name })),
+    variants: d.variants.map((v) => {
+      const price = Math.max(0, Math.round(Number(v.price) || 0));
+      const compareAt = Number(v.compareAt);
+      return { id: v.key, label: v.label.trim(), price, ...(compareAt > price ? { compareAt } : {}) };
+    }),
+    ...(d.origin.trim() ? { origin: d.origin.trim() } : {}),
+    ...(d.badge.trim() ? { badge: d.badge.trim() } : {}),
+    active: d.active,
+    sort: 0,
+  };
+}
+
 /** Loads what the form needs (categories, and the product when editing) and then shows it. */
 export function ProductEditor({ id }: { id?: string }) {
   const cats = useFetch<{ categories: Category[] }>('/api/admin/categories');
@@ -63,7 +111,7 @@ export function ProductEditor({ id }: { id?: string }) {
   const ready = cats.data && (!id || prod.data);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-5">
+    <div className="mx-auto flex max-w-3xl flex-col gap-5 xl:max-w-none">
       {!ready ? (
         <>
           <PageHead title={id ? 'Edit product' : 'New product'} />
@@ -82,6 +130,15 @@ export function ProductEditor({ id }: { id?: string }) {
   );
 }
 
+function CardTitle({ children, tip }: { children: string; tip: string }) {
+  return (
+    <h2 className="flex items-center gap-1 text-[15px] font-semibold text-navy">
+      {children}
+      <InfoTip label={`What is “${children}”?`}>{tip}</InfoTip>
+    </h2>
+  );
+}
+
 function ProductForm({ id, categories, initial }: { id?: string; categories: Category[]; initial: Draft }) {
   const router = useRouter();
   const [d, setD] = React.useState<Draft>(initial);
@@ -90,11 +147,15 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+  const [previewing, setPreviewing] = React.useState(false);
   const top = React.useRef<HTMLDivElement>(null);
+  // Typing stays snappy; the preview catches up a moment later.
+  const preview = previewOf(React.useDeferredValue(d));
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => { setD((s) => ({ ...s, [k]: v })); setSaved(false); };
   const setVariant = (key: string, patch: Partial<VariantRow>) => set('variants', d.variants.map((v) => (v.key === key ? { ...v, ...patch } : v)));
   const setDetail = (key: string, patch: Partial<DetailRow>) => set('details', d.details.map((x) => (x.key === key ? { ...x, ...patch } : x)));
+  const several = d.variants.length > 1;
 
   const validate = (): Errors => {
     const e: Errors = {};
@@ -103,7 +164,8 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
     d.variants.forEach((v, i) => {
       const price = Number(v.price);
       const compare = Number(v.compareAt);
-      if (!v.label.trim()) e[`v${i}.label`] = 'Name this size, e.g. 500 g.';
+      // One price needs no size (e.g. a book); several need names so customers can choose.
+      if (several && !v.label.trim()) e[`v${i}.label`] = 'Name each one so customers can choose, e.g. 500 g.';
       if (!(price > 0)) e[`v${i}.price`] = 'Enter a price above 0.';
       else if (v.compareAt && !(compare > price)) e[`v${i}.compareAt`] = 'Must be higher than the price.';
     });
@@ -125,7 +187,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
       category: d.category,
       tagline: d.tagline.trim(),
       description: d.description.trim(),
-      highlights: d.highlights.split('\n').map((l) => l.trim()).filter(Boolean),
+      highlights: lines(d.highlights),
       details: d.details.map((x) => ({ label: x.label.trim(), value: x.value.trim() })).filter((x) => x.label && x.value),
       images: d.images.map((i) => ({ src: i.src, alt: i.alt.trim() || d.name.trim(), ...(i.cover ? { cover: true } : {}) })),
       variants: d.variants.map((v) => ({
@@ -165,118 +227,138 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
   return (
     <form onSubmit={(e) => { e.preventDefault(); void save(); }} noValidate className="flex flex-col gap-5">
       <div ref={top} className="scroll-mt-32" />
-      <PageHead title={id ? 'Edit product' : 'New product'} sub={id ? d.name || undefined : 'Fill in the basics, add pictures and at least one price.'} action={<Link href="/admin/products" className="text-sm font-semibold text-navy underline-offset-4 hover:underline">← All products</Link>} />
+      <PageHead title={id ? 'Edit product' : 'New product'} sub={id ? d.name || undefined : 'Fill in the basics, add pictures and a price. Tap any ⓘ for help.'} action={<Link href="/admin/products" className="text-sm font-semibold text-navy underline-offset-4 hover:underline">← All products</Link>} />
       {(fixFields || problem) && <ErrorNote>{fixFields ? 'Please fix the highlighted fields.' : problem}</ErrorNote>}
 
-      <Card className="flex flex-col gap-4">
-        <h2 className="text-[15px] font-semibold text-navy">Basics</h2>
-        <Field label="Name" error={errors.name}>
-          <Input value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Ajwa Dates" autoComplete="off" />
-        </Field>
-        <Field label="Category" error={errors.category}>
-          <Select value={d.category} onChange={(e) => set('category', e.target.value)}>
-            {categories.map((c) => <option key={c.id} value={c.slug}>{c.name}{c.active ? '' : ' (hidden)'}</option>)}
-          </Select>
-        </Field>
-        <Field label="Tagline" hint="One short line under the name.">
-          <Input value={d.tagline} onChange={(e) => set('tagline', e.target.value)} />
-        </Field>
-        <Field label="Description">
-          <Textarea rows={5} value={d.description} onChange={(e) => set('description', e.target.value)} />
-        </Field>
-        <Field label="Highlights" hint="One per line.">
-          <Textarea rows={4} value={d.highlights} onChange={(e) => set('highlights', e.target.value)} />
-        </Field>
-      </Card>
-
-      <Card className="flex flex-col gap-3">
-        <h2 className="text-[15px] font-semibold text-navy">Prices</h2>
-        <p className="-mt-1 text-xs text-ink-soft">One row for each size or pack. The strike-through price is optional.</p>
-        {d.variants.map((v, i) => (
-          <div key={v.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 rounded-xl border bg-white p-3 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-start">
-            <Field label="Size or pack" error={errors[`v${i}.label`]} className="col-span-2 sm:col-span-1">
-              <Input value={v.label} onChange={(e) => setVariant(v.key, { label: e.target.value })} placeholder="e.g. 500 g" />
+      {/* 25rem leaves the preview about as wide as a phone screen. */}
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start">
+        <div className="flex min-w-0 flex-col gap-5">
+          <Card className="flex flex-col gap-4">
+            <h2 className="text-[15px] font-semibold text-navy">Basics</h2>
+            <Field label="Name" tip={TIP.name} error={errors.name}>
+              <Input value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Ajwa Dates" autoComplete="off" />
             </Field>
-            <Field label="Price ₹" error={errors[`v${i}.price`]}>
-              <Input type="number" inputMode="numeric" min={1} value={v.price} onChange={(e) => setVariant(v.key, { price: e.target.value })} placeholder="449" />
+            <Field label="Category" tip={TIP.category} error={errors.category}>
+              <Select value={d.category} onChange={(e) => set('category', e.target.value)}>
+                {categories.map((c) => <option key={c.id} value={c.slug}>{c.name}{c.active ? '' : ' (hidden)'}</option>)}
+              </Select>
             </Field>
-            <Field label="Was ₹ (optional)" error={errors[`v${i}.compareAt`]}>
-              <Input type="number" inputMode="numeric" min={1} value={v.compareAt} onChange={(e) => setVariant(v.key, { compareAt: e.target.value })} placeholder="549" />
+            <Field label="Tagline" tip={TIP.tagline} hint="One short line under the name.">
+              <Input value={d.tagline} onChange={(e) => set('tagline', e.target.value)} />
             </Field>
-            <button
-              type="button"
-              disabled={d.variants.length === 1}
-              onClick={() => set('variants', d.variants.filter((x) => x.key !== v.key))}
-              aria-label={`Remove price row ${i + 1}`}
-              className="col-span-2 grid size-10 place-items-center self-end justify-self-end rounded-full border border-red-700/30 text-red-700 hover:bg-red-700 hover:text-white disabled:opacity-30 sm:col-span-1"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          </div>
-        ))}
-        <div>
-          <Button variant="outline" size="sm" onClick={() => set('variants', [...d.variants, { key: rid(), label: '', price: '', compareAt: '' }])}><Plus className="size-4" />Add a price</Button>
-        </div>
-      </Card>
+            <Field label="Description" tip={TIP.description}>
+              <Textarea rows={5} value={d.description} onChange={(e) => set('description', e.target.value)} />
+            </Field>
+            <Field label="Highlights" tip={TIP.highlights} hint="One per line.">
+              <Textarea rows={4} value={d.highlights} onChange={(e) => set('highlights', e.target.value)} />
+            </Field>
+          </Card>
 
-      <Card className="flex flex-col gap-3">
-        <h2 className="text-[15px] font-semibold text-navy">Pictures</h2>
-        <p className="-mt-1 text-xs text-ink-soft">The first picture is the main one. &ldquo;Fill the tile&rdquo; is for full photos; leave it off for cut-out pouches and jars.</p>
-        <ImagesEditor images={d.images} onChange={(v) => set('images', v)} defaultAlt={d.name.trim()} />
-      </Card>
-
-      <Card className="flex flex-col gap-3">
-        <h2 className="text-[15px] font-semibold text-navy">Details</h2>
-        <p className="-mt-1 text-xs text-ink-soft">Small facts such as Storage or Ingredients.</p>
-        {d.details.map((x) => (
-          <div key={x.key} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]">
-            <Input value={x.label} onChange={(e) => setDetail(x.key, { label: e.target.value })} placeholder="Label" aria-label="Detail label" />
-            <button type="button" onClick={() => set('details', d.details.filter((y) => y.key !== x.key))} aria-label="Remove detail" className="grid size-10 place-items-center self-start rounded-full border border-red-700/30 text-red-700 hover:bg-red-700 hover:text-white sm:order-last"><Trash2 className="size-4" /></button>
-            <Input value={x.value} onChange={(e) => setDetail(x.key, { value: e.target.value })} placeholder="Value" aria-label="Detail value" className="col-span-2 sm:col-span-1" />
-          </div>
-        ))}
-        <div>
-          <Button variant="outline" size="sm" onClick={() => set('details', [...d.details, { key: rid(), label: '', value: '' }])}><Plus className="size-4" />Add a detail</Button>
-        </div>
-      </Card>
-
-      <Card className="flex flex-col gap-4">
-        <h2 className="text-[15px] font-semibold text-navy">Shop settings</h2>
-        <div>
-          <p className="mb-1 text-[13px] font-semibold text-ink">Tags</p>
-          <div className="flex flex-wrap gap-x-5">
-            {PRODUCT_TAGS.map((t) => (
-              <Checkbox key={t} checked={d.tags.includes(t)} onChange={(on) => set('tags', on ? [...d.tags, t] : d.tags.filter((x) => x !== t))}>{TAG_LABEL[t]}</Checkbox>
+          <Card className="flex flex-col gap-3">
+            <h2 className="text-[15px] font-semibold text-navy">Price</h2>
+            <p className="-mt-1 text-xs text-ink-soft">One price is enough. If you sell it in sizes or packs (250 g, 500 g, S, M…), add a row for each.</p>
+            {d.variants.map((v, i) => (
+              <div key={v.key} className="grid grid-cols-2 gap-x-2 gap-y-3 rounded-xl border bg-white p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] sm:items-start">
+                <Field label="Price ₹" tip={TIP.price} error={errors[`v${i}.price`]}>
+                  <Input type="number" inputMode="numeric" min={1} value={v.price} onChange={(e) => setVariant(v.key, { price: e.target.value })} placeholder="449" />
+                </Field>
+                <Field label="Was ₹ (optional)" tip={TIP.was} error={errors[`v${i}.compareAt`]}>
+                  <Input type="number" inputMode="numeric" min={1} value={v.compareAt} onChange={(e) => setVariant(v.key, { compareAt: e.target.value })} placeholder="549" />
+                </Field>
+                <Field label={several ? 'Size or pack' : 'Size or pack (optional)'} tip={TIP.size} error={errors[`v${i}.label`]} className="col-span-2 sm:col-span-1">
+                  <Input value={v.label} onChange={(e) => setVariant(v.key, { label: e.target.value })} placeholder={several ? 'e.g. 500 g' : 'e.g. 500 g, or leave empty'} />
+                </Field>
+                {several && (
+                  <button
+                    type="button"
+                    onClick={() => set('variants', d.variants.filter((x) => x.key !== v.key))}
+                    aria-label={`Remove price row ${i + 1}`}
+                    className="col-span-2 grid size-10 place-items-center justify-self-end rounded-full border border-red-700/30 text-red-700 hover:bg-red-700 hover:text-white sm:col-span-1 sm:mt-[26px]"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                )}
+              </div>
             ))}
-          </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="Badge" hint="Small label on the card.">
-            <Input value={d.badge} onChange={(e) => set('badge', e.target.value)} placeholder="e.g. Bestseller" />
-          </Field>
-          <Field label="Origin">
-            <Input value={d.origin} onChange={(e) => set('origin', e.target.value)} placeholder="e.g. Madinah" />
-          </Field>
-          <Field label="Sort order" hint="Lower shows first.">
-            <Input type="number" inputMode="numeric" value={d.sort} onChange={(e) => set('sort', e.target.value)} placeholder="0" />
-          </Field>
-        </div>
-        <label className="flex items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3">
-          <span>
-            <span className="block text-sm font-semibold text-ink">Show in the shop</span>
-            <span className="block text-xs text-ink-soft">Turn off to hide it without deleting.</span>
-          </span>
-          <Switch checked={d.active} onChange={(v) => set('active', v)} label="Show in the shop" />
-        </label>
-      </Card>
+            <div>
+              <Button variant="outline" size="sm" onClick={() => set('variants', [...d.variants, { key: rid(), label: '', price: '', compareAt: '' }])}><Plus className="size-4" />Add a size or pack</Button>
+            </div>
+          </Card>
 
-      <div className="sticky bottom-0 z-30 -mx-4 flex flex-wrap items-center gap-2 border-t bg-cream/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
-        <Button type="submit" variant="gold" busy={saving}>{id ? 'Save changes' : 'Add product'}</Button>
-        <Link href="/admin/products" className={btn('ghost')}>Cancel</Link>
-        {saved && <span role="status" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700"><Check className="size-4" />Saved</span>}
-        {id && <Button variant="danger" className="ml-auto" onClick={() => setDeleting(true)}><Trash2 className="size-4" />Delete</Button>}
+          <Card className="flex flex-col gap-3">
+            <CardTitle tip={TIP.pictures}>Pictures</CardTitle>
+            <p className="-mt-1 text-xs text-ink-soft">The first picture is the main one. Upload from your phone or computer, or paste a picture link.</p>
+            <ImagesEditor images={d.images} onChange={(v) => set('images', v)} defaultAlt={d.name.trim()} />
+          </Card>
+
+          <Card className="flex flex-col gap-3">
+            <CardTitle tip={TIP.details}>Details</CardTitle>
+            <p className="-mt-1 text-xs text-ink-soft">Small facts such as Storage or Ingredients.</p>
+            {d.details.map((x) => (
+              <div key={x.key} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]">
+                <Input value={x.label} onChange={(e) => setDetail(x.key, { label: e.target.value })} placeholder="Label, e.g. Storage" aria-label="Detail label" />
+                <button type="button" onClick={() => set('details', d.details.filter((y) => y.key !== x.key))} aria-label="Remove detail" className="grid size-10 place-items-center self-start rounded-full border border-red-700/30 text-red-700 hover:bg-red-700 hover:text-white sm:order-last"><Trash2 className="size-4" /></button>
+                <Input value={x.value} onChange={(e) => setDetail(x.key, { value: e.target.value })} placeholder="Value, e.g. Keep in a cool, dry place" aria-label="Detail value" className="col-span-2 sm:col-span-1" />
+              </div>
+            ))}
+            <div>
+              <Button variant="outline" size="sm" onClick={() => set('details', [...d.details, { key: rid(), label: '', value: '' }])}><Plus className="size-4" />Add a detail</Button>
+            </div>
+          </Card>
+
+          <Card className="flex flex-col gap-4">
+            <h2 className="text-[15px] font-semibold text-navy">Shop settings</h2>
+            <div>
+              <TipLabel tip={TIP.tags} className="mb-1">Tags</TipLabel>
+              <div className="flex flex-wrap gap-x-5">
+                {PRODUCT_TAGS.map((t) => (
+                  <Checkbox key={t} checked={d.tags.includes(t)} onChange={(on) => set('tags', on ? [...d.tags, t] : d.tags.filter((x) => x !== t))}>{TAG_LABEL[t]}</Checkbox>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Badge" tip={TIP.badge} hint="Small label on the photo.">
+                <Input value={d.badge} onChange={(e) => set('badge', e.target.value)} placeholder="e.g. Bestseller" />
+              </Field>
+              <Field label="Origin" tip={TIP.origin}>
+                <Input value={d.origin} onChange={(e) => set('origin', e.target.value)} placeholder="e.g. Madinah" />
+              </Field>
+              <Field label="Sort order" tip={TIP.sort} hint="Lower shows first.">
+                <Input type="number" inputMode="numeric" value={d.sort} onChange={(e) => set('sort', e.target.value)} placeholder="0" />
+              </Field>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3">
+              <span className="min-w-0">
+                <TipLabel tip={TIP.active} className="text-sm">Show in the shop</TipLabel>
+                <span className="block text-xs text-ink-soft">Turn off to hide it without deleting.</span>
+              </span>
+              <Switch checked={d.active} onChange={(v) => set('active', v)} label="Show in the shop" />
+            </div>
+          </Card>
+        </div>
+
+        <aside aria-label="Preview" className="hidden xl:sticky xl:top-6 xl:block xl:max-h-[calc(100dvh-3rem)] xl:overflow-y-auto xl:overscroll-contain xl:rounded-2xl">
+          <Card className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-[15px] font-semibold text-navy">Preview</h2>
+              <p className="text-xs text-ink-soft">How customers will see it. Updates as you type.</p>
+            </div>
+            <ProductPreview product={preview} categories={categories} />
+          </Card>
+        </aside>
       </div>
 
+      <div className="sticky bottom-0 z-30 -mx-4 flex items-center gap-2 border-t bg-cream/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
+        <Button type="submit" variant="gold" busy={saving}>{id ? 'Save changes' : 'Add product'}</Button>
+        <Button variant="outline" className="xl:hidden" onClick={() => setPreviewing(true)}><Eye className="size-4" />Preview</Button>
+        <Link href="/admin/products" className={btn('ghost', 'md', 'max-sm:hidden')}>Cancel</Link>
+        {saved && <span role="status" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700"><Check className="size-4" /><span className="max-sm:sr-only">Saved</span></span>}
+        {id && <Button variant="danger" className="ml-auto max-sm:px-3" aria-label="Delete" onClick={() => setDeleting(true)}><Trash2 className="size-4" /><span className="max-sm:hidden">Delete</span></Button>}
+      </div>
+
+      <Modal open={previewing} onOpenChange={setPreviewing} title="Preview" description="How customers will see it. Close to keep editing.">
+        <ProductPreview product={preview} categories={categories} />
+      </Modal>
       <ConfirmDelete open={deleting} onOpenChange={setDeleting} title="Delete this product?" description={`"${d.name}" will be removed from the shop for good. To just hide it, turn off "Show in the shop" instead.`} onConfirm={remove} />
     </form>
   );
