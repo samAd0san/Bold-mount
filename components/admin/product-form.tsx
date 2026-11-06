@@ -51,7 +51,7 @@ const TIP = {
   tags: 'Bestseller puts it in the Bestsellers row on the home page. Gift lists it under Gift Boxes. New brings it to the top when customers sort by Newest.',
   badge: 'A small gold label on the product’s photo, e.g. “Bestseller” or “Limited”. Leave empty for none.',
   origin: 'Where it comes from, e.g. “Madinah”. Shown above the name on the tile and the product page, in place of the category name.',
-  sort: 'The order products appear in. Lower numbers come first (1 before 5). Leave empty to put new products last.',
+  sort: 'The order products appear in within their category (the shop lists categories in menu order). Lower numbers come first (1 before 5). Leave empty to put new products last.',
   active: 'Turn off to hide the product from customers without deleting it. Turn it back on any time.',
 };
 

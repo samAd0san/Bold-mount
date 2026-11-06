@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   // The parent Parcera folder has its own lockfile; pin the root so Turbopack doesn't pick it.
   turbopack: { root: __dirname },
   serverExternalPackages: ['mongoose'],
+  // Pages already loaded in the browser are reused for 30s, not 5 min, so shop changes show up on the next click.
+  experimental: { staleTimes: { static: 30 } },
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
