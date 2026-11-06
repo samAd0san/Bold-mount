@@ -24,7 +24,7 @@ export type VisitorRow = {
   lastPage: string;
   outcome: { key: OutcomeKey; text: string };
 };
-export type StepKind = 'start' | 'page' | 'search' | 'cart' | 'checkout' | 'order' | 'paid' | 'failed';
+export type StepKind = 'start' | 'page' | 'search' | 'cart' | 'checkout' | 'order' | 'paid' | 'failed' | 'cancelled' | 'refund';
 export type Step = { at: string; kind: StepKind; text: string; detail?: string };
 
 type Ev = VisitDoc;
@@ -37,9 +37,14 @@ function outcomeOf(events: Ev[], orders: Map<string, OrderInfo>): VisitorRow['ou
   const tried = events.filter((e) => e.ev === 'order').map((e) => e.order!);
   const saved = tried.filter((n) => orders.has(n));
   const placed = saved.filter((n) => orders.get(n)!.payment !== 'failed');
-  const paid = placed.filter((n) => isPaid(orders.get(n)!));
-  if (paid.length) return { key: 'paid', text: `Paid ${paid.join(', ')}` };
-  if (placed.length) return { key: 'placed', text: `Placed order ${placed.join(', ')}` };
+  // A cancelled order is named as cancelled, never as paid, even if it was paid before it was refunded.
+  const cancelled = placed.filter((n) => orders.get(n)!.status === 'cancelled');
+  const live = placed.filter((n) => !cancelled.includes(n));
+  const paid = live.filter((n) => isPaid(orders.get(n)!));
+  const tail = cancelled.length ? ` · cancelled ${cancelled.join(', ')}` : '';
+  if (paid.length) return { key: 'paid', text: `Paid ${paid.join(', ')}${tail}` };
+  if (live.length) return { key: 'placed', text: `Placed order ${live.join(', ')}${tail}` };
+  if (cancelled.length) return { key: 'placed', text: `Cancelled order ${cancelled.join(', ')}` };
   if (saved.length) return { key: 'failed', text: `Payment didn’t go through (${saved.join(', ')})` };
   if (tried.length || events.some((e) => e.ev === 'checkout')) return { key: 'checkout', text: 'Reached checkout' };
   if (events.some((e) => e.ev === 'cart')) return { key: 'cart', text: 'Added to cart' };
@@ -135,6 +140,12 @@ export async function visitorJourney(vid: string, period: Period, custom?: DayRa
       const method = METHOD[o.method ?? ''];
       steps.push({ at, kind: 'order', text: `Placed order ${e.order}`, detail: [formatINR(o.total), method].filter(Boolean).join(' · ') });
       if (isPaid(o)) steps.push({ at: (o.paidAt ?? o.updatedAt ?? e.ts).toISOString(), kind: 'paid', text: `Paid ${formatINR(o.total)}`, detail: e.order });
+      if (o.status === 'cancelled' && o.cancelledAt) {
+        steps.push({ at: o.cancelledAt.toISOString(), kind: 'cancelled', text: `Cancelled ${e.order}`, detail: o.cancelledBy === 'shop' ? 'by the shop' : 'by the customer' });
+      }
+      if (o.refund?.status === 'refunded' && o.refund.updatedAt) {
+        steps.push({ at: o.refund.updatedAt.toISOString(), kind: 'refund', text: `Refunded ${formatINR(o.refund.amount ?? 0)}`, detail: e.order });
+      }
     } else if (e.q) {
       steps.push({ at, kind: 'search', text: searchText(e.q), detail: e.n === 0 ? 'Found nothing' : e.n == null ? undefined : `${e.n} ${e.n === 1 ? 'product' : 'products'} found` });
     } else {

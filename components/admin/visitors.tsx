@@ -103,6 +103,8 @@ const DOTS: Record<StepKind, string> = {
   order: 'bg-gold-deep',
   paid: 'bg-emerald-600',
   failed: 'bg-red-600',
+  cancelled: 'bg-red-400',
+  refund: 'bg-orange-500',
 };
 
 function Journey({ row, query, onClose }: { row: VisitorRow | null; query: string; onClose: () => void }) {

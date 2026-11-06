@@ -120,7 +120,10 @@ export function readPeriod(sp: URLSearchParams): { period: Period; custom?: DayR
 
 /* ---------- orders ---------- */
 
-export type OrderInfo = { payment: string; total: number; method?: string; paidAt?: Date; updatedAt?: Date };
+export type OrderInfo = {
+  payment: string; total: number; method?: string; paidAt?: Date; updatedAt?: Date;
+  status?: string; cancelledAt?: Date; cancelledBy?: string; refund?: { status?: string; amount?: number; updatedAt?: Date } | null;
+};
 export const isPaid = (o: OrderInfo) => PAID.includes(o.payment);
 
 /** The saved orders for these numbers; the stats trust the order itself, never the browser, for "placed" and "paid". */
@@ -128,7 +131,7 @@ export async function orderInfo(d: mongo.Db, numbers: string[]): Promise<Map<str
   const unique = [...new Set(numbers)];
   if (!unique.length) return new Map();
   const found = await d.collection<OrderInfo & { number: string }>('orders')
-    .find({ number: { $in: unique } }, { projection: { number: 1, payment: 1, total: 1, method: 1, paidAt: 1, updatedAt: 1 } })
+    .find({ number: { $in: unique } }, { projection: { number: 1, payment: 1, total: 1, method: 1, paidAt: 1, updatedAt: 1, status: 1, cancelledAt: 1, cancelledBy: 1, refund: 1 } })
     .toArray();
   return new Map(found.map((o) => [o.number, o]));
 }
@@ -207,7 +210,8 @@ export async function adminStats(period: Period, custom?: DayRange): Promise<Adm
           views: [{ $group: { _id: null, n: { $sum: isView } } }],
           pages: [
             { $match: VIEW },
-            { $group: { _id: '$path', views: { $sum: 1 }, vids: { $addToSet: '$vid' } } },
+            // Older visits kept the order id in the path; count every order's tracking page as one page.
+            { $group: { _id: { $cond: [{ $regexMatch: { input: '$path', regex: /^\/orders\/./ } }, '/orders/[id]', '$path'] }, views: { $sum: 1 }, vids: { $addToSet: '$vid' } } },
             { $project: { views: 1, visitors: { $size: '$vids' } } },
             { $sort: { views: -1, visitors: -1, _id: 1 } },
             { $limit: 10 },

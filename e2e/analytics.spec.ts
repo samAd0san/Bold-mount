@@ -257,6 +257,24 @@ test.describe.serial('visitor analytics', () => {
     await expect(visitorRows(page).filter({ hasText: 'Ayesha Khan' })).toContainText('Payment didn’t go through');
   });
 
+  test('a cancelled and refunded order is named as cancelled, not paid, and the journey shows both steps', async ({ page }) => {
+    await adminLogin(page);
+    const at = Date.now();
+    await (await testDb()).collection('orders').updateOne({ number: placed.imran.number }, {
+      $set: {
+        status: 'cancelled', cancelledAt: new Date(at), cancelledBy: 'customer', payment: 'refunded',
+        refund: { status: 'refunded', reason: 'Cancelled by customer', amount: placed.imran.total, requestedAt: new Date(at), updatedAt: new Date(at + 1000) },
+      },
+    });
+    await page.goto('/admin/visitors');
+    const imran = visitorRows(page).filter({ hasText: 'Imran Siddiqui' });
+    await expect(imran).toContainText('Cancelled order ' + placed.imran.number);
+    await expect(imran).not.toContainText('Paid ' + placed.imran.number);
+    await imran.click();
+    expect((await steps(page)).slice(-3)).toEqual([`Paid ${inr(placed.imran.total)}`, `Cancelled ${placed.imran.number}`, `Refunded ${inr(placed.imran.total)}`]);
+    await expect(page.getByRole('dialog')).toContainText('by the customer');
+  });
+
   test('the owner, bots and other sites are not counted, and nothing personal is stored', async ({ page, request }) => {
     await adminLogin(page);
     const before = await stats(page);
