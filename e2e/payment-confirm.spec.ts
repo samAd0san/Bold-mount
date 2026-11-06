@@ -321,7 +321,11 @@ test('g. the page died before it heard back and the cart is still full: paying a
   await addToCart(page);
   await page.goto('/cart');
   await expect(payButton(page)).toBeVisible();
+  // The cart page re-reads the orders as it opens (that is when the backstop confirms the first payment); type once it has settled.
+  await page.waitForLoadState('networkidle');
   await fillCheckout(page, WHO.farida);
+  await expect(page.getByLabel('Pincode *')).toHaveValue(WHO.farida.pincode);
+  await expect(page.getByLabel('Mobile number *')).not.toHaveValue('');
   await payButton(page).click();
   await expect(page.locator('main')).toContainText(`Your earlier payment went through: order ${first.number} is paid.`);
   await expect(page.locator('iframe.razorpay-checkout-frame')).toHaveCount(0);
