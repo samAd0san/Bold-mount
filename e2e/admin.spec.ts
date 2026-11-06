@@ -178,7 +178,8 @@ test('product: add with several prices and photos, edit, rename, duplicate name,
   }
   expect((await products(page)).filter((p) => p.name.startsWith('Rose Attar'))).toHaveLength(0);
   expect((await api(page, `/api/admin/categories/${attar.id}`, { method: 'DELETE' })).status).toBe(200);
-  expect((await page.goto('/product/rose-attar'))?.status()).toBe(404);
+  // The cached page may be served once more while it refreshes in the background.
+  await expect.poll(async () => (await page.goto('/product/rose-attar'))?.status()).toBe(404);
 
   await destroyCloudinary(uploaded);
 });

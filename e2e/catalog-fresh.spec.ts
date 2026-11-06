@@ -1,7 +1,7 @@
 import { expect, test, type Request } from '@playwright/test';
 import { api } from './helpers';
 
-type Catalog = { categories: { slug: string }[]; products: { slug: string; category: string }[] };
+type Catalog = { categories: { slug: string; name: string }[]; products: { slug: string; category: string; origin?: string }[] };
 
 test('All products lists each category’s products together, in menu order', async ({ page }) => {
   await page.goto('/shop');
@@ -15,6 +15,23 @@ test('All products lists each category’s products together, in menu order', as
   expect(shown.length).toBe(products.length);
   const ranks = shown.map((slug) => rank.get(categoryOf.get(slug)!)!);
   expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+
+  // Each category has its own heading (full name), holding only its own products.
+  const withProducts = categories.filter((c) => products.some((p) => p.category === c.slug));
+  const sections = page.locator('main section[aria-labelledby^="shop-"]');
+  await expect(sections.locator('h3')).toHaveText(withProducts.map((c) => c.name));
+  for (const c of withProducts) {
+    const inSection = await page.locator(`main section[aria-labelledby="shop-${c.slug}"] a[href^="/product/"]`).evaluateAll((links) =>
+      links.map((a) => a.getAttribute('href')!.replace('/product/', '')),
+    );
+    expect(new Set(inSection.map((s) => categoryOf.get(s)))).toEqual(new Set([c.slug]));
+  }
+
+  // A product with an origin still names its category at the top.
+  const withOrigin = products.find((p) => p.origin)!;
+  await page.goto(`/product/${withOrigin.slug}`);
+  const catName = categories.find((c) => c.slug === withOrigin.category)!.name;
+  await expect(page.locator('main .eyebrow').first()).toHaveText(new RegExp(catName, 'i'));
 });
 
 test('coming back to a shop tab after a while fetches fresh shop data', async ({ page }) => {

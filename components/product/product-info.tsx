@@ -34,12 +34,11 @@ export function ProductInfo({ product, categoryName, preview = false }: { produc
             {product.badge}
           </span>
         )}
-        {product.origin ? (
+        {categoryName && <span className="eyebrow">{categoryName}</span>}
+        {product.origin && (
           <span className="flex items-center gap-1 text-sm text-ink-soft">
             <MapPin size={14} className="text-gold-ink" /> {product.origin}
           </span>
-        ) : (
-          <span className="eyebrow">{categoryName}</span>
         )}
         {ARABIC[product.category] && (
           <span lang="ar" dir="rtl" className="ml-auto font-arabic text-xl text-gold-ink">

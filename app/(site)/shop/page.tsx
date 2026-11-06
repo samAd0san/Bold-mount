@@ -30,6 +30,11 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const products = applyShopQuery(query, all);
   const title = query.q ? `Results for “${query.q}”` : query.filter ? categoryLabel(categories, query.filter) : 'All products';
   const category = categories.find((c) => c.slug === query.filter);
+  // The plain "All products" list gets a titled block per category, in menu order, so each category is easy to spot.
+  const sections =
+    !query.filter && !query.q && query.sort === 'featured'
+      ? categories.map((c) => ({ c, items: products.filter((p) => p.category === c.slug) })).filter((s) => s.items.length)
+      : null;
 
   return (
     <>
@@ -70,7 +75,30 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
           <div className="mt-6 md:mt-8">
             <Reveal key={shopHref(query)}>
-              {products.length ? <ProductGrid products={products} /> : <ShopEmptyState query={query} />}
+              {!products.length ? (
+                <ShopEmptyState query={query} />
+              ) : sections ? (
+                <div className="space-y-12 md:space-y-14">
+                  {sections.map(({ c, items }) => (
+                    <section key={c.slug} aria-labelledby={`shop-${c.slug}`}>
+                      <div className="mb-5 flex items-end justify-between gap-4 border-b border-line pb-3">
+                        <h3 id={`shop-${c.slug}`} className="text-xl text-ink md:text-2xl">
+                          {c.name}
+                        </h3>
+                        <Link
+                          href={categoryHref(c.slug)}
+                          className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-sm font-semibold text-navy underline-offset-4 hover:underline"
+                        >
+                          Go to {c.name} <ArrowRight size={15} aria-hidden />
+                        </Link>
+                      </div>
+                      <ProductGrid products={items} />
+                    </section>
+                  ))}
+                </div>
+              ) : (
+                <ProductGrid products={products} />
+              )}
             </Reveal>
           </div>
         </Container>
