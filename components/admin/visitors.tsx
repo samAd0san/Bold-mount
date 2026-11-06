@@ -156,6 +156,9 @@ function Journey({ row, query, onClose }: { row: VisitorRow | null; query: strin
   );
 }
 
+/** One line under the page title: visits are only counted for people who accepted the cookie notice. */
+export const CountNote = () => <p className="-mt-2 text-[13px] text-ink-soft">Only visitors who pressed OK on the cookie notice are counted.</p>;
+
 /** The Visitors page: everyone in the chosen period, newest first, 20 at a time. */
 export function Visitors() {
   const p = usePeriod();
@@ -188,6 +191,7 @@ export function Visitors() {
   return (
     <div className="flex flex-col gap-5 sm:gap-6">
       <PageHead title="Visitors" sub="Everyone who opened your shop, newest first. Tap a visitor to see the pages they looked at." />
+      <CountNote />
       <PeriodBar p={p} />
       {first.error && !first.data && <ErrorNote onRetry={first.reload}>{first.error}</ErrorNote>}
       <Card className={cn('transition-opacity', first.loading && first.data && 'opacity-55')}>

@@ -7,6 +7,7 @@ import { FloatingActions } from '@/components/layout/floating-actions';
 import { CategoriesProvider } from '@/components/layout/categories-context';
 import { DeliveryProvider } from '@/components/layout/delivery-context';
 import { Tracker } from '@/components/analytics/tracker';
+import { CookieNotice } from '@/components/consent/cookie-notice';
 import { LiveCatalog } from '@/components/layout/live-catalog';
 import { getCategories, getDelivery } from '@/lib/catalog';
 import { DEFAULT_DELIVERY } from '@/lib/delivery';
@@ -30,6 +31,7 @@ export async function SiteChrome({ children }: { children: React.ReactNode }) {
         <CartDrawer />
         <FloatingActions />
         <Tracker />
+        <CookieNotice />
         <LiveCatalog />
       </DeliveryProvider>
     </CategoriesProvider>

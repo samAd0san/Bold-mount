@@ -7,6 +7,7 @@ export interface PolicyBlock {
   list?: string[];
   ordered?: boolean;
   link?: { label: string; href: string };
+  cookieChoice?: boolean; // shows the "Change my choice" button
 }
 
 export interface Policy {
@@ -151,7 +152,7 @@ export const policies = (d: DeliverySettings): Policy[] => [
       {
         heading: 'Your cart',
         paragraphs: [
-          'Your cart is stored in your own browser, on your device. The full cart is not sent to us until you place your order, paying online or choosing cash on delivery; we only note which product was added (see Visits to this website). Clearing your browser data removes it.',
+          'Your cart is stored in your own browser, on your device. The full cart is not sent to us until you place your order, paying online or choosing cash on delivery; if you pressed OK on the cookie notice, we also note which product was added (see Visits to this website). Clearing your browser data removes it.',
         ],
       },
       {
@@ -163,8 +164,20 @@ export const policies = (d: DeliverySettings): Policy[] => [
       {
         heading: 'Visits to this website',
         paragraphs: [
-          'To see which pages are useful, we keep a simple record of visits. By default it is anonymous: a random ID in a small cookie, the pages opened, the kind of device (phone, tablet or computer), the time, the website or link that sent you (such as WhatsApp or Google), words typed into our shop search, and whether something was added to a cart, you reached checkout or an order was placed (with its order number). We do not store your IP address or your browser’s details. Only if you are signed in is the record linked to your account, so we can see which customer it was. Records are deleted automatically after 400 days, and visits by the shop owner are not counted.',
+          'To see which pages are useful, we keep a simple record of visits, but only after you press OK on the cookie notice. If you press No thanks, nothing is recorded. By default the record is anonymous: a random ID in a small cookie, the pages opened, the kind of device (phone, tablet or computer), the time, the website or link that sent you (such as WhatsApp or Google), words typed into our shop search, and whether something was added to a cart, you reached checkout or an order was placed (with its order number). We do not store your IP address or your browser’s details. Only if you are signed in is the record linked to your account, so we can see which customer it was. Records are deleted automatically after 400 days, and visits by the shop owner are not counted.',
         ],
+      },
+      {
+        heading: 'Cookies',
+        paragraphs: ['The first four are needed for the shop to work, so they are always on and need no OK. Only the last one is optional.'],
+        list: [
+          'Sign-in (bm_session, bm_oauth): keeps you signed in with Google so you can place and track your orders.',
+          'Admin sign-in (bm_admin): used only by the shop owner.',
+          'Your cart, and the details you type at checkout: kept in your own browser’s storage on your device. Nothing is sent to us until you place your order.',
+          'Your cookie choice (bm_consent): remembers whether you pressed OK or No thanks, for one year.',
+          'Counting visits (bm_vid), only if you press OK: a random ID that lets us count visits without knowing who you are, kept for one year. Your browser also keeps the time of your last visit (bm_seen) so that coming back later counts as a new visit.',
+        ],
+        cookieChoice: true,
       },
       {
         heading: 'Sharing',
@@ -178,7 +191,7 @@ export const policies = (d: DeliverySettings): Policy[] => [
       },
       {
         heading: 'Your choices',
-        paragraphs: ['You can ask us to remove the details you have sent us at any time by messaging us on WhatsApp.'],
+        paragraphs: ['You can ask us to remove the details you have sent us at any time by messaging us on WhatsApp. You can also change your cookie choice at any time with the button under Cookies.'],
       },
     ],
   },

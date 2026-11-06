@@ -4,7 +4,7 @@ import { trackBeacon, type Beacon } from '@/lib/server/track';
 
 const done = () => new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
 
-// One page opened, or one thing a visitor did. Bots, other sites, /admin and the owner are ignored.
+// One page opened, or one thing a visitor did. Bots, other sites, /admin, the owner and visitors who have not pressed OK are ignored.
 export async function POST(req: Request) {
   const ua = req.headers.get('user-agent') ?? '';
   const site = req.headers.get('sec-fetch-site');

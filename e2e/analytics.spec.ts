@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
-import { adminLogin, api, CUSTOMER, fillCheckout, overflowing, payWithTestBank, signInAs, testDb } from './helpers';
+import { acceptCookies, adminLogin, api, CUSTOMER, fillCheckout, overflowing, payWithTestBank, signInAs, testDb } from './helpers';
 import type { AdminStats } from '../lib/server/admin-stats';
 import type { Order } from '../lib/types';
 
@@ -41,6 +41,8 @@ test.describe.serial('visitor analytics', () => {
 
     const who = async (b: Browser, userAgent: string, viewport = { width: 1280, height: 800 }) => {
       const context = await b.newContext({ userAgent, viewport });
+      // Only visitors who pressed OK on the cookie notice are counted.
+      await acceptCookies(context);
       return { context, page: await context.newPage() };
     };
 
@@ -276,6 +278,7 @@ test.describe.serial('visitor analytics', () => {
   });
 
   test('the owner, bots and other sites are not counted, and nothing personal is stored', async ({ page, request }) => {
+    await acceptCookies(page.context());
     await adminLogin(page);
     const before = await stats(page);
 
@@ -284,9 +287,10 @@ test.describe.serial('visitor analytics', () => {
     await open(page, '/product/ajwa-dates');
     // A search engine robot, and a note from another website.
     const note = { path: '/', land: { host: 'bing.com' } };
-    expect((await request.post('/api/track', { data: note, headers: { 'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)' } })).status()).toBe(204);
-    expect((await request.post('/api/track', { data: note, headers: { 'user-agent': DESKTOP, 'sec-fetch-site': 'cross-site' } })).status()).toBe(204);
-    expect((await request.post('/api/track', { data: { path: '/admin/orders' }, headers: { 'user-agent': DESKTOP } })).status()).toBe(204);
+    const consent = 'bm_consent=yes';
+    expect((await request.post('/api/track', { data: note, headers: { 'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)', cookie: consent } })).status()).toBe(204);
+    expect((await request.post('/api/track', { data: note, headers: { 'user-agent': DESKTOP, 'sec-fetch-site': 'cross-site', cookie: consent } })).status()).toBe(204);
+    expect((await request.post('/api/track', { data: { path: '/admin/orders' }, headers: { 'user-agent': DESKTOP, cookie: consent } })).status()).toBe(204);
     await page.waitForTimeout(1500);
 
     const after = await stats(page);

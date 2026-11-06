@@ -7,10 +7,14 @@ import { isAdmin } from '@/lib/server/admin-auth';
 import { deviceFrom, describePath, isBot, landingFields, recordVisits, VID_COOKIE, VID_RE, type VisitDoc } from '@/lib/server/analytics';
 import { sessionUid } from '@/lib/server/auth-token';
 import { getCatalog } from '@/lib/catalog';
+import { readConsent } from '@/lib/consent';
 
 const SLUG = /^[a-z0-9-]{1,80}$/;
 
 export type Beacon = { path?: unknown; q?: unknown; land?: unknown; checkout?: unknown; ev?: unknown; slug?: unknown };
+
+/** True only when the request carries bm_consent=yes: the one server-side gate for every kind of visit tracking. */
+const consented = async () => readConsent((await headers()).get('cookie')) === 'yes';
 
 /** How many products the shop search finds for these words, by the same rule the Shop page uses. */
 async function searchHits(q: string) {
@@ -18,10 +22,10 @@ async function searchHits(q: string) {
   return applyShopQuery(parseShopQuery({ q }, []), products).length;
 }
 
-/** Saves what one browser beacon reports. The owner's own visits and unreadable beacons are dropped; each browser gets an anonymous id cookie. */
+/** Saves what one browser beacon reports. Visitors who have not pressed OK, the owner's own visits and unreadable beacons are dropped; each browser gets an anonymous id cookie. */
 export async function trackBeacon(ua: string, b: Beacon) {
   const where = describePath(b.path);
-  if (!where || (await isAdmin())) return;
+  if (!where || !(await consented()) || (await isAdmin())) return;
   const jar = await cookies();
   let vid = jar.get(VID_COOKIE)?.value;
   if (!vid || !VID_RE.test(vid)) {
@@ -56,7 +60,7 @@ export async function trackOrder(number: string) {
   try {
     const ua = (await headers()).get('user-agent') ?? '';
     const vid = (await cookies()).get(VID_COOKIE)?.value;
-    if (isBot(ua) || !vid || !VID_RE.test(vid) || (await isAdmin())) return;
+    if (isBot(ua) || !vid || !VID_RE.test(vid) || !(await consented()) || (await isAdmin())) return;
     const uid = await sessionUid();
     const doc: VisitDoc = { vid, path: '/cart', device: deviceFrom(ua), ts: new Date(), ev: 'order', order: number, ...(uid ? { uid } : {}) };
     after(() => recordVisits([doc]).catch((err) => console.error('[track]', err)));

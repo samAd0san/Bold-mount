@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, RotateCw } from 'lucide-react';
 import { BarRow, n, Panel, Stat } from '@/components/admin/dash-parts';
 import { PeriodBar, usePeriod, usePolled, type PeriodControl } from '@/components/admin/period';
-import { DEVICES, VisitorList, type VisitorPage } from '@/components/admin/visitors';
+import { CountNote, DEVICES, VisitorList, type VisitorPage } from '@/components/admin/visitors';
 import { Badge, Empty, ErrorNote, PageHead } from '@/components/admin/ui';
 import type { AdminStats } from '@/lib/server/admin-stats';
 import { formatINR } from '@/lib/format';
@@ -37,6 +37,7 @@ export function Dashboard() {
         }
       />
 
+      <CountNote />
       <PeriodBar p={p} range={data && !stats.loading ? data.range : undefined} />
 
       {stats.error && !data && <ErrorNote onRetry={reload}>{stats.error}</ErrorNote>}

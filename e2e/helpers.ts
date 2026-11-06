@@ -47,6 +47,9 @@ export async function signInAs(context: BrowserContext, user: { name: string; em
   return uid;
 }
 
+/** Presses OK on the cookie notice ahead of time, the way a returning visitor already has, so visits are counted. */
+export const acceptCookies = (context: BrowserContext) => context.addCookies([{ name: 'bm_consent', value: 'yes', domain: 'localhost', path: '/' }]);
+
 export const CUSTOMER = {
   name: 'Yusuf Rahman',
   mobile: '98480 22338',

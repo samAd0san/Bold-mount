@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/container';
 import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { PolicyTabs } from '@/components/info/policy-tabs';
+import { CookieChoiceButton } from '@/components/consent/cookie-choice-button';
 import { POLICY_SLUGS, POLICY_UPDATED, getPolicy } from '@/components/info/policy-data';
 import { pageMeta } from '@/components/info/page-meta';
 import { getDelivery } from '@/lib/catalog';
@@ -59,7 +60,7 @@ export default async function PolicyPage({ params }: Props) {
               {policy.blocks.map((b) => {
                 const List = b.ordered ? 'ol' : 'ul';
                 return (
-                  <section key={b.heading}>
+                  <section key={b.heading} id={b.heading.toLowerCase().replace(/[^a-z0-9]+/g, '-')} className="scroll-mt-32">
                     <h2 className="text-xl text-ink md:text-2xl">{b.heading}</h2>
                     {b.paragraphs?.map((p) => (
                       <p key={p} className="mt-3 leading-relaxed text-ink-soft">
@@ -78,6 +79,7 @@ export default async function PolicyPage({ params }: Props) {
                         ))}
                       </List>
                     )}
+                    {b.cookieChoice && <CookieChoiceButton />}
                     {b.link && (
                       <Link href={b.link.href} className="mt-3 inline-block font-semibold text-navy underline-offset-4 hover:underline">
                         {b.link.label} →
