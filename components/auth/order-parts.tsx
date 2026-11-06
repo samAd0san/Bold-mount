@@ -1,17 +1,14 @@
 import type { Order } from '@/lib/types';
-import { PAYMENT_LABEL } from '@/lib/order-view';
+import { cashDue, paymentText } from '@/lib/order-view';
 import { GoogleButton } from '@/components/auth/google-button';
 import { signInHref } from '@/components/auth/use-account';
 import { cn } from '@/lib/utils';
 
 export const ORDER_CARD = 'rounded-2xl bg-pearl ring-1 ring-line ring-inset';
 
-export function PaymentPill({ payment }: { payment: Order['payment'] }) {
-  return (
-    <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', payment === 'paid' ? 'bg-whatsapp/15 text-whatsapp-ink' : 'bg-sand text-ink')}>
-      {PAYMENT_LABEL[payment]}
-    </span>
-  );
+export function PaymentPill({ order }: { order: Order }) {
+  const tone = order.payment === 'paid' ? 'bg-whatsapp/15 text-whatsapp-ink' : cashDue(order) ? 'bg-gold/15 text-gold-ink' : 'bg-sand text-ink';
+  return <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', tone)}>{paymentText(order)}</span>;
 }
 
 /** Shown on the orders pages when nobody is signed in; `next` is where Google sends them back to. */

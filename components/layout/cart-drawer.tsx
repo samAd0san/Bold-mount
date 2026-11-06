@@ -7,7 +7,7 @@ import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useCart, cartSubtotal } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
 import { formatINR } from '@/lib/format';
-import { SITE } from '@/lib/site';
+import { PAY_LINE, SITE } from '@/lib/site';
 import { deliveryFor } from '@/lib/shop';
 import { buttonClass } from '@/components/ui/button-styles';
 import { cn } from '@/lib/utils';
@@ -122,7 +122,7 @@ export function CartDrawer() {
               <Link href="/cart" onClick={() => setOpen(false)} className={buttonClass('navy', 'w-full py-3.5')}>
                 Checkout
               </Link>
-              <p className="text-center text-xs text-ink-soft">Pay online with UPI, cards or netbanking.</p>
+              <p className="text-center text-xs text-ink-soft">{PAY_LINE}.</p>
             </div>
           </>
         )}

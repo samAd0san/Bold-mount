@@ -62,8 +62,13 @@ function ErrorLine({ message }: { message: string }) {
 
 // Says exactly what cancelling does for this kind of order.
 function cancelNote(order: Order): string {
-  if (order.payment === 'paid') {
+  if (order.method === 'online' && order.payment === 'paid') {
     return `You’ll get a full refund of ${formatINR(order.total)}, including delivery, to your original payment method. Banks usually take 5–7 working days.`;
+  }
+  if (order.method === 'cod') {
+    return order.payment === 'paid'
+      ? 'This order will be cancelled. You’ve already paid in cash, so we’ll arrange your money back with you.'
+      : 'This order will be cancelled. You haven’t paid anything, so there is nothing to refund.';
   }
   if (order.method === 'whatsapp') {
     return 'This order will simply be cancelled. If you already paid us by UPI or bank transfer, message us on WhatsApp and it goes back to the same account.';
@@ -101,6 +106,9 @@ function CancelForm({ order, close, onDone }: { order: Order; close: () => void;
         </label>
         <textarea id={id} rows={2} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Tell us why, if you like" className={cn(FIELD, 'resize-y')} />
       </div>
+      <p className="rounded-xl bg-gold/15 p-4 text-sm font-medium leading-relaxed text-gold-ink">
+        Good to know: once you cancel an order, cash on delivery is switched off for your account. You can still pay online for future orders.
+      </p>
       {error && <ErrorLine message={error} />}
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <button type="button" onClick={close} className={buttonClass('outline', 'min-h-11')}>

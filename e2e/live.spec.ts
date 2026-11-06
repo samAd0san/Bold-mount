@@ -78,11 +78,11 @@ test('order status set in the admin shows on the customer’s open tracking page
   await listening(admin, 'admin');
   await mark(admin);
 
-  // The customer orders on WhatsApp: the admin's open Orders page lists it straight away.
+  // The customer orders with cash on delivery: the admin's open Orders page lists it straight away.
   await page.goto('/');
   const placed = await api<{ order: Order }>(page, '/api/orders', {
     method: 'POST',
-    body: { method: 'whatsapp', items: [{ slug: 'premium-roasted-talbeenah', variantId: '500g', qty: 1 }], customer: { ...CUSTOMER, name: 'Faisal Ahmed', note: '' } },
+    body: { method: 'cod', items: [{ slug: 'premium-roasted-talbeenah', variantId: '500g', qty: 1 }], customer: { ...CUSTOMER, name: 'Faisal Ahmed', note: '' } },
   });
   expect(placed.status).toBe(201);
   const order = placed.data.order;

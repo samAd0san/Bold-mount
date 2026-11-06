@@ -15,8 +15,12 @@ export const SITE = {
   deliveryFee: 50,
 } as const;
 
+/** The two ways to pay for a shop order, worded the same everywhere on the site. */
+export const PAY_WAYS = 'online (UPI, cards, netbanking) or cash on delivery';
+export const PAY_LINE = `Pay ${PAY_WAYS}`;
+
 export const ANNOUNCEMENTS = [
   `Free delivery on orders above ₹${SITE.freeShippingAbove}`,
-  'Pay securely online — UPI, cards or netbanking',
+  PAY_LINE,
   'A share of every order feeds a family in need',
 ];

@@ -17,7 +17,7 @@ export const metadata = pageMeta({
 
 const TOPICS = [
   'Order / product question',
-  'Bulk or gift order',
+  'Bulk or gift question',
   'Zakat / donations',
   'Umrah Badal',
   'Volunteer services',

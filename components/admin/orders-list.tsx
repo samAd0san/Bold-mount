@@ -5,8 +5,9 @@ import { ChevronDown, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { useAdmin } from '@/components/admin/admin-gate';
 import { adminFetch, clock, SignedOut, telLink, useFetch, waLink } from '@/components/admin/api';
 import { CancelDialog, RefundPanel } from '@/components/admin/order-refund';
-import { Badge, Chips, Empty, ErrorNote, PageHead, Select, Skeleton } from '@/components/admin/ui';
+import { Badge, Button, Chips, Empty, ErrorNote, PageHead, Select, Skeleton } from '@/components/admin/ui';
 import { formatINR } from '@/lib/format';
+import { cashDue } from '@/lib/order-view';
 import { ORDER_STATUSES, type Order, type OrderStatus, type PaymentStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useLive } from '@/lib/live';
@@ -18,8 +19,19 @@ const PAY: Record<PaymentStatus, { label: string; tone: 'green' | 'amber' | 'red
   failed: { label: 'Failed', tone: 'red' },
   'on-whatsapp': { label: 'On WhatsApp', tone: 'blue' },
   refunded: { label: 'Refunded', tone: 'gray' },
+  cod: { label: 'Cash on delivery', tone: 'amber' },
 };
 const FILTERS: { value: OrderStatus | 'all'; label: string }[] = [{ value: 'all', label: 'All' }, ...ORDER_STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s] }))];
+
+/** The payment badge; a cash-on-delivery order says how much to collect, then "Paid in cash". */
+function payBadge(o: Order): { label: string; tone: 'green' | 'amber' | 'red' | 'blue' | 'gray' } {
+  if (o.method !== 'cod') return PAY[o.payment];
+  if (o.payment === 'paid') return { label: 'Paid in cash', tone: 'green' };
+  if (o.status === 'cancelled') return { label: 'Cash on delivery · cancelled', tone: 'gray' };
+  return { label: `Cash on delivery — collect ${formatINR(o.total)}`, tone: 'amber' };
+}
+
+const METHOD_NOTE: Record<Order['method'], string> = { online: 'Paid through the website', cod: 'Cash on delivery', whatsapp: 'Ordered on WhatsApp' };
 
 /** Small badge for where a refund stands; a finished refund shows its amount instead of the payment badge. */
 function refundBadge(o: Order): { label: string; tone: 'gold' | 'red' | 'gray' } | null {
@@ -54,7 +66,7 @@ export function OrdersList() {
   const replace = (order: Order) => mutate((d) => ({ ...d, orders: d.orders.map((x) => (x.id === order.id ? order : x)) }));
 
   const setStatus = async (o: Order, status: OrderStatus) => {
-    // A paid order is cancelled through the box that offers the refund.
+    // A paid order (online or cash) is cancelled through the box that offers the refund.
     if (status === 'cancelled' && o.payment === 'paid') {
       setCancelling(o);
       return;
@@ -63,6 +75,20 @@ export function OrdersList() {
     setProblem(null);
     try {
       const res = await adminFetch<{ order: Order }>(`/api/admin/orders/${o.id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+      replace(res.order);
+    } catch (e) {
+      setProblem(`${o.number}: ${(e as Error).message}`);
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  // Cash handed over before the shop changes the status.
+  const markCash = async (o: Order) => {
+    setSaving(o.id);
+    setProblem(null);
+    try {
+      const res = await adminFetch<{ order: Order }>(`/api/admin/orders/${o.id}/cash`, { method: 'POST' });
       replace(res.order);
     } catch (e) {
       setProblem(`${o.number}: ${(e as Error).message}`);
@@ -103,7 +129,7 @@ export function OrdersList() {
         <ul className={cn('flex flex-col gap-3 transition-opacity', loading && 'opacity-55')}>
           {data.orders.map((o) => {
             const expanded = open === o.id;
-            const pay = PAY[o.payment];
+            const pay = payBadge(o);
             const rb = refundBadge(o);
             const c = o.customer;
             return (
@@ -185,9 +211,15 @@ export function OrdersList() {
                         <p className="mt-1 whitespace-pre-wrap text-ink">{c.note}</p>
                       </div>
                     )}
+                    {cashDue(o) && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
+                        <p className="text-ink">Collect <span className="font-semibold">{formatINR(o.total)}</span> in cash when it is delivered.</p>
+                        <Button size="sm" variant="outline" busy={saving === o.id} onClick={() => void markCash(o)}>Mark cash received</Button>
+                      </div>
+                    )}
                     <RefundPanel order={o} onSaved={replace} onFailed={reload} />
                     <p className="text-xs text-ink-soft">
-                      {o.method === 'online' ? 'Paid through the website' : 'Ordered on WhatsApp'}
+                      {METHOD_NOTE[o.method]}
                       {o.paidAt ? ` · paid ${clock(o.paidAt)}` : ''}
                       {stageNote(o)}
                     </p>

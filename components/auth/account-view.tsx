@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { LogOut, PackageOpen } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { formatINR } from '@/lib/format';
-import { formatDate, isOngoing, itemsSummary, refundText, statusText } from '@/lib/order-view';
+import { cashDue, formatDate, isOngoing, itemsSummary, paymentText, refundText, statusText } from '@/lib/order-view';
 import { buttonClass } from '@/components/ui/button-styles';
 import { Avatar } from '@/components/auth/avatar';
 import { OrderProgress } from '@/components/auth/order-progress';
@@ -21,6 +21,7 @@ function OngoingCard({ order }: { order: Order }) {
       </div>
       <p className="mt-2 line-clamp-2 text-sm text-ink-soft">{itemsSummary(order)}</p>
       <p className="mt-4 text-sm font-semibold text-ink">Status: {statusText(order)}</p>
+      {cashDue(order) && <p className="mt-1 text-sm text-ink-soft">Cash on delivery: pay {formatINR(order.total)} in cash when it arrives.</p>}
       <OrderProgress order={order} />
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
         <p className="text-sm text-ink-soft">
@@ -49,6 +50,7 @@ function HistoryRow({ order }: { order: Order }) {
         {statusText(order)}
         {at && <span className="font-normal text-ink-soft"> on {formatDate(at)}</span>}
       </p>
+      {order.method === 'cod' && <p className="mt-1 text-sm text-ink-soft">{paymentText(order)}</p>}
       {order.refund && <p className="mt-1 text-sm leading-relaxed text-ink-soft">{refundText(order.refund)}</p>}
       <Link href={`/orders/${order.id}`} aria-describedby={`${order.id}-number`} className="mt-1 -mb-2 inline-flex min-h-11 items-center text-sm font-semibold text-navy underline underline-offset-4">
         View
@@ -124,7 +126,7 @@ export function AccountView() {
         </button>
       </div>
       <p className="text-sm text-ink-soft">
-        Cancel an order before it is dispatched, or ask for a refund after delivery.{' '}
+        Cancel an order before it is dispatched, or ask for a refund after delivery. Cancelling turns off cash on delivery for your account.{' '}
         <Link href="/policies/refund-cancellation" className="font-semibold text-navy underline underline-offset-4">
           Refund & Cancellation policy
         </Link>

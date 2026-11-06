@@ -7,9 +7,10 @@ import type { Order } from '@/lib/types';
 import { formatINR } from '@/lib/format';
 import { buttonClass } from '@/components/ui/button-styles';
 
-/** Shown after a successful online payment, in place of the cart. */
+/** Shown after an order is placed (paid online, or cash on delivery), in place of the cart. */
 export function OrderConfirmation({ order }: { order: Order }) {
   const ref = useRef<HTMLDivElement>(null);
+  const cod = order.method === 'cod';
   // The form was far down the page; bring the confirmation into view.
   // Braces matter: newer browsers return a Promise from scrollIntoView, which React rejects as a cleanup.
   useEffect(() => {
@@ -20,7 +21,7 @@ export function OrderConfirmation({ order }: { order: Order }) {
       <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-whatsapp/15 text-whatsapp-ink">
         <CheckCircle2 size={30} />
       </span>
-      <h2 className="mt-5 text-2xl text-ink">Payment received — thank you!</h2>
+      <h2 className="mt-5 text-2xl text-ink">{cod ? 'Order placed — thank you!' : 'Payment received — thank you!'}</h2>
       <p className="mt-2 text-ink-soft">Your order is placed, in shā’ Allāh.</p>
 
       <dl className="mx-auto mt-7 max-w-xs divide-y divide-line rounded-xl bg-cream text-sm ring-1 ring-line ring-inset">
@@ -29,12 +30,13 @@ export function OrderConfirmation({ order }: { order: Order }) {
           <dd className="font-semibold text-ink">{order.number}</dd>
         </div>
         <div className="flex justify-between gap-4 px-4 py-3">
-          <dt className="text-ink-soft">Total paid</dt>
+          <dt className="text-ink-soft">{cod ? 'To pay in cash' : 'Total paid'}</dt>
           <dd className="font-semibold tabular-nums text-navy">{formatINR(order.total)}</dd>
         </div>
       </dl>
 
-      <p className="mx-auto mt-6 max-w-sm leading-relaxed text-ink-soft">
+      {cod && <p className="mx-auto mt-6 max-w-sm leading-relaxed font-medium text-ink">You’ll pay {formatINR(order.total)} in cash when your order arrives.</p>}
+      <p className={`mx-auto max-w-sm leading-relaxed text-ink-soft ${cod ? 'mt-3' : 'mt-6'}`}>
         We’ll call or WhatsApp you on {order.customer.mobile} to confirm delivery.
       </p>
 

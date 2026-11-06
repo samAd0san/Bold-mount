@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
-import { CheckCircle2, ShoppingBag, Trash2 } from 'lucide-react';
+import { ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart, cartCount, cartSubtotal } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
 import { formatINR } from '@/lib/format';
-import { SITE } from '@/lib/site';
+import { PAY_WAYS, SITE } from '@/lib/site';
 import { deliveryFor } from '@/lib/shop';
 import type { Order } from '@/lib/types';
 import { buttonClass } from '@/components/ui/button-styles';
@@ -25,7 +25,6 @@ export function CartView() {
   const setQty = useCart((s) => s.setQty);
   const remove = useCart((s) => s.remove);
   const clear = useCart((s) => s.clear);
-  const [cleared, setCleared] = useState(false);
   const [placed, setPlaced] = useState<Order | null>(null);
 
   if (placed) return <OrderConfirmation order={placed} />;
@@ -40,7 +39,7 @@ export function CartView() {
     );
   }
 
-  if (!items.length) return <EmptyCart cleared={cleared} />;
+  if (!items.length) return <EmptyCart />;
 
   const count = cartCount(items);
   const subtotal = cartSubtotal(items);
@@ -143,14 +142,10 @@ export function CartView() {
 
       <section id="delivery" aria-labelledby="delivery-title" className={`scroll-mt-36 p-5 md:p-8 lg:col-start-1 lg:row-start-2 ${CARD}`}>
         <h2 id="delivery-title" className="text-xl text-ink">Delivery details</h2>
-        <p className="mt-1.5 mb-6 text-sm text-ink-soft">Tell us where to deliver, then pay online with UPI, cards or netbanking.</p>
+        <p className="mt-1.5 mb-6 text-sm text-ink-soft">Tell us where to deliver, then pay {PAY_WAYS}.</p>
         <CheckoutForm
           items={items}
-          onClear={() => {
-            setCleared(true);
-            clear();
-          }}
-          onPaid={(order) => {
+          onPlaced={(order) => {
             setPlaced(order);
             clear();
             void refreshOrders();
@@ -161,18 +156,14 @@ export function CartView() {
   );
 }
 
-function EmptyCart({ cleared }: { cleared: boolean }) {
+function EmptyCart() {
   return (
     <div className={`mx-auto max-w-xl px-6 py-14 text-center md:py-16 ${CARD}`}>
       <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sand text-navy">
-        {cleared ? <CheckCircle2 size={26} /> : <ShoppingBag size={26} />}
+        <ShoppingBag size={26} />
       </span>
-      <h2 className="mt-5 text-2xl text-ink">{cleared ? 'Thank you!' : 'Your cart is empty'}</h2>
-      <p className="mx-auto mt-2 max-w-sm leading-relaxed text-ink-soft">
-        {cleared
-          ? 'Once you press send on WhatsApp, we’ll reply to confirm availability, delivery and payment, in shā’ Allāh.'
-          : 'Start with our bestselling Talbeenah or a box of hand-picked dates.'}
-      </p>
+      <h2 className="mt-5 text-2xl text-ink">Your cart is empty</h2>
+      <p className="mx-auto mt-2 max-w-sm leading-relaxed text-ink-soft">Start with our bestselling Talbeenah or a box of hand-picked dates.</p>
       <div className="mt-7 flex flex-wrap justify-center gap-3">
         <Link href="/talbeenah" className={buttonClass('gold')}>
           Shop Talbeenah

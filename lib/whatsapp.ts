@@ -1,6 +1,4 @@
 import { SITE } from './site';
-import { formatINR } from './format';
-import { deliveryFor } from './shop';
 
 export function whatsappLink(text: string): string {
   return `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
@@ -8,28 +6,6 @@ export function whatsappLink(text: string): string {
 
 export function whatsappGeneralLink(): string {
   return whatsappLink('Assalamu alaikum Bold Mount, I have a question.');
-}
-
-export type OrderLine = { name: string; variant: string; price: number; qty: number };
-
-/** Full order message for checkout; `customer` lines are appended as "Label: value", then an optional closing line. */
-export function whatsappOrderLink(lines: OrderLine[], customer: Record<string, string> = {}, closing?: string): string {
-  const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
-  const fee = deliveryFor(subtotal);
-  const details = Object.entries(customer).filter(([, v]) => v.trim());
-  return whatsappLink(
-    [
-      'Assalamu alaikum Bold Mount, I would like to place an order:',
-      '',
-      ...lines.map((l) => `• ${l.name}${l.variant ? ` (${l.variant})` : ''} × ${l.qty} — ${formatINR(l.price * l.qty)}`),
-      '',
-      `Subtotal: ${formatINR(subtotal)}`,
-      `Delivery: ${fee ? formatINR(fee) : 'Free'}`,
-      `Total: ${formatINR(subtotal + fee)}`,
-      ...(details.length ? ['', ...details.map(([k, v]) => `${k}: ${v}`)] : []),
-      ...(closing ? ['', closing] : []),
-    ].join('\n'),
-  );
 }
 
 /** Service request (Zakat, Umrah Badal, giveaway…) — a title line plus "Label: value" fields. */

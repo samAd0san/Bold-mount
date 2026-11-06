@@ -17,13 +17,13 @@ export function ProductInfo({ product, categoryName, preview = false }: { produc
     ...(product.details ?? []),
     {
       label: 'Delivery & payment',
-      value: `Pay online at checkout with UPI, Google Pay, PhonePe, cards or netbanking. Payments are handled by Razorpay, so we never see or store your card details. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders above ${formatINR(SITE.freeShippingAbove)}. We deliver to your door and confirm the delivery time with you before we dispatch.`,
+      value: `Pay online (UPI, cards, netbanking) or cash on delivery. Online payments are handled by Razorpay, so we never see or store your card details. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders above ${formatINR(SITE.freeShippingAbove)}. We deliver to your door and confirm the delivery time with you before we dispatch.`,
     },
   ];
   const assurances = [
     { icon: Truck, label: `Free delivery above ${formatINR(SITE.freeShippingAbove)}` },
     { icon: PackageCheck, label: FOOD.has(product.category) ? 'Freshly packed' : 'Carefully packed' },
-    { icon: Lock, label: 'Secure online payment' },
+    { icon: Lock, label: 'Secure checkout' },
   ];
 
   return (

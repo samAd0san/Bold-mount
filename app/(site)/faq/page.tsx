@@ -13,7 +13,7 @@ import { whatsappGeneralLink } from '@/lib/whatsapp';
 export const metadata = pageMeta({
   title: 'FAQ',
   description:
-    'Answers about ordering and paying online, doorstep delivery, Talbeenah, dates and honey, plus Zakat, Umrah Badal, free giveaways and volunteer guidance at Bold Mount.',
+    'Answers about ordering and paying (online or cash on delivery), doorstep delivery, Talbeenah, dates and honey, plus Zakat, Umrah Badal, free giveaways and volunteer guidance at Bold Mount.',
   path: '/faq',
 });
 

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { addToCart, adminLogin, api, CUSTOMER, fillCheckout, payWithTestBank, signInAs } from './helpers';
+import { payCash, payOnlineChoice, placeOrder } from './place-order';
 
 type Order = { id: string; number: string; method: string; payment: string; status: string; total: number; delivery: number; customer: { name: string } };
 const orders = async (page: Page) => (await api<{ orders: Order[] }>(page, '/api/admin/orders')).data.orders;
@@ -10,9 +11,46 @@ test('signed out: checkout asks you to sign in, and the API refuses the order', 
   await page.goto('/cart');
   await expect(page.getByRole('link', { name: /Sign in with Google to place your order/i })).toBeVisible();
   await expect(payButton(page)).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Order on WhatsApp instead' })).toHaveCount(0);
-  const res = await api<{ error: string }>(page, '/api/orders', { method: 'POST', body: { method: 'whatsapp', items: [], customer: CUSTOMER } });
-  expect(res.status).toBe(401);
+  await expect(page.locator('main')).not.toContainText(/on whatsapp/i);
+  await expect(page.locator('main a[href*="wa.me"]')).toHaveCount(0);
+  for (const method of ['online', 'cod']) {
+    const res = await api<{ error: string }>(page, '/api/orders', { method: 'POST', body: { method, items: [], customer: CUSTOMER } });
+    expect(res.status).toBe(401);
+  }
+});
+
+test('checkout offers online payment or cash on delivery, shows the total, and has no WhatsApp ordering', async ({ page, context }) => {
+  await signInAs(context, { name: 'Zainab Hussain', email: 'zainab.hussain@example.com' });
+  await addToCart(page);
+  await page.goto('/cart');
+  const main = page.locator('main');
+
+  // Pay online is the default; both choices show the same clear total (₹249 + ₹50 delivery).
+  await expect(payOnlineChoice(page)).toBeChecked();
+  await expect(payCash(page)).toBeEnabled();
+  await expect(main).toContainText('To pay now');
+  await expect(main.getByText('₹299').last()).toBeVisible();
+  await expect(payButton(page)).toHaveText(/Pay ₹299 securely/);
+  await expect(placeOrder(page)).toHaveCount(0);
+
+  await payCash(page).check();
+  await expect(main).toContainText('To pay in cash on delivery');
+  await expect(placeOrder(page)).toHaveText(/Place order — pay ₹299 on delivery/);
+  await expect(payButton(page)).toHaveCount(0);
+
+  // Nothing in checkout sends the customer to WhatsApp to order or pay.
+  await expect(page.getByRole('button', { name: /whatsapp/i })).toHaveCount(0);
+  await expect(main.locator('a[href*="wa.me"]')).toHaveCount(0);
+  await expect(main).not.toContainText(/(order|pay|send)[^.]{0,25}on whatsapp/i);
+
+  // The server no longer takes WhatsApp orders either, and saves nothing.
+  const before = (await api<{ orders: unknown[] }>(page, '/api/orders/mine')).data.orders.length;
+  const res = await api<{ error: string }>(page, '/api/orders', {
+    method: 'POST',
+    body: { method: 'whatsapp', items: [{ slug: 'premium-roasted-talbeenah', variantId: '500g', qty: 1 }], customer: { ...CUSTOMER, name: 'Zainab Hussain' } },
+  });
+  expect(res.status).toBe(400);
+  expect((await api<{ orders: unknown[] }>(page, '/api/orders/mine')).data.orders.length).toBe(before);
 });
 
 test('checkout checks every required field before paying', async ({ page, context }) => {
@@ -42,6 +80,7 @@ test('online payment (Razorpay test bank) is saved as paid, and admin can confir
   await addToCart(page);
   await page.goto('/cart');
   await fillCheckout(page);
+  await expect(payOnlineChoice(page)).toBeChecked();
   await payButton(page).click();
   await payWithTestBank(page, 'Success');
   await expect(page.getByText('Payment received')).toBeVisible({ timeout: 45_000 });
@@ -82,24 +121,6 @@ test('a cancelled payment says nothing was charged and is marked failed', async 
 
   await adminLogin(page);
   await expect.poll(async () => (await orders(page)).find((o) => o.customer.name === 'Hamza Qureshi')?.payment).toBe('failed');
-});
-
-test('WhatsApp order from checkout opens WhatsApp and is saved', async ({ page, context }) => {
-  await signInAs(context, { name: 'Ayesha Siddiqui', email: 'ayesha.siddiqui@example.com' });
-  await addToCart(page, '/product/ajwa-dates');
-  await page.goto('/cart');
-  await page.evaluate(() => {
-    const w = window as unknown as { __wa: string[] };
-    w.__wa = [];
-    window.open = ((u?: string | URL) => { w.__wa.push(String(u ?? '')); return null; }) as typeof window.open;
-  });
-  await fillCheckout(page, { ...CUSTOMER, name: 'Ayesha Siddiqui', mobile: '91000 45127' });
-  await page.getByRole('button', { name: 'Order on WhatsApp instead' }).click();
-  await expect.poll(() => page.evaluate(() => (window as unknown as { __wa: string[] }).__wa.some((u) => u.includes('wa.me')))).toBe(true);
-
-  await adminLogin(page);
-  // The order is saved in the background (keepalive) while WhatsApp opens, so give it a moment to land.
-  await expect.poll(async () => (await orders(page)).find((o) => o.customer.name === 'Ayesha Siddiqui')?.method).toBe('whatsapp');
 });
 
 test('a signed-in customer sees their paid order under My orders', async ({ page, context }) => {

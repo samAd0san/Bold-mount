@@ -4,7 +4,7 @@ import { db } from '@/lib/server/db';
 import { CategoryModel, OrderModel, ProductModel } from '@/lib/server/models';
 import { refundPayment } from '@/lib/server/razorpay';
 import { deliveryFor } from '@/lib/shop';
-import type { OrderItem } from '@/lib/types';
+import type { OrderItem, OrderStatus } from '@/lib/types';
 
 // Indian mobile → "+91 98480 22338"; accepts spaces, dashes, +91, 91 or 0 in front.
 function cleanMobile(raw: string): string | null {
@@ -29,7 +29,7 @@ const Customer = z.object({
 });
 
 export const OrderBody = z.object({
-  method: z.enum(['online', 'whatsapp'], 'Please choose how to pay.'),
+  method: z.enum(['online', 'cod'], 'Please choose how to pay.'),
   items: z
     .array(z.object({
       slug: z.string().trim().min(1).max(80),
@@ -40,6 +40,20 @@ export const OrderBody = z.object({
     .max(40, 'That is too many different items for one order.'),
   customer: Customer,
 });
+
+/** Shown at checkout and returned by the API when cash on delivery is switched off for a customer. */
+export const COD_OFF = 'Cash on delivery isn’t available on your account because an earlier order was cancelled. You can pay online.';
+
+/** The one rule for who may pay cash on delivery: nobody who has ever cancelled one of their own orders. */
+export async function codAllowed(userId: string): Promise<boolean> {
+  return !(await OrderModel.exists({ userId, status: 'cancelled', cancelledBy: 'customer' }));
+}
+
+/** Delivered means the cash was collected: marks a cash-on-delivery order paid. Returns the updated order, or null when nothing changed. */
+export async function settleCash(order: { _id: unknown; method?: string | null; payment?: string | null }, status: OrderStatus) {
+  if (order.method !== 'cod' || order.payment !== 'cod' || status !== 'delivered') return null;
+  return OrderModel.findByIdAndUpdate(order._id, { $set: { payment: 'paid', paidAt: new Date() } }, { returnDocument: 'after' }).lean();
+}
 
 export type PricedCart = { items: OrderItem[]; subtotal: number; delivery: number; total: number };
 
@@ -86,9 +100,12 @@ export async function nextOrderNumber(): Promise<string> {
 
 type RefundInfo = { reason: string; note?: string; reply?: string; requestedAt: Date };
 
-/** Sends `amount` back through Razorpay and saves the result on the order. Returns the updated order, plus Razorpay's reason when it refused (the order then stays paid with refund "failed"). */
+/**
+ * Records a refund of `amount` on a paid order: online orders are sent back through Razorpay; cash-on-delivery orders are paid back by the shop
+ * by hand, so this only records it. Returns the updated order, plus Razorpay's reason when it refused (the order then stays paid with refund "failed").
+ */
 export async function refundOrder(
-  order: { _id: unknown; number: string; razorpayPaymentId?: string | null },
+  order: { _id: unknown; number: string; method?: string | null; razorpayPaymentId?: string | null },
   amount: number,
   info: RefundInfo,
 ) {
@@ -96,14 +113,17 @@ export async function refundOrder(
     reason: info.reason, ...(info.note ? { note: info.note } : {}), ...(info.reply ? { reply: info.reply } : {}),
     amount, requestedAt: info.requestedAt, updatedAt: new Date(),
   };
-  let refundId: string;
-  try {
-    refundId = (await refundPayment(order.razorpayPaymentId ?? '', amount, order.number)).id;
-  } catch (e) {
-    const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: { refund: { ...base, status: 'failed' } } }, { returnDocument: 'after' }).lean();
-    return { doc, error: (e as Error).message };
+  const byHand = order.method === 'cod';
+  let refundId = '';
+  if (!byHand) {
+    try {
+      refundId = (await refundPayment(order.razorpayPaymentId ?? '', amount, order.number)).id;
+    } catch (e) {
+      const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: { refund: { ...base, status: 'failed' } } }, { returnDocument: 'after' }).lean();
+      return { doc, error: (e as Error).message };
+    }
   }
-  const set = { payment: 'refunded', refund: { ...base, status: 'refunded', razorpayRefundId: refundId } };
+  const set = { payment: 'refunded', refund: { ...base, status: 'refunded', ...(byHand ? { by: 'hand' } : { razorpayRefundId: refundId }) } };
   const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: set }, { returnDocument: 'after' }).lean().catch((e: unknown) => {
     console.error('[refund] sent but not saved', order.number, refundId); // the money is already back with the customer
     throw e;

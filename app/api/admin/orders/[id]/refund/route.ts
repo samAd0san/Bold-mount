@@ -12,7 +12,7 @@ const Body = z.object({
   reply: z.string().trim().max(300, 'Please keep the note under 300 characters.').optional(),
 });
 
-// Sends money back through Razorpay (full or part). A refused refund is saved as "failed" so it can be retried.
+// Refunds a paid order (full or part): online goes back through Razorpay, cash on delivery is recorded once the shop has paid it back. A refused Razorpay refund is saved as "failed" so it can be retried.
 export const POST = handle(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const denied = await adminOnly(req, true);
   if (denied) return denied;
@@ -23,7 +23,7 @@ export const POST = handle(async (req: Request, { params }: { params: Promise<{ 
   if (!order) return fail(404, 'That order was not found.');
 
   if (order.payment === 'refunded' || order.refund?.status === 'refunded') return fail(409, 'This order has already been refunded.');
-  if (order.payment !== 'paid' || !order.razorpayPaymentId) return fail(409, 'Only an order paid online can be refunded here.');
+  if (order.payment !== 'paid' || (order.method !== 'cod' && !order.razorpayPaymentId)) return fail(409, 'Only a paid order can be refunded here.');
   if (amount > (order.total ?? 0)) return fail(400, `The refund can’t be more than the order total (${formatINR(order.total ?? 0)}).`);
 
   const prev = order.refund;

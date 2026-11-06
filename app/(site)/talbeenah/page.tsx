@@ -64,7 +64,7 @@ const FAQ: FaqItem[] = [
     q: 'How do I order?',
     a: (
       <>
-        Add a pack to your cart and pay securely online with UPI, cards or netbanking. Have a question first? Message us on{' '}
+        Add a pack to your cart, then pay online (UPI, cards, netbanking) or cash on delivery. Have a question first? Message us on{' '}
         <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className="font-semibold text-navy underline-offset-4 hover:underline">
           {SITE.phoneDisplay}
         </a>

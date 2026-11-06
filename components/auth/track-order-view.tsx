@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CANCELLABLE } from '@/lib/types';
 import { formatINR } from '@/lib/format';
-import { canRequestRefund, formatDate, refundText } from '@/lib/order-view';
+import { canRequestRefund, cashDue, formatDate, refundText } from '@/lib/order-view';
 import { whatsappLink } from '@/lib/whatsapp';
 import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
@@ -111,8 +111,9 @@ export function TrackOrderView({ id }: { id: string }) {
       <section aria-labelledby="payment-title" className={`${CARD} p-5 md:p-6`}>
         <h2 id="payment-title" className="text-lg text-ink">Payment</h2>
         <p className="mt-3">
-          <PaymentPill payment={order.payment} />
+          <PaymentPill order={order} />
         </p>
+        {cashDue(order) && <p className="mt-3 text-sm leading-relaxed text-ink">Please keep {formatINR(order.total)} ready in cash. You pay it when your order arrives.</p>}
         {order.refund && <p className="mt-3 rounded-xl bg-cream px-4 py-3 text-sm leading-relaxed text-ink">{refundText(order.refund)}</p>}
         {(cancellable || refundable) && (
           <div className="mt-4 flex flex-wrap gap-3">

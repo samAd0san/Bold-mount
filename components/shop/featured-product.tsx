@@ -67,7 +67,7 @@ export function FeaturedProduct({ product, eyebrow = 'Featured' }: { product: Pr
                 Choose pack
               </Link>
             </div>
-            <p className="mt-3 text-sm text-ink-soft">Pay online at checkout with UPI, cards or netbanking.</p>
+            <p className="mt-3 text-sm text-ink-soft">Pay online (UPI, cards, netbanking) or cash on delivery.</p>
           </Reveal>
         </div>
       </Container>

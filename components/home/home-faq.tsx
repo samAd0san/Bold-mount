@@ -12,7 +12,7 @@ import { Reveal } from '@/components/motion/reveal';
 const FAQS = [
   {
     q: 'How do I place an order?',
-    a: 'Add what you like to the cart and check out, paying online with UPI (Google Pay, PhonePe), cards or netbanking. Your order is placed once the payment goes through, and we confirm delivery with you.',
+    a: 'Add what you like to the cart and check out. Pay online (UPI, cards, netbanking) or cash on delivery. An online order is placed once the payment goes through, a cash on delivery order straight away, and we confirm delivery with you.',
   },
   {
     q: 'How does delivery work?',

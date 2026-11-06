@@ -12,7 +12,7 @@ const Body = z.object({ reason: z.string().trim().max(300, 'Please keep the reas
 
 const TOO_LATE = 'This order has already left our shop, so it can’t be cancelled. Message us and we’ll help.';
 
-// The customer cancels their own order before it ships; a paid online order is refunded in full.
+// The customer cancels their own order before it ships; a paid online order is refunded in full (cash on delivery has nothing to refund).
 export const POST = handle(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const blocked = rejectCrossSite(req);
   if (blocked) return blocked;

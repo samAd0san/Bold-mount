@@ -7,11 +7,12 @@ import { Button, Checkbox, ErrorNote, Field, Input, Modal, Textarea } from '@/co
 import { formatINR } from '@/lib/format';
 import type { Order } from '@/lib/types';
 
-/** Asks before cancelling a paid order; "refund now" is ticked by default. */
+/** Asks before cancelling a paid order (online or cash); "refund now" is ticked by default. */
 export function CancelDialog({ order, onClose, onConfirm }: { order: Order; onClose: () => void; onConfirm: (refund: boolean) => Promise<void> }) {
   const [refund, setRefund] = React.useState(true);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const cash = order.method === 'cod';
 
   const run = async () => {
     setBusy(true);
@@ -26,11 +27,11 @@ export function CancelDialog({ order, onClose, onConfirm }: { order: Order; onCl
   };
 
   return (
-    <Modal open onOpenChange={(o) => { if (!o && !busy) onClose(); }} title={`Cancel order ${order.number}?`} description="This customer already paid online.">
+    <Modal open onOpenChange={(o) => { if (!o && !busy) onClose(); }} title={`Cancel order ${order.number}?`} description={cash ? 'This customer already paid in cash.' : 'This customer already paid online.'}>
       <div className="space-y-4">
         <div>
-          <Checkbox checked={refund} onChange={setRefund}>Refund {formatINR(order.total)} to the customer now</Checkbox>
-          {!refund && <p className="mt-1 text-xs text-ink-soft">No money will be sent back. You can refund later from the order.</p>}
+          <Checkbox checked={refund} onChange={setRefund}>{cash ? `Record a refund of ${formatINR(order.total)} (I paid it back by cash or UPI)` : `Refund ${formatINR(order.total)} to the customer now`}</Checkbox>
+          {!refund && <p className="mt-1 text-xs text-ink-soft">{cash ? 'No refund will be recorded.' : 'No money will be sent back.'} You can refund later from the order.</p>}
         </div>
         {error && <ErrorNote>{error}</ErrorNote>}
         <div className="flex flex-wrap justify-end gap-2">
@@ -49,7 +50,8 @@ export function RefundPanel({ order, onSaved, onFailed }: { order: Order; onSave
   const { refreshAttention } = useAdmin();
   const r = order.refund;
   const requested = r?.status === 'requested';
-  const canRefund = order.payment === 'paid' && !!order.razorpayPaymentId && r?.status !== 'refunded';
+  const cash = order.method === 'cod';
+  const canRefund = order.payment === 'paid' && (cash || !!order.razorpayPaymentId) && r?.status !== 'refunded';
   const [step, setStep] = React.useState<Step>(null);
   const [amount, setAmount] = React.useState(String(order.total));
   const [reply, setReply] = React.useState('');
@@ -96,13 +98,13 @@ export function RefundPanel({ order, onSaved, onFailed }: { order: Order; onSave
       )}
       {r?.status === 'refunded' && (
         <p className="break-words text-ink">
-          Refunded {formatINR(r.amount)} on {clock(r.updatedAt, false)}{r.razorpayRefundId ? ` · ${r.razorpayRefundId}` : ''}
+          Refunded {formatINR(r.amount)} on {clock(r.updatedAt, false)}{r.razorpayRefundId ? ` · ${r.razorpayRefundId}` : r.by === 'hand' ? ' · paid back by hand' : ''}
         </p>
       )}
 
       {showForm && step === 'confirm' && (
         <div className="space-y-3">
-          <p className="text-ink">Send {formatINR(n)} back to the customer through Razorpay? This can’t be undone.</p>
+          <p className="text-ink">{cash ? `Record a refund of ${formatINR(n)}? Only do this once you have paid it back. This can’t be undone.` : `Send ${formatINR(n)} back to the customer through Razorpay? This can’t be undone.`}</p>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" busy={busy} onClick={() => void send('refund', { amount: n })}>Yes, refund {formatINR(n)}</Button>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => setStep('amount')}>Go back</Button>
@@ -129,6 +131,8 @@ export function RefundPanel({ order, onSaved, onFailed }: { order: Order; onSave
       {canRefund && !requested && !showForm && (
         <Button size="sm" variant="outline" onClick={() => { setError(null); setStep('amount'); }}>{r?.status === 'failed' ? 'Try refund again' : 'Refund'}</Button>
       )}
+
+      {cash && canRefund && step !== 'confirm' && <p className="text-xs text-ink-soft">Cash on delivery: pay this back by cash or UPI, then press Refund to record it.</p>}
 
       {requested && step === 'decline' && (
         <div className="space-y-3">

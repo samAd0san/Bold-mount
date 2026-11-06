@@ -56,8 +56,8 @@ const OrderSchema = new Schema(
       location: { type: { _id: false, lat: Number, lng: Number }, default: undefined },
     },
     userId: { type: String, index: true },
-    method: { type: String, enum: ['online', 'whatsapp'], required: true },
-    payment: { type: String, enum: ['pending', 'paid', 'failed', 'on-whatsapp', 'refunded'], default: 'pending' },
+    method: { type: String, enum: ['online', 'cod', 'whatsapp'], required: true },
+    payment: { type: String, enum: ['pending', 'paid', 'failed', 'on-whatsapp', 'refunded', 'cod'], default: 'pending' },
     status: { type: String, enum: ['new', 'confirmed', 'dispatched', 'delivered', 'cancelled'], default: 'new' },
     razorpayOrderId: { type: String, index: true },
     razorpayPaymentId: String,
@@ -69,6 +69,7 @@ const OrderSchema = new Schema(
         note: String,
         amount: Number,
         razorpayRefundId: String,
+        by: { type: String, enum: ['hand'] },
         reply: String,
         requestedAt: Date,
         updatedAt: Date,
@@ -150,7 +151,7 @@ export const toProduct = (d: any): Product => ({
 
 const toRefund = (r: any): OrderRefund => ({
   status: r.status, reason: r.reason ?? '', ...(r.note ? { note: r.note } : {}), amount: r.amount ?? 0,
-  ...(r.razorpayRefundId ? { razorpayRefundId: r.razorpayRefundId } : {}), ...(r.reply ? { reply: r.reply } : {}),
+  ...(r.razorpayRefundId ? { razorpayRefundId: r.razorpayRefundId } : {}), ...(r.by ? { by: r.by } : {}), ...(r.reply ? { reply: r.reply } : {}),
   requestedAt: iso(r.requestedAt)!, updatedAt: iso(r.updatedAt)!,
 });
 

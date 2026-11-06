@@ -11,7 +11,7 @@ Storefront and community site for **Bold Mount** — Sunnah superfoods (Talbeena
 
 Live: https://www.boldmount.store (boldmount.store and the old bold-mount.vercel.app forward there)
 
-Products and categories live in MongoDB and are edited from **`/admin`** (PIN, default `1111`). Customers can pay online (Razorpay: UPI / Google Pay / PhonePe, cards, netbanking, Apple Pay) or send the order on WhatsApp; both land in the admin. Every form on the site (contact, zakat pledge, volunteer, giveaway, umrah booking) still opens WhatsApp and is also saved for the admin.
+Products and categories live in MongoDB and are edited from **`/admin`** (PIN, default `1111`). Customers pay online (Razorpay: UPI / Google Pay / PhonePe, cards, netbanking, Apple Pay) or choose cash on delivery; both land in the admin. Every form on the site (contact, zakat pledge, volunteer, giveaway, umrah booking) still opens WhatsApp and is also saved for the admin.
 
 ## Run it locally
 
@@ -53,8 +53,8 @@ Node 20+ is recommended.
 
 1. Customer adds products to the cart (saved in their browser).
 2. Checkout collects name, mobile and a drop address — or a one-tap location pin.
-3. **Pay online:** the server re-prices the cart from the database, creates a Razorpay order, and marks it paid only after checking Razorpay's signature. **Or order on WhatsApp:** WhatsApp opens with the order filled in, and the order is saved as "On WhatsApp".
-4. Every order appears in `/admin/orders`, where its status is set (New → Confirmed → Delivered / Cancelled).
+3. **Pay online:** the server re-prices the cart from the database, creates a Razorpay order, and marks it paid only after checking Razorpay's signature. **Or cash on delivery:** the order is saved straight away as "cash to collect". Anyone who has cancelled one of their own orders can't use cash on delivery any more (one rule, `codAllowed` in `lib/server/orders.ts`); they pay online.
+4. Every order appears in `/admin/orders`, where its status is set (New → Confirmed → Delivered / Cancelled). Marking a cash-on-delivery order Delivered records it as "Paid in cash"; "Mark cash received" does the same without changing the status. Refunds work the same for both: online ones go back through Razorpay, and for cash on delivery the shop pays it back by cash or UPI and presses Refund to record it (`refundOrder` in `lib/server/orders.ts`). Old orders sent on WhatsApp stay visible as history.
 
 Delivery is doorstep delivery by Bold Mount; free above the threshold in `lib/site.ts`, otherwise `deliveryFee`.
 

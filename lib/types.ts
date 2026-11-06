@@ -71,8 +71,10 @@ export interface OrderCustomer {
   location?: { lat: number; lng: number };
 }
 
-export type OrderMethod = 'online' | 'whatsapp';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'on-whatsapp' | 'refunded';
+/** 'whatsapp' is history only: the shop no longer takes new orders that way. */
+export type OrderMethod = 'online' | 'cod' | 'whatsapp';
+/** 'cod' = cash on delivery, still to be collected; it becomes 'paid' once the cash is in. */
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'on-whatsapp' | 'refunded' | 'cod';
 export type OrderStatus = 'new' | 'confirmed' | 'dispatched' | 'delivered' | 'cancelled';
 export const ORDER_STATUSES: OrderStatus[] = ['new', 'confirmed', 'dispatched', 'delivered', 'cancelled'];
 /** The customer can cancel in these statuses (before it leaves the shop). */
@@ -89,6 +91,7 @@ export interface OrderRefund {
   note?: string;
   amount: number; // rupees asked for / sent back
   razorpayRefundId?: string;
+  by?: 'hand'; // cash on delivery: the shop paid it back itself (cash or UPI), no Razorpay
   reply?: string; // shop's note to the customer (e.g. why declined)
   requestedAt: string;
   updatedAt: string;

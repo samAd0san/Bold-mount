@@ -11,7 +11,7 @@ import { HomeFaq } from '@/components/home/home-faq';
 
 export const metadata: Metadata = {
   description:
-    'Shop slow-roasted Talbeenah, hand-picked dates and pure Sidr honey — and give through Zakat, Umrah Badal, Khidmat-e-Khalq and free Qur’an giveaways. Pay online with UPI, cards or netbanking.',
+    'Shop slow-roasted Talbeenah, hand-picked dates and pure Sidr honey — and give through Zakat, Umrah Badal, Khidmat-e-Khalq and free Qur’an giveaways. Pay online (UPI, cards, netbanking) or cash on delivery.',
   alternates: { canonical: '/' },
 };
 

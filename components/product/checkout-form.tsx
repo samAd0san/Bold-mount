@@ -1,19 +1,16 @@
 'use client';
 
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, CheckCircle2, Loader2, Lock } from 'lucide-react';
+import { AlertCircle, Banknote, Loader2, Lock } from 'lucide-react';
 import { cartSubtotal, type CartItem } from '@/store/cart';
-import { whatsappGeneralLink, whatsappOrderLink } from '@/lib/whatsapp';
 import { postJson } from '@/lib/client-api';
 import { formatINR } from '@/lib/format';
 import { deliveryFor } from '@/lib/shop';
 import type { Order, OrderCustomer } from '@/lib/types';
 import { buttonClass } from '@/components/ui/button-styles';
-import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { GoogleMark } from '@/components/auth/google-button';
 import { signInHref, signOut, useAccount } from '@/components/auth/use-account';
-import { refreshOrders } from '@/components/auth/use-orders';
 import { cn } from '@/lib/utils';
 import { LocationShare, mapsUrl, type Coords } from './location-share';
 import { loadRazorpay, type RazorpayResponse } from './razorpay';
@@ -22,7 +19,6 @@ type Key = 'name' | 'mobile' | 'address' | 'city' | 'pincode' | 'note';
 
 interface Field {
   key: Key;
-  label: string; // also the line label in the WhatsApp message
   required?: boolean;
   textarea?: boolean;
   full?: boolean;
@@ -34,13 +30,13 @@ interface Field {
 }
 
 const FIELDS: Field[] = [
-  { key: 'name', label: 'Name', required: true, autoComplete: 'name' },
-  { key: 'mobile', label: 'Mobile', type: 'tel', inputMode: 'tel', required: true, autoComplete: 'tel', placeholder: '10-digit mobile number' },
+  { key: 'name', required: true, autoComplete: 'name' },
+  { key: 'mobile', type: 'tel', inputMode: 'tel', required: true, autoComplete: 'tel', placeholder: '10-digit mobile number' },
   // Address is checked in validate(): it may be skipped when a location is shared.
-  { key: 'address', label: 'Drop address', textarea: true, full: true, autoComplete: 'street-address', placeholder: 'House / flat, street, area, landmark' },
-  { key: 'city', label: 'City', required: true, autoComplete: 'address-level2' },
-  { key: 'pincode', label: 'Pincode', required: true, inputMode: 'numeric', autoComplete: 'postal-code', maxLength: 6, placeholder: '6 digits' },
-  { key: 'note', label: 'Note', textarea: true, full: true, placeholder: 'Gift message, preferred delivery time…' },
+  { key: 'address', textarea: true, full: true, autoComplete: 'street-address', placeholder: 'House / flat, street, area, landmark' },
+  { key: 'city', required: true, autoComplete: 'address-level2' },
+  { key: 'pincode', required: true, inputMode: 'numeric', autoComplete: 'postal-code', maxLength: 6, placeholder: '6 digits' },
+  { key: 'note', textarea: true, full: true, placeholder: 'Gift message, preferred delivery time…' },
 ];
 
 const DISPLAY: Record<Key, string> = {
@@ -71,7 +67,9 @@ function validate(v: Partial<Record<Key, string>>, hasLocation: boolean): Partia
 }
 
 type Draft = { values: Partial<Record<Key, string>>; location: Coords | null };
-type Problem = { message: string; toWhatsApp?: boolean };
+type Method = 'online' | 'cod';
+// allowed is null until the server has answered; the server checks again when the order is placed.
+type CodState = { allowed: boolean | null; reason?: string };
 
 // The Google sign-in is a full-page trip, so the typed details wait in sessionStorage and come back with the customer.
 const DRAFT_KEY = 'boldmount-checkout-draft';
@@ -85,19 +83,39 @@ const readDraft = (): Draft | null => {
 
 const FINE_LINK = 'font-semibold text-navy underline underline-offset-4';
 
-/** Delivery details → sign in, then pay online with Razorpay or send the order on WhatsApp; both orders are saved to the customer's account. */
-export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; onClear: () => void; onPaid: (order: Order) => void }) {
+/** One choice in "How would you like to pay?"; a disabled one shows its reason instead of the usual text. */
+function PayOption({ checked, disabled, onSelect, title, text }: { checked: boolean; disabled?: boolean; onSelect: () => void; title: string; text: string }) {
+  return (
+    <label
+      className={cn(
+        'flex items-start gap-3 rounded-xl border p-4 transition-colors',
+        disabled ? 'cursor-not-allowed border-line bg-sand/40' : 'cursor-pointer',
+        !disabled && (checked ? 'border-navy bg-cream ring-1 ring-navy' : 'border-line hover:border-navy/50'),
+      )}
+    >
+      <input type="radio" name="payment-method" checked={checked} disabled={disabled} onChange={onSelect} className="mt-1 size-4 shrink-0 accent-navy" />
+      <span className="min-w-0">
+        <span className={cn('block text-sm font-semibold', disabled ? 'text-ink-soft' : 'text-ink')}>{title}</span>
+        <span className="mt-0.5 block text-xs leading-relaxed text-ink-soft">{text}</span>
+      </span>
+    </label>
+  );
+}
+
+/** Delivery details → sign in → choose to pay online with Razorpay or cash on delivery; both orders are saved to the customer's account. */
+export function CheckoutForm({ items, onPlaced }: { items: CartItem[]; onPlaced: (order: Order) => void }) {
   const { ready, user, google } = useAccount();
   // This form only mounts after hydration (see CartView), so reading sessionStorage here is safe.
   const [values, setValues] = useState<Partial<Record<Key, string>>>(() => readDraft()?.values ?? {});
   const [errors, setErrors] = useState<Partial<Record<Key, string>>>({});
-  const [sentLink, setSentLink] = useState<string | null>(null);
   const [location, setLocation] = useState<Coords | null>(() => readDraft()?.location ?? null);
   const [paying, setPaying] = useState(false);
-  const [problem, setProblem] = useState<Problem | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const savedWhatsApp = useRef('');
+  const [picked, setPicked] = useState<Method>('online');
+  const [cod, setCod] = useState<CodState>({ allowed: null });
   const signedOut = ready && !user;
+  const userId = user?.id;
 
   useEffect(() => {
     try {
@@ -107,8 +125,24 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
     }
   }, []);
 
+  // Asks the server whether this customer may pay cash; if the question fails, the server still decides at order time.
+  useEffect(() => {
+    if (!userId) return;
+    let current = true;
+    fetch('/api/orders/cod', { cache: 'no-store', credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b: { allowed: boolean; reason?: string } | null) => current && setCod(b ? { allowed: b.allowed, reason: b.reason } : { allowed: null }))
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
+  }, [userId]);
+
   const subtotal = cartSubtotal(items);
-  const total = subtotal + deliveryFor(subtotal);
+  const fee = deliveryFor(subtotal);
+  const total = subtotal + fee;
+  const codOff = cod.allowed === false;
+  const method: Method = codOff ? 'online' : picked;
   // Name falls back to the signed-in customer's until they type their own.
   const get = (key: Key) => values[key] ?? (key === 'name' ? (user?.name ?? '') : '');
 
@@ -153,13 +187,31 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
 
   // The server says 401 when the session has ended: forget the stale sign-in so the prompt shows.
   const sessionEnded = (message: string) => {
-    setProblem({ message });
+    setProblem(message);
     void signOut();
   };
 
-  const payOnline = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
+  const placeCod = async () => {
+    const customer = collect();
+    if (!customer || paying) return;
+    setPaying(true);
+    setProblem(null);
+    setNotice(null);
+    const res = await postJson<{ order: Order }>('/api/orders', { method: 'cod', items: lines, customer });
+    if (res.ok) {
+      onPlaced(res.data.order);
+      return;
+    }
+    setPaying(false);
+    if (res.status === 401) sessionEnded(res.error);
+    else {
+      // 403 = the server switched cash off for this customer since the page loaded.
+      if (res.status === 403) setCod({ allowed: false, reason: res.error });
+      setProblem(res.error);
+    }
+  };
+
+  const payOnline = async () => {
     const customer = collect();
     if (!customer || paying) return;
     setPaying(true);
@@ -174,7 +226,7 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
     if (!res.ok) {
       setPaying(false);
       if (res.status === 401) sessionEnded(res.error);
-      else setProblem({ message: res.error, toWhatsApp: res.status === 503 });
+      else setProblem(res.error);
       return;
     }
     const { order, razorpay } = res.data;
@@ -185,7 +237,7 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
     } catch {
       markFailed('script-load');
       setPaying(false);
-      setProblem({ message: 'Couldn’t open the payment window. Check your connection and try again.', toWhatsApp: true });
+      setProblem('Couldn’t open the payment window. Check your connection and try again.');
       return;
     }
 
@@ -211,23 +263,22 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
           razorpaySignature: resp.razorpay_signature,
         });
         if (verified.ok) {
-          onPaid(verified.data.order);
+          onPlaced(verified.data.order);
           return;
         }
         setPaying(false);
-        setProblem({
-          message: `Your payment went through, but we couldn’t confirm it here. Please message us on WhatsApp with order ${order.number} and we’ll sort it out.`,
-        });
+        setProblem(`Your payment went through, but we couldn’t confirm it here. Please message us on WhatsApp with order ${order.number} and we’ll sort it out.`);
       },
       modal: {
         ondismiss: () => {
           if (finished) return;
           markFailed(lastFailure || 'dismissed');
           setPaying(false);
+          const retry = codOff ? 'you can try again' : 'you can try again or choose cash on delivery';
           setNotice(
             lastFailure
-              ? 'The payment didn’t go through, and nothing was charged. Your cart is saved — you can try again or order on WhatsApp.'
-              : 'Payment cancelled — nothing was charged. Your cart is saved, so you can try again or order on WhatsApp.',
+              ? `The payment didn’t go through, and nothing was charged. Your cart is saved — ${retry}.`
+              : `Payment cancelled — nothing was charged. Your cart is saved, so ${retry}.`,
           );
         },
       },
@@ -239,45 +290,14 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
     rzp.open();
   };
 
-  // window.open must run inside the click itself (popup blockers); saving the order is fire-and-forget.
-  const orderOnWhatsApp = () => {
-    const customer = collect();
-    if (!customer) return;
-    const details: Record<string, string> = {};
-    for (const f of FIELDS) {
-      if (f.key === 'note' && location) details.Location = mapsUrl(location);
-      details[f.label] = f.key === 'address' ? get('address').trim() : customer[f.key];
-    }
-    const link = whatsappOrderLink(
-      items.map(({ name, variant, price, qty }) => ({ name, variant, price, qty })),
-      details,
-      'I can also share my live location pin here.',
-    );
-    window.open(link, '_blank', 'noopener,noreferrer');
-    setSentLink(link);
-    setProblem(null);
-    setNotice(null);
-
-    const fingerprint = JSON.stringify([lines, customer]);
-    if (savedWhatsApp.current !== fingerprint) {
-      savedWhatsApp.current = fingerprint;
-      void postJson('/api/orders', { method: 'whatsapp', items: lines, customer }, true).then((res) => {
-        if (res.ok) {
-          void refreshOrders();
-          return;
-        }
-        // Let "Send again" retry the save; a 401 also means they must sign in again.
-        savedWhatsApp.current = '';
-        if (res.status === 401) {
-          setSentLink(null);
-          sessionEnded(res.error);
-        }
-      });
-    }
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    return method === 'cod' ? placeCod() : payOnline();
   };
 
   return (
-    <form onSubmit={payOnline} noValidate className="grid gap-4 md:grid-cols-2">
+    <form onSubmit={submit} noValidate className="grid gap-4 md:grid-cols-2">
       <p className="text-sm leading-relaxed text-ink-soft md:col-span-2">
         We deliver to your door. Share your drop address or location — we’ll confirm the delivery time with you.
       </p>
@@ -330,29 +350,48 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
       })}
 
       <div className="space-y-3 md:col-span-2">
-        {problem && (
-          <div role="alert" className="flex items-start gap-2 rounded-xl bg-gold/15 p-4 text-sm font-medium text-gold-ink">
-            <AlertCircle size={17} className="mt-px shrink-0" />
-            <p>
-              {problem.message}
-              {problem.toWhatsApp && ' Use the “Order on WhatsApp instead” button below.'}
-            </p>
-          </div>
-        )}
-        {notice && (
-          <p role="status" className="rounded-xl bg-sand p-4 text-sm text-ink">
-            {notice}
-          </p>
-        )}
-
         {!ready && (
           <div aria-busy className="space-y-3">
             <span role="status" className="sr-only">
               Checking your sign-in…
             </span>
             <div className="h-12 animate-pulse rounded-full bg-sand" />
-            <div className="h-12 animate-pulse rounded-full bg-sand" />
           </div>
+        )}
+
+        {ready && user && (
+          <fieldset disabled={paying} className="space-y-3">
+            <legend className="mb-2 text-sm font-medium text-ink">How would you like to pay?</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <PayOption checked={method === 'online'} onSelect={() => setPicked('online')} title="Pay online" text="UPI, cards, netbanking" />
+              <PayOption
+                checked={method === 'cod'}
+                disabled={codOff}
+                onSelect={() => setPicked('cod')}
+                title="Cash on delivery"
+                text={codOff ? (cod.reason ?? '') : `Pay ${formatINR(total)} in cash when your order arrives.`}
+              />
+            </div>
+            <p className="flex items-baseline justify-between gap-4 rounded-xl bg-sand/50 px-4 py-3 text-sm text-ink">
+              <span>
+                {method === 'cod' ? 'To pay in cash on delivery' : 'To pay now'}
+                <span className="block text-xs text-ink-soft">{fee ? `Includes ${formatINR(fee)} delivery` : 'Free delivery'}</span>
+              </span>
+              <span className="text-xl font-semibold tabular-nums text-navy">{formatINR(total)}</span>
+            </p>
+          </fieldset>
+        )}
+
+        {problem && (
+          <div role="alert" className="flex items-start gap-2 rounded-xl bg-gold/15 p-4 text-sm font-medium text-gold-ink">
+            <AlertCircle size={17} className="mt-px shrink-0" />
+            <p>{problem}</p>
+          </div>
+        )}
+        {notice && (
+          <p role="status" className="rounded-xl bg-sand p-4 text-sm text-ink">
+            {notice}
+          </p>
         )}
 
         {signedOut &&
@@ -370,54 +409,21 @@ export function CheckoutForm({ items, onClear, onPaid }: { items: CartItem[]; on
             </>
           ) : (
             <p role="status" className="rounded-xl bg-sand p-4 text-sm leading-relaxed text-ink">
-              Sign-in isn’t available right now, so we can’t take orders on the website. Please try again soon, or{' '}
-              <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className={FINE_LINK}>
-                message us on WhatsApp
-              </a>
-              .
+              Sign-in isn’t available right now, so we can’t take orders on the website yet. Please try again in a little while.
             </p>
           ))}
 
         {ready && user && (
           <>
             <button type="submit" disabled={paying} className={buttonClass('gold', 'w-full py-3.5')}>
-              {paying ? <Loader2 size={17} className="animate-spin" /> : <Lock size={16} />} Pay {formatINR(total)} securely
+              {paying ? <Loader2 size={17} className="animate-spin" /> : method === 'cod' ? <Banknote size={17} /> : <Lock size={16} />}
+              {method === 'cod' ? `Place order — pay ${formatINR(total)} on delivery` : `Pay ${formatINR(total)} securely`}
             </button>
-            <p className="text-center text-xs text-ink-soft">UPI · Google Pay · PhonePe · Paytm · Cards · Netbanking · Apple Pay (Safari)</p>
-
-            <div className="flex items-center gap-3 text-xs text-ink-soft" aria-hidden>
-              <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
-            </div>
-
-            <button
-              type="button"
-              onClick={orderOnWhatsApp}
-              disabled={paying}
-              className={buttonClass('outline', 'w-full border-whatsapp-ink/40 py-3.5 text-whatsapp-ink hover:border-whatsapp hover:bg-whatsapp hover:text-white')}
-            >
-              <WhatsAppGlyph size={18} /> {sentLink ? 'Send again on WhatsApp' : 'Order on WhatsApp instead'}
-            </button>
-
-            {sentLink ? (
-              <div role="status" className="rounded-xl bg-whatsapp/10 p-4 text-sm">
-                <p className="flex items-start gap-2 font-medium text-whatsapp-ink">
-                  <CheckCircle2 size={18} className="mt-px shrink-0" />
-                  WhatsApp opened with your order — press send to confirm. We’ll confirm availability, delivery and payment there.
-                </p>
-                <p className="mt-1 flex flex-wrap gap-x-4 pl-[26px] text-ink-soft">
-                  <a href={sentLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
-                    WhatsApp didn’t open?
-                  </a>
-                  <button type="button" onClick={onClear} className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
-                    Clear cart
-                  </button>
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs leading-relaxed text-ink-soft">
-                Payments are handled by Razorpay, so we never see or store your card details. Prefer to talk first? Send the order on WhatsApp and we’ll confirm availability, delivery and payment with you.
-              </p>
-            )}
+            <p className="text-center text-xs leading-relaxed text-ink-soft">
+              {method === 'cod'
+                ? 'Nothing to pay now. Please keep the cash ready for when your order arrives.'
+                : 'UPI · Google Pay · PhonePe · Paytm · Cards · Netbanking · Apple Pay (Safari). Payments are handled by Razorpay, so we never see or store your card details.'}
+            </p>
           </>
         )}
 

@@ -7,6 +7,8 @@ export const ONGOING: OrderStatus[] = ['new', 'confirmed', 'dispatched'];
 /** An online order whose payment never went through: nothing is on its way. */
 export const unpaid = (o: Order) => o.method === 'online' && (o.payment === 'pending' || o.payment === 'failed');
 export const isOngoing = (o: Order) => ONGOING.includes(o.status) && !unpaid(o);
+/** A cash-on-delivery order whose cash is still to be handed over. */
+export const cashDue = (o: Order) => o.method === 'cod' && o.payment === 'cod' && o.status !== 'cancelled';
 
 // One label per admin status, so the customer sees exactly what the shop set.
 const STATUS_LABEL: Record<OrderStatus, string> = { new: 'Placed', confirmed: 'Confirmed', dispatched: 'Dispatched', delivered: 'Delivered', cancelled: 'Cancelled' };
@@ -18,13 +20,21 @@ export function statusText(o: Order): string {
   return o.cancelledBy === 'customer' ? 'Cancelled by you' : o.cancelledBy === 'shop' ? 'Cancelled by the shop' : 'Cancelled';
 }
 
-export const PAYMENT_LABEL: Record<Order['payment'], string> = {
+const PAYMENT_LABEL: Record<Order['payment'], string> = {
   paid: 'Paid online',
   pending: 'Payment pending',
   failed: 'Payment failed',
   'on-whatsapp': 'Ordered on WhatsApp',
   refunded: 'Refunded',
+  cod: 'Cash on delivery',
 };
+
+/** The payment line the customer sees, e.g. "Paid online", "Paid in cash" or "Cash on delivery · pay ₹349 on arrival". */
+export function paymentText(o: Order): string {
+  if (o.method === 'cod' && o.payment === 'paid') return 'Paid in cash';
+  if (o.method !== 'cod' || o.payment !== 'cod') return PAYMENT_LABEL[o.payment];
+  return o.status === 'cancelled' ? 'Cash on delivery · nothing to pay' : `Cash on delivery · pay ${formatINR(o.total)} on arrival`;
+}
 
 export const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 export const formatDateTime = (iso: string) =>
@@ -33,7 +43,9 @@ export const formatDateTime = (iso: string) =>
 export function refundText(r: OrderRefund): string {
   switch (r.status) {
     case 'refunded':
-      return `Refund of ${formatINR(r.amount)} sent on ${formatDate(r.updatedAt)}. It reaches your original payment method in 5–7 working days.`;
+      return r.by === 'hand'
+        ? `${formatINR(r.amount)} refunded on ${formatDate(r.updatedAt)}. We paid it back to you directly.`
+        : `Refund of ${formatINR(r.amount)} sent on ${formatDate(r.updatedAt)}. It reaches your original payment method in 5–7 working days.`;
     case 'requested':
       return `Refund requested on ${formatDate(r.requestedAt)}. We reply within 2 working days.`;
     case 'declined':
@@ -43,7 +55,7 @@ export function refundText(r: OrderRefund): string {
   }
 }
 
-// A refund can be asked for once delivered and paid, until REFUND_REQUEST_DAYS after delivery.
+// A refund can be asked for once delivered and paid (online or in cash), until REFUND_REQUEST_DAYS after delivery.
 export function canRequestRefund(o: Order, now: number): boolean {
   if (o.status !== 'delivered' || o.payment !== 'paid' || o.refund || !o.deliveredAt) return false;
   return now - new Date(o.deliveredAt).getTime() <= REFUND_REQUEST_DAYS * 86_400_000;

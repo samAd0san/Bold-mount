@@ -34,7 +34,7 @@ async function deleteProduct(page: Page, id: string) {
   expect((await api(page, `/api/admin/products/${id}`, { method: 'DELETE' })).status).toBe(200);
 }
 
-test('a book: one price and no size; the shop, cart, WhatsApp message and tracking show no empty size', async ({ page, context }) => {
+test('a book: one price and no size; the shop, cart, order and tracking show no empty size', async ({ page, context }) => {
   await adminLogin(page);
   await booksCategory(page);
   await page.goto('/admin/products/new');
@@ -58,20 +58,17 @@ test('a book: one price and no size; the shop, cart, WhatsApp message and tracki
   await page.goto('/category/islamic-books');
   await expect(page.getByRole('button', { name: 'Add Riyad as-Salihin (Arabic–English) to cart' })).toBeVisible();
 
-  // Cart and a WhatsApp order: the line reads "name × 1", never "name () × 1".
+  // Cart and a cash on delivery order: the line reads "name × 1", never "name () × 1".
   await signInAs(context, { name: 'Bilal Qureshi', email: 'bilal.qureshi@example.com' });
   await page.goto(`/product/${book.slug}`);
   await page.getByRole('button', { name: 'Add to cart' }).first().click();
   await expect(page.getByRole('dialog').locator('li', { hasText: 'Riyad as-Salihin' }).locator('p')).toHaveCount(1);
   await page.goto('/cart');
   await expect(page.locator('main li', { hasText: 'Riyad as-Salihin' }).locator('p').first()).toHaveText('₹899');
-  await page.evaluate(() => { window.open = (url) => { (window as unknown as { sent: string }).sent = String(url); return null; }; });
   await fillCheckout(page, { ...CUSTOMER, name: 'Bilal Qureshi' });
-  await page.getByRole('button', { name: 'Order on WhatsApp instead' }).click();
-  await expect.poll(() => page.evaluate(() => (window as unknown as { sent?: string }).sent ?? '')).toContain('wa.me');
-  const message = decodeURIComponent(await page.evaluate(() => (window as unknown as { sent: string }).sent));
-  expect(message).toContain('• Riyad as-Salihin (Arabic–English) × 1 — ₹899');
-  expect(message).not.toContain('()');
+  await page.getByRole('radio', { name: /Cash on delivery/ }).check();
+  await page.getByRole('button', { name: /^Place order/ }).click();
+  await expect(page.getByText('Order placed — thank you!')).toBeVisible();
 
   const bookOrder = async () => (await api<{ orders: Order[] }>(page, '/api/orders/mine')).data.orders.find((o) => o.items.some((i) => i.slug === book.slug));
   await expect.poll(async () => !!(await bookOrder())).toBe(true);
@@ -270,7 +267,7 @@ test('preview: the product and category previews follow what you type; phones ge
   await preview.getByText('Storage', { exact: true }).click();
   await expect(preview.getByText('Keep in a cool, dry place.')).toBeVisible();
   await preview.getByText('Delivery & payment').click();
-  await expect(preview.getByText(/Payments are handled by Razorpay/)).toBeVisible();
+  await expect(preview.getByText(/Online payments are handled by Razorpay/)).toBeVisible();
   // Tapping the shop tile "opens" its page: the page preview scrolls into view and the admin stays put.
   await preview.getByRole('link', { name: 'Ajwa Dates Gift Tin' }).first().click();
   await expect(page).toHaveURL(/\/admin\/products\/new$/);

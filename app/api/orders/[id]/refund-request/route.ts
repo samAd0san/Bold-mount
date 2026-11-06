@@ -12,7 +12,7 @@ const Body = z.object({
   note: z.string().trim().max(500, 'Please keep your note under 500 characters.').optional(),
 });
 
-// The customer asks for a refund on a delivered, paid order; the shop answers from admin.
+// The customer asks for a refund on a delivered, paid order (online or cash on delivery); the shop answers from admin.
 export const POST = handle(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const blocked = rejectCrossSite(req);
   if (blocked) return blocked;
@@ -26,7 +26,7 @@ export const POST = handle(async (req: Request, { params }: { params: Promise<{ 
 
   if (found.refund) return fail(409, found.refund.status === 'refunded' ? 'This order has already been refunded.' : 'You have already asked for a refund on this order.');
   if (found.status !== 'delivered') return fail(409, 'You can ask for a refund once your order has been delivered.');
-  if (found.payment !== 'paid') return fail(409, 'Only orders paid online can be refunded here. Message us and we’ll help.');
+  if (found.payment !== 'paid') return fail(409, 'Only a paid order can be refunded here. Message us and we’ll help.');
   const since = found.deliveredAt ?? found.updatedAt;
   if (!since || Date.now() - new Date(since).getTime() > REFUND_REQUEST_DAYS * 86_400_000) {
     return fail(409, `The ${REFUND_REQUEST_DAYS}-day window to ask for a refund has ended. Message us and we’ll see what we can do.`);

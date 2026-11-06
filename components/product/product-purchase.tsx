@@ -17,7 +17,7 @@ function optionName(product: Product): string {
   return labels.every((l) => /\d|pack|box|pouch|jar|bottle/i.test(l)) ? 'Pack size' : 'Option';
 }
 
-/** Price (follows the chosen variant), variant pills, quantity, add to cart and buy now (pay online at checkout). */
+/** Price (follows the chosen variant), variant pills, quantity, add to cart and buy now (pay online or cash on delivery at checkout). */
 export function ProductPurchase({ product }: { product: Product }) {
   const router = useRouter();
   const add = useCart((s) => s.add);
@@ -85,7 +85,7 @@ export function ProductPurchase({ product }: { product: Product }) {
       <button type="button" data-cart-action onClick={buyNow} className={buttonClass('gold', 'mt-3 h-12 w-full')}>
         Buy now
       </button>
-      <p className="mt-3 text-center text-xs text-ink-soft">Pay online at checkout with UPI, cards or netbanking.</p>
+      <p className="mt-3 text-center text-xs text-ink-soft">Pay online (UPI, cards, netbanking) or cash on delivery.</p>
     </div>
   );
 }

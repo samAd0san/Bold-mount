@@ -40,7 +40,7 @@ export function SiteFooter({ categories }: { categories: Category[] }) {
                 </a>
               </li>
               <li className="flex items-center gap-3 text-on-night-soft">
-                <MapPin size={16} className="text-gold" /> Doorstep delivery — pay online
+                <MapPin size={16} className="text-gold" /> Doorstep delivery — online or cash on delivery
               </li>
             </ul>
           </div>

@@ -1,22 +1,13 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
-import { addToCart, adminLogin, CUSTOMER, fillCheckout, signInAs, api } from './helpers';
-import type { Order } from '../lib/types';
+import { adminLogin } from './helpers';
+import { cashOrder } from './place-order';
 
 // Customer and shop use separate browsers, like in real life: what the shop changes must show up for the customer.
 
 async function customerWithOrder(browser: Browser, name: string) {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await signInAs(context, { name, email: `${name.toLowerCase().replace(/\W+/g, '.')}@example.com` });
-  await addToCart(page, '/product/ajwa-dates');
-  await page.goto('/cart');
-  const mine = async () => (await api<{ orders: Order[] }>(page, '/api/orders/mine')).data.orders.length;
-  const before = await mine();
-  await page.evaluate(() => { window.open = () => null; });
-  await fillCheckout(page, { ...CUSTOMER, name });
-  await page.getByRole('button', { name: 'Order on WhatsApp instead' }).click();
-  await expect.poll(mine).toBeGreaterThan(before);
-  const order = (await api<{ orders: Order[] }>(page, '/api/orders/mine')).data.orders[0];
+  const order = await cashOrder(page, context, name);
   return { page, order };
 }
 

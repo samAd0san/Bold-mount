@@ -12,7 +12,7 @@ import { whatsappLink } from '@/lib/whatsapp';
 export const metadata: Metadata = {
   title: 'Modest Wear — Thobes, Kurtas, Abayas & Hijabs',
   description:
-    'Simple, dignified modest wear from Bold Mount — thobes, kurta sets, kufis, abayas and hijabs. A new range; pay online at checkout, or ask on WhatsApp about sizes and custom stitching.',
+    'Simple, dignified modest wear from Bold Mount — thobes, kurta sets, kufis, abayas and hijabs. A new range; pay online (UPI, cards, netbanking) or cash on delivery, and ask us on WhatsApp about sizes and custom stitching.',
 };
 
 export const revalidate = 60;

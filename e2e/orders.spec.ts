@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { addToCart, adminLogin, api, CUSTOMER, fillCheckout, payWithTestBank, signInAs } from './helpers';
+import { cashOrder } from './place-order';
 import type { Order } from '../lib/types';
 
 /** Signs in as `name`, pays for one Talbeenah (₹249 + ₹50 delivery) in Razorpay's test mode and returns the order. */
@@ -15,19 +16,6 @@ async function paidOrder(page: Page, context: BrowserContext, name: string): Pro
   return data.orders[0];
 }
 
-async function whatsappOrder(page: Page, context: BrowserContext, name: string): Promise<Order> {
-  await signInAs(context, { name, email: `${name.toLowerCase().replace(/\W+/g, '.')}@example.com` });
-  await addToCart(page, '/product/ajwa-dates');
-  await page.goto('/cart');
-  const mine = async () => (await api<{ orders: Order[] }>(page, '/api/orders/mine')).data.orders.length;
-  const before = await mine();
-  await page.evaluate(() => { window.open = () => null; });
-  await fillCheckout(page, { ...CUSTOMER, name });
-  await page.getByRole('button', { name: 'Order on WhatsApp instead' }).click();
-  await expect.poll(mine).toBeGreaterThan(before);
-  return (await api<{ orders: Order[] }>(page, '/api/orders/mine')).data.orders[0];
-}
-
 const track = (page: Page, order: Order) => page.goto(`/orders/${order.id}`);
 const adminRow = (page: Page, number: string) => page.locator('main li').filter({ hasText: number }).first();
 const setStatus =(page: Page, id: string, status: string) => api(page, `/api/admin/orders/${id}`, { method: 'PATCH', body: { status } });
@@ -35,7 +23,7 @@ const adminOrder = async (page: Page, id: string) =>
   (await api<{ orders: Order[] }>(page, '/api/admin/orders')).data.orders.find((o) => o.id === id)!;
 
 test('My orders tracks the order: placed → confirmed → dispatched → delivered', async ({ page, context }) => {
-  const order = await whatsappOrder(page, context, 'Imran Sheikh');
+  const order = await cashOrder(page, context, 'Imran Sheikh');
   await track(page, order);
   const progress = page.getByRole('list', { name: 'Order progress' });
   for (const step of ['Placed', 'Confirmed', 'Dispatched', 'Delivered']) await expect(progress).toContainText(step);
@@ -52,14 +40,14 @@ test('My orders tracks the order: placed → confirmed → dispatched → delive
   await admin.close();
 });
 
-test('customer cancels a WhatsApp order before dispatch', async ({ page, context }) => {
-  const order = await whatsappOrder(page, context, 'Sana Mirza');
+test('customer cancels a cash on delivery order before dispatch: nothing to refund', async ({ page, context }) => {
+  const order = await cashOrder(page, context, 'Sana Mirza');
   await track(page, order);
   await page.getByRole('button', { name: 'Cancel order' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes, cancel my order' }).click();
   await expect(page.locator('main')).toContainText('Cancelled by you');
   const { data } = await api<{ orders: Order[] }>(page, '/api/orders/mine');
-  expect(data.orders.find((o) => o.id === order.id)).toMatchObject({ status: 'cancelled', cancelledBy: 'customer' });
+  expect(data.orders.find((o) => o.id === order.id)).toMatchObject({ status: 'cancelled', cancelledBy: 'customer', payment: 'cod' });
 });
 
 test('customer cancels a paid order: full refund goes back through Razorpay automatically', async ({ page, context }) => {

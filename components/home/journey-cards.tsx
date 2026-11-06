@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { ArrowRight, Home, Lock, MapPin, Navigation } from 'lucide-react';
 import { formatINR } from '@/lib/format';
 import { PRODUCT_IMG } from '@/lib/media';
-import { SITE } from '@/lib/site';
+import { PAY_LINE, SITE } from '@/lib/site';
 import { deliveryFor } from '@/lib/shop';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
@@ -45,7 +45,7 @@ function PackIllustration() {
 // Sample basket for the pay card: one 500 g Talbeenah plus the real delivery rule.
 const SAMPLE_SUBTOTAL = 449;
 const SAMPLE_TOTAL = SAMPLE_SUBTOTAL + deliveryFor(SAMPLE_SUBTOTAL);
-const PAY_METHODS = ['UPI', 'Card', 'Netbanking'];
+const PAY_METHODS = ['Pay online', 'Cash on delivery'];
 
 function PayIllustration() {
   return (
@@ -53,7 +53,7 @@ function PayIllustration() {
       <div className="flex items-center justify-between border-b border-line px-2.5 py-2">
         <span className="text-[10px] font-semibold text-ink">Bold Mount</span>
         <span className="flex items-center gap-1 text-[9px] text-ink-soft">
-          <Lock size={9} /> Pay online
+          <Lock size={9} /> Secure checkout
         </span>
       </div>
       <div className="p-2.5">
@@ -110,8 +110,8 @@ const STEPS: { title: string; text: string; art: ReactNode }[] = [
     art: <PackIllustration />,
   },
   {
-    title: 'Pay securely online',
-    text: 'UPI, Google Pay, PhonePe, cards or netbanking. Payments are handled by Razorpay.',
+    title: 'Pay your way',
+    text: `${PAY_LINE}. Online payments are handled by Razorpay.`,
     art: <PayIllustration />,
   },
   {
