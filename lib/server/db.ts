@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 export const DB_NAME = process.env.MONGODB_DB || 'boldmount';
 
 // The Atlas cluster is shared with other projects; refuse to run against any database that isn't ours.
-if (!/^boldmount([-_][a-z0-9]+)?$/i.test(DB_NAME)) {
+if (!/^boldmount([-_][a-z0-9]+){0,2}$/i.test(DB_NAME)) {
   throw new Error(`MONGODB_DB must be "boldmount" (or boldmount-<suffix>), got "${DB_NAME}"`);
 }
 

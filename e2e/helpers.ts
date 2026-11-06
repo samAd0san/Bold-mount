@@ -28,7 +28,7 @@ export async function api<T = Record<string, unknown>>(page: Page, path: string,
 let conn: Promise<typeof mongoose> | null = null;
 /** The test database, for setting up a signed-in customer. */
 export async function testDb() {
-  conn ??= mongoose.connect(process.env.MONGODB_URI!, { dbName: 'boldmount_e2e', serverSelectionTimeoutMS: 10000 });
+  conn ??= mongoose.connect(process.env.MONGODB_URI!, { dbName: process.env.MONGODB_DB, serverSelectionTimeoutMS: 10000 });
   return (await conn).connection.db!;
 }
 

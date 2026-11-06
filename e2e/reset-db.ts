@@ -1,9 +1,9 @@
-// Empties the boldmount_e2e test database before a test run (npm run seed then reloads the catalog).
+// Empties the test database (boldmount_e2e, or boldmount_e2e_<suffix> for a parallel copy) before a test run.
 import 'dotenv/config';
 import mongoose from 'mongoose';
 
 const DB = process.env.MONGODB_DB;
-if (DB !== 'boldmount_e2e') throw new Error(`refusing: MONGODB_DB is "${DB}", not boldmount_e2e`);
+if (!/^boldmount_e2e(_[a-z0-9]+)?$/.test(DB ?? '')) throw new Error(`refusing: MONGODB_DB is "${DB}", not a boldmount_e2e test database`);
 
 async function main() {
   await mongoose.connect(process.env.MONGODB_URI!, { dbName: DB, serverSelectionTimeoutMS: 10000 });

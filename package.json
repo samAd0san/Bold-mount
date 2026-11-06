@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
-    "test:e2e": "export MONGODB_DB=boldmount_e2e && tsx e2e/reset-db.ts && tsx scripts/seed.ts && next build && playwright test"
+    "test:e2e": "export MONGODB_DB=${E2E_DB:-boldmount_e2e} && tsx e2e/reset-db.ts && tsx scripts/seed.ts && next build && playwright test"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

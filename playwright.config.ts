@@ -1,9 +1,10 @@
 import { defineConfig } from '@playwright/test';
 
 // Tests write orders, forms and products, so they only ever run against the separate test database.
-if (process.env.MONGODB_DB !== 'boldmount_e2e') throw new Error('Run the tests with `npm run test:e2e` (uses the boldmount_e2e database).');
+if (!/^boldmount_e2e(_[a-z0-9]+)?$/.test(process.env.MONGODB_DB ?? '')) throw new Error('Run the tests with `npm run test:e2e` (uses the boldmount_e2e database).');
 
-const PORT = 3200;
+// E2E_PORT / E2E_DB let a second copy of the repo run its own suite at the same time.
+const PORT = Number(process.env.E2E_PORT) || 3200;
 
 export default defineConfig({
   testDir: 'e2e',

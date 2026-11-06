@@ -23,16 +23,17 @@ async function adminPage(browser: Browser) {
 test('the token only lets each visitor listen to what is theirs', async ({ page, context, browser }) => {
   await page.goto('/');
   const guest = (await api<Grant>(page, '/api/live/token')).data;
-  expect(guest.prefix).toBe('boldmount_e2e');
-  expect(Object.keys(JSON.parse(guest.tokenRequest.capability))).toEqual(['boldmount_e2e:catalog']);
+  const db = process.env.MONGODB_DB!;
+  expect(guest.prefix).toBe(db);
+  expect(Object.keys(JSON.parse(guest.tokenRequest.capability))).toEqual([`${db}:catalog`]);
 
   const uid = await signInAs(context, { name: 'Maryam Siddiqui', email: 'maryam.siddiqui@example.com' });
   const customer = (await api<Grant>(page, '/api/live/token')).data;
-  expect(Object.keys(JSON.parse(customer.tokenRequest.capability)).sort()).toEqual(['boldmount_e2e:catalog', `boldmount_e2e:orders:${uid}`]);
+  expect(Object.keys(JSON.parse(customer.tokenRequest.capability)).sort()).toEqual([`${db}:catalog`, `${db}:orders:${uid}`]);
 
   const admin = await adminPage(browser);
   const shop = (await api<Grant>(admin, '/api/live/token')).data;
-  expect(Object.keys(JSON.parse(shop.tokenRequest.capability)).sort()).toEqual(['boldmount_e2e:admin', 'boldmount_e2e:catalog']);
+  expect(Object.keys(JSON.parse(shop.tokenRequest.capability)).sort()).toEqual([`${db}:admin`, `${db}:catalog`]);
   await admin.context().close();
 });
 

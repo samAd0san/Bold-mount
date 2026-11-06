@@ -5,7 +5,7 @@ import { SEED_CATEGORIES } from '../lib/seed/categories';
 import { SEED_PRODUCTS } from '../lib/seed/products';
 
 const DB = process.env.MONGODB_DB || 'boldmount';
-if (!/^boldmount([-_][a-z0-9]+)?$/i.test(DB)) throw new Error(`refusing: MONGODB_DB is "${DB}", not boldmount`);
+if (!/^boldmount([-_][a-z0-9]+){0,2}$/i.test(DB)) throw new Error(`refusing: MONGODB_DB is "${DB}", not boldmount`);
 
 async function main() {
   await mongoose.connect(process.env.MONGODB_URI!, { dbName: DB, serverSelectionTimeoutMS: 10000 });
