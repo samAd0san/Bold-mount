@@ -19,7 +19,7 @@ test('wrong PIN is refused, right PIN opens the dashboard, Log out locks it agai
   await page.reload();
   await pressPin(page, PIN);
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-  for (const tile of ['Visitors', 'Page views', 'Orders', 'Revenue', 'Sign-ups', 'Active now']) await expect(page.locator('main')).toContainText(tile);
+  for (const tile of ['Visitors', 'Pages opened', 'Orders', 'Revenue', 'Sign-ups', 'Active now']) await expect(page.locator('main')).toContainText(tile);
   await page.getByRole('button', { name: 'Log out' }).click();
   await expect(page.getByRole('heading', { name: 'Enter your PIN' })).toBeVisible();
 });

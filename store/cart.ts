@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { trackCartAdd } from '@/components/analytics/send';
 import type { Product, Variant } from '@/lib/types';
 
 export interface CartItem {
@@ -31,7 +32,8 @@ export const useCart = create<CartState>()(
     (set) => ({
       items: [],
       open: false,
-      add: (product, variant, qty = 1) =>
+      add: (product, variant, qty = 1) => {
+        trackCartAdd(product.slug);
         set((state) => {
           const key = `${product.slug}:${variant.id}`;
           const existing = state.items.find((i) => i.key === key);
@@ -52,7 +54,8 @@ export const useCart = create<CartState>()(
                 },
               ];
           return { items, open: true };
-        }),
+        });
+      },
       remove: (key) => set((state) => ({ items: state.items.filter((i) => i.key !== key) })),
       setQty: (key, qty) =>
         set((state) => ({

@@ -160,6 +160,12 @@ export const POLICIES: Policy[] = [
         ],
       },
       {
+        heading: 'Visits to this website',
+        paragraphs: [
+          'To see which pages are useful, we keep a simple record of visits. By default it is anonymous: a random ID in a small cookie, the pages opened, the kind of device (phone, tablet or computer), the time, the website or link that sent you (such as WhatsApp or Google), words typed into our shop search, and whether something was added to a cart, you reached checkout or an order was placed (with its order number). We do not store your IP address or your browser’s details. Only if you are signed in is the record linked to your account, so we can see which customer it was. Records are deleted automatically after 400 days, and visits by the shop owner are not counted.',
+        ],
+      },
+      {
         heading: 'Sharing',
         paragraphs: [
           'We do not sell your data. We share details only with those who need them to complete your order, such as Razorpay for your payment and whoever is delivering it to you.',

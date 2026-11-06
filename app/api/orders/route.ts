@@ -6,6 +6,7 @@ import { fail, handle, ok, readJson } from '@/lib/server/http';
 import { OrderModel, toOrder } from '@/lib/server/models';
 import { nextOrderNumber, OrderBody, priceCart } from '@/lib/server/orders';
 import { createRazorpayOrder, razorpayKeyId, razorpayReady } from '@/lib/server/razorpay';
+import { trackOrder } from '@/lib/server/track';
 
 // Places an order (sign-in required). Prices come from the database, never from the browser.
 export const POST = handle(async (req: Request) => {
@@ -22,6 +23,7 @@ export const POST = handle(async (req: Request) => {
 
   const _id = new Types.ObjectId();
   const number = await nextOrderNumber();
+  await trackOrder(number); // stats only: links this order number to the visitor
   const base = { _id, number, ...cart, customer: body.customer, method: body.method, status: 'new' as const, userId };
 
   if (body.method === 'whatsapp') {

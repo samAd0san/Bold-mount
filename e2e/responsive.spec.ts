@@ -3,7 +3,7 @@ import { addToCart, adminLogin, overflowing, signInAs, TALBEENAH } from './helpe
 
 const WIDTHS = [360, 390, 768, 1024, 1440];
 const STORE = ['/', '/shop', TALBEENAH, '/dates', '/honey', '/wearings', '/category/talbeenah', '/cart', '/orders', '/contact', '/faq', '/about', '/umrah', '/zakat', '/khidmat-e-khalq', '/policies/shipping', '/policies/refund-cancellation'];
-const ADMIN = ['/admin', '/admin/orders', '/admin/products', '/admin/products/new', '/admin/categories', '/admin/users', '/admin/forms', '/admin/settings'];
+const ADMIN = ['/admin', '/admin/visitors', '/admin/orders', '/admin/products', '/admin/products/new', '/admin/categories', '/admin/users', '/admin/forms', '/admin/settings'];
 
 for (const width of WIDTHS) {
   test(`nothing spills off the screen at ${width}px`, async ({ page, context }) => {

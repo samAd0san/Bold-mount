@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Footprints,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -28,6 +29,7 @@ import { useLive } from '@/lib/live';
 
 const TABS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/visitors', label: 'Visitors', icon: Footprints },
   { href: '/admin/orders', label: 'Orders', icon: ReceiptText },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: Tags },
