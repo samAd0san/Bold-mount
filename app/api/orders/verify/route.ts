@@ -23,15 +23,21 @@ export const POST = handle(async (req: Request) => {
   const b = Body.parse(await readJson(req));
   if (!isObjectId(b.orderId) || !validPaymentSignature(b.razorpayOrderId, b.razorpayPaymentId, b.razorpaySignature)) return fail(400, UNCONFIRMED);
   await connectDb();
-  const order = await OrderModel.findOne({ _id: b.orderId, method: 'online', razorpayOrderId: b.razorpayOrderId });
+  const order = await OrderModel.findOne({ _id: b.orderId, method: 'online', razorpayOrderId: b.razorpayOrderId }).lean();
   if (!order) return fail(400, UNCONFIRMED);
-  if (order.payment === 'paid' || order.payment === 'refunded') return ok({ order: toOrder(order.toObject()) });
-  order.set({ payment: 'paid', razorpayPaymentId: b.razorpayPaymentId, paidAt: new Date() });
-  await order.save();
+  if (order.payment === 'paid' || order.payment === 'refunded') return ok({ order: toOrder(order) });
+
+  // Marked paid in one step, and the status is read from the saved order, so a cancel that lands at the same moment is still caught below.
+  const paid = await OrderModel.findOneAndUpdate(
+    { _id: order._id, payment: { $nin: ['paid', 'refunded'] } },
+    { $set: { payment: 'paid', razorpayPaymentId: b.razorpayPaymentId, paidAt: new Date() } },
+    { returnDocument: 'after' },
+  ).lean();
+  if (!paid) return ok({ order: toOrder((await OrderModel.findById(order._id).lean()) ?? order) }); // a twin request confirmed it first
   // Paid after it was cancelled (e.g. in another tab): send the money straight back.
-  if (order.status === 'cancelled') {
-    const { doc } = await refundOrder(order, order.total ?? 0, { reason: 'Paid after the order was cancelled', requestedAt: new Date() });
+  if (paid.status === 'cancelled') {
+    const { doc } = await refundOrder(paid, paid.total ?? 0, { reason: 'Paid after the order was cancelled', requestedAt: new Date() });
     if (doc) return ok({ order: toOrder(doc) });
   }
-  return ok({ order: toOrder(order.toObject()) });
+  return ok({ order: toOrder(paid) });
 });

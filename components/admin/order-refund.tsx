@@ -97,14 +97,20 @@ export function RefundPanel({ order, onSaved, onFailed }: { order: Order; onSave
         <p className="break-words text-ink">You declined this refund{r.reply ? <span className="text-ink-soft"> · “{r.reply}”</span> : null}</p>
       )}
       {r?.status === 'refunded' && (
-        <p className="break-words text-ink">
-          Refunded {formatINR(r.amount)} on {clock(r.updatedAt, false)}{r.razorpayRefundId ? ` · ${r.razorpayRefundId}` : r.by === 'hand' ? ' · paid back by hand' : ''}
-        </p>
+        <div className="space-y-1">
+          <p className="break-words text-ink">
+            Refunded {formatINR(r.amount)}{r.amount < order.total ? ` of ${formatINR(order.total)}` : ''} on {clock(r.updatedAt, false)}{r.razorpayRefundId ? ` · ${r.razorpayRefundId}` : r.by === 'hand' ? ' · paid back by hand' : ''}
+          </p>
+          {r.amount < order.total && <p className="text-xs text-ink-soft">An order can only be refunded once, so the other {formatINR(order.total - r.amount)} can’t be refunded later.</p>}
+        </div>
       )}
 
       {showForm && step === 'confirm' && (
         <div className="space-y-3">
-          <p className="text-ink">{cash ? `Record a refund of ${formatINR(n)}? Only do this once you have paid it back. This can’t be undone.` : `Send ${formatINR(n)} back to the customer through Razorpay? This can’t be undone.`}</p>
+          <p className="text-ink">
+            {cash ? `Record a refund of ${formatINR(n)}? Only do this once you have paid it back. This can’t be undone.` : `Send ${formatINR(n)} back to the customer through Razorpay? This can’t be undone.`}
+            {n < order.total && ` An order can only be refunded once, so the other ${formatINR(order.total - n)} can’t be refunded later.`}
+          </p>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" busy={busy} onClick={() => void send('refund', { amount: n })}>Yes, refund {formatINR(n)}</Button>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => setStep('amount')}>Go back</Button>

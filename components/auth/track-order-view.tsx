@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { CANCELLABLE } from '@/lib/types';
 import { formatINR } from '@/lib/format';
-import { canRequestRefund, cashDue, formatDate, refundText } from '@/lib/order-view';
+import { canCancel, canRequestRefund, cashDue, formatDate, refundText } from '@/lib/order-view';
 import { whatsappLink } from '@/lib/whatsapp';
 import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
@@ -47,7 +46,7 @@ export function TrackOrderView({ id }: { id: string }) {
 
   const { customer } = order;
   const mapLink = /^https?:\/\//.test(customer.address);
-  const cancellable = CANCELLABLE.includes(order.status);
+  const cancellable = canCancel(order);
   const refundable = canRequestRefund(order, openedAt);
   return (
     <div className="space-y-5">

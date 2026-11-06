@@ -100,9 +100,16 @@ export async function nextOrderNumber(): Promise<string> {
 
 type RefundInfo = { reason: string; note?: string; reply?: string; requestedAt: Date };
 
+/** The "customer asked for a refund" record, shared by the refund request and by cancelling an order already paid in cash. */
+export const refundRequest = (reason: string, note: string | undefined, amount: number, at: Date) => ({
+  status: 'requested', reason, ...(note ? { note } : {}), amount, requestedAt: at, updatedAt: at,
+});
+
+const REFUND_CLAIM_MS = 60_000;
+
 /**
- * Records a refund of `amount` on a paid order: online orders are sent back through Razorpay; cash-on-delivery orders are paid back by the shop
- * by hand, so this only records it. Returns the updated order, plus Razorpay's reason when it refused (the order then stays paid with refund "failed").
+ * Refunds `amount` of a paid order: online goes back through Razorpay, cash on delivery is only recorded (the shop pays by hand). Returns the updated order;
+ * `error` says why nothing was sent: `refused` = already refunded or in progress, else Razorpay's reason (the order stays paid, refund "failed").
  */
 export async function refundOrder(
   order: { _id: unknown; number: string; method?: string | null; razorpayPaymentId?: string | null },
@@ -114,19 +121,27 @@ export async function refundOrder(
     amount, requestedAt: info.requestedAt, updatedAt: new Date(),
   };
   const byHand = order.method === 'cod';
+  // Only one request may send a refund: a double tap or a second tab finds the order claimed. A claim over a minute old belongs to a crashed request.
+  const claimed = await OrderModel.findOneAndUpdate(
+    { _id: order._id, payment: 'paid', $or: [{ refundingAt: null }, { refundingAt: { $lt: new Date(Date.now() - REFUND_CLAIM_MS) } }] },
+    { $set: { refundingAt: new Date() } },
+    { projection: { _id: 1 } },
+  ).lean();
+  if (!claimed) return { doc: await OrderModel.findById(order._id).lean(), error: 'This order has already been refunded, or its refund is on the way.', refused: true };
+
   let refundId = '';
   if (!byHand) {
     try {
       refundId = (await refundPayment(order.razorpayPaymentId ?? '', amount, order.number)).id;
     } catch (e) {
-      const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: { refund: { ...base, status: 'failed' } } }, { returnDocument: 'after' }).lean();
-      return { doc, error: (e as Error).message };
+      const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: { refund: { ...base, status: 'failed' } }, $unset: { refundingAt: '' } }, { returnDocument: 'after' }).lean();
+      return { doc, error: (e as Error).message, refused: false };
     }
   }
   const set = { payment: 'refunded', refund: { ...base, status: 'refunded', ...(byHand ? { by: 'hand' } : { razorpayRefundId: refundId }) } };
-  const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: set }, { returnDocument: 'after' }).lean().catch((e: unknown) => {
+  const doc = await OrderModel.findByIdAndUpdate(order._id, { $set: set, $unset: { refundingAt: '' } }, { returnDocument: 'after' }).lean().catch((e: unknown) => {
     console.error('[refund] sent but not saved', order.number, refundId); // the money is already back with the customer
     throw e;
   });
-  return { doc, error: null };
+  return { doc, error: null, refused: false };
 }

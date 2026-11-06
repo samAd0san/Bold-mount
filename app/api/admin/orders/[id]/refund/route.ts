@@ -22,13 +22,18 @@ export const POST = handle(async (req: Request, { params }: { params: Promise<{ 
   const order = isObjectId(id) ? await OrderModel.findById(id).lean() : null;
   if (!order) return fail(404, 'That order was not found.');
 
-  if (order.payment === 'refunded' || order.refund?.status === 'refunded') return fail(409, 'This order has already been refunded.');
+  const total = order.total ?? 0;
+  if (order.payment === 'refunded' || order.refund?.status === 'refunded') {
+    const sent = order.refund?.amount ?? total;
+    return fail(409, sent < total ? `${formatINR(sent)} of ${formatINR(total)} has already been refunded, and an order can only be refunded once.` : 'This order has already been refunded.');
+  }
   if (order.payment !== 'paid' || (order.method !== 'cod' && !order.razorpayPaymentId)) return fail(409, 'Only a paid order can be refunded here.');
-  if (amount > (order.total ?? 0)) return fail(400, `The refund can’t be more than the order total (${formatINR(order.total ?? 0)}).`);
+  if (amount > total) return fail(400, `The refund can’t be more than the order total (${formatINR(total)}).`);
 
   const prev = order.refund;
   const done = await refundOrder(order, amount, {
     reason: prev?.reason || 'Refunded by shop', note: prev?.note || undefined, reply: reply || undefined, requestedAt: prev?.requestedAt ?? new Date(),
   });
-  return done.error ? fail(502, done.error) : ok({ order: toOrder(done.doc!) });
+  // 409 = nothing was sent (already refunded); 502 = Razorpay said no and the order now says "failed".
+  return done.error ? fail(done.refused ? 409 : 502, done.error) : ok({ order: toOrder(done.doc!) });
 });

@@ -4,6 +4,7 @@ import { sessionUid } from '@/lib/server/auth-token';
 import { connectDb } from '@/lib/server/db';
 import { fail, handle, ok, readJson } from '@/lib/server/http';
 import { OrderModel, toOrder } from '@/lib/server/models';
+import { refundRequest } from '@/lib/server/orders';
 import { isObjectId } from '@/lib/server/slug';
 import { REFUND_REASONS, REFUND_REQUEST_DAYS } from '@/lib/types';
 
@@ -34,7 +35,7 @@ export const POST = handle(async (req: Request, { params }: { params: Promise<{ 
 
   // The "no refund yet" filter lets only one request win, so a double tap can't file two.
   const now = new Date();
-  const refund = { status: 'requested', reason, ...(note ? { note } : {}), amount: found.total ?? 0, requestedAt: now, updatedAt: now };
+  const refund = refundRequest(reason, note, found.total ?? 0, now);
   const order = await OrderModel.findOneAndUpdate({ _id: id, userId: uid, status: 'delivered', payment: 'paid', refund: null }, { $set: { refund } }, { returnDocument: 'after' }).lean();
   return order ? ok({ order: toOrder(order) }) : fail(409, 'You have already asked for a refund on this order.');
 });

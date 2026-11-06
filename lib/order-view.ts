@@ -1,12 +1,14 @@
 // What the customer sees for an order: wording, dates and the rules for which actions to offer.
 import { formatINR } from './format';
-import { REFUND_REQUEST_DAYS, type Order, type OrderRefund, type OrderStatus } from './types';
+import { CANCELLABLE, REFUND_REQUEST_DAYS, type Order, type OrderRefund, type OrderStatus } from './types';
 
 /** Orders still on their way to the customer. */
 export const ONGOING: OrderStatus[] = ['new', 'confirmed', 'dispatched'];
 /** An online order whose payment never went through: nothing is on its way. */
-export const unpaid = (o: Order) => o.method === 'online' && (o.payment === 'pending' || o.payment === 'failed');
+export const unpaid = (o: Pick<Order, 'method' | 'payment'>) => o.method === 'online' && (o.payment === 'pending' || o.payment === 'failed');
 export const isOngoing = (o: Order) => ONGOING.includes(o.status) && !unpaid(o);
+/** The customer can cancel before dispatch, but not an unpaid online order: there is nothing to cancel, and it would switch cash off for them. */
+export const canCancel = (o: Order) => CANCELLABLE.includes(o.status) && !unpaid(o);
 /** A cash-on-delivery order whose cash is still to be handed over. */
 export const cashDue = (o: Order) => o.method === 'cod' && o.payment === 'cod' && o.status !== 'cancelled';
 
@@ -29,8 +31,9 @@ const PAYMENT_LABEL: Record<Order['payment'], string> = {
   cod: 'Cash on delivery',
 };
 
-/** The payment line the customer sees, e.g. "Paid online", "Paid in cash" or "Cash on delivery · pay ₹349 on arrival". */
+/** The payment line the customer sees, e.g. "Paid online", "Paid in cash", "₹150 refunded" (part of the total) or "Cash on delivery · pay ₹349 on arrival". */
 export function paymentText(o: Order): string {
+  if (o.payment === 'refunded' && o.refund && o.refund.amount < o.total) return `${formatINR(o.refund.amount)} refunded`;
   if (o.method === 'cod' && o.payment === 'paid') return 'Paid in cash';
   if (o.method !== 'cod' || o.payment !== 'cod') return PAYMENT_LABEL[o.payment];
   return o.status === 'cancelled' ? 'Cash on delivery · nothing to pay' : `Cash on delivery · pay ${formatINR(o.total)} on arrival`;

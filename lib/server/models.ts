@@ -77,6 +77,7 @@ const OrderSchema = new Schema(
       default: undefined,
     },
     cancelledBy: { type: String, enum: ['customer', 'shop'] },
+    refundingAt: Date, // set while a refund is being sent, so two requests can't both send it
     paidAt: Date,
     dispatchedAt: Date,
     deliveredAt: Date,

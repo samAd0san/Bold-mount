@@ -33,13 +33,13 @@ function payBadge(o: Order): { label: string; tone: 'green' | 'amber' | 'red' | 
 
 const METHOD_NOTE: Record<Order['method'], string> = { online: 'Paid through the website', cod: 'Cash on delivery', whatsapp: 'Ordered on WhatsApp' };
 
-/** Small badge for where a refund stands; a finished refund shows its amount instead of the payment badge. */
+/** Small badge for where a refund stands; a finished refund shows its amount (and the total, when only part went back) instead of the payment badge. */
 function refundBadge(o: Order): { label: string; tone: 'gold' | 'red' | 'gray' } | null {
   const r = o.refund;
   if (!r) return null;
   if (r.status === 'requested') return { label: 'Refund requested', tone: 'gold' };
   if (r.status === 'failed') return { label: 'Refund failed', tone: 'red' };
-  if (r.status === 'refunded') return { label: `Refunded ${formatINR(r.amount)}`, tone: 'gray' };
+  if (r.status === 'refunded') return { label: `Refunded ${formatINR(r.amount)}${r.amount < o.total ? ` of ${formatINR(o.total)}` : ''}`, tone: 'gray' };
   return { label: 'Refund declined', tone: 'gray' };
 }
 
