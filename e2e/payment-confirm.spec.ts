@@ -18,6 +18,7 @@ const WHO = {
   rukhsar: person('Rukhsar Parveen', '96300 24818', '33 Aminabad Chowk, Near Tunday Kababi', 'Lucknow', '226018'),
   idrees: person('Idrees Qazi', '98110 42276', '19 Mehdipatnam Main Road, Near Rythu Bazar', 'Hyderabad', '500028'),
   sabiha: person('Sabiha Ansari', '98230 91547', '27 Kondhwa Road, Near Salunke Vihar', 'Pune', '411048'),
+  farida: person('Farida Begum', '98490 33172', '12 Old Malakpet Road, Near Race Course', 'Hyderabad', '500036'),
 };
 type Person = (typeof WHO)[keyof typeof WHO];
 
@@ -307,4 +308,29 @@ test('f. a payment that landed after the shop cancelled the order is found by th
   const refunds = (await (await fetch(`https://api.razorpay.com/v1/payments/${paymentId}/refunds`, { headers: { Authorization: `Basic ${auth}` } })).json()) as { items: { amount: number }[] };
   expect(refunds.items.map((r) => r.amount)).toEqual([29900]);
   await admin.context().close();
+});
+
+test('g. the page died before it heard back and the cart is still full: paying again for the same items is stopped once, then allowed', async ({ page, context }) => {
+  await payWithVerifyLost(page, context, WHO.farida);
+  const first = await savedOrder(WHO.farida);
+  await theCapturedPayment(first.razorpayOrderId);
+  await letNetworkBack(page);
+  await askAgain(WHO.farida);
+
+  // Same items back in the cart, as if the page had been killed before it could clear it.
+  await addToCart(page);
+  await page.goto('/cart');
+  await expect(payButton(page)).toBeVisible();
+  await fillCheckout(page, WHO.farida);
+  await payButton(page).click();
+  await expect(page.locator('main')).toContainText(`Your earlier payment went through: order ${first.number} is paid.`);
+  await expect(page.locator('iframe.razorpay-checkout-frame')).toHaveCount(0);
+  expect(await savedOrder(WHO.farida)).toMatchObject({ number: first.number, payment: 'paid' });
+
+  // Told once: a deliberate second purchase goes ahead to Razorpay.
+  await payButton(page).click();
+  await closeRazorpay(page);
+  const second = await savedOrder(WHO.farida);
+  expect(second.number).not.toBe(first.number);
+  expect(await razorpayPayments(first.razorpayOrderId)).toHaveLength(1);
 });

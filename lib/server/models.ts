@@ -80,6 +80,7 @@ const OrderSchema = new Schema(
     refundingAt: Date, // set while a refund is being sent, so two requests can't both send it
     paidAt: Date,
     paymentCheckedAt: Date, // last time Razorpay was asked about this unpaid online order (throttle; never sent to the browser)
+    paidLate: Boolean, // paid, but found by the backstop: the customer's checkout never said so (cleared once checkout warns them)
     dispatchedAt: Date,
     deliveredAt: Date,
     cancelledAt: Date,

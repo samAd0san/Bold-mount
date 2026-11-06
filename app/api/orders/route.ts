@@ -4,7 +4,7 @@ import { sessionUid } from '@/lib/server/auth-token';
 import { connectDb } from '@/lib/server/db';
 import { fail, handle, ok, readJson } from '@/lib/server/http';
 import { OrderModel, toOrder } from '@/lib/server/models';
-import { COD_OFF, codAllowed, nextOrderNumber, OrderBody, priceCart } from '@/lib/server/orders';
+import { COD_OFF, codAllowed, nextOrderNumber, OrderBody, priceCart, unseenPaidOrder } from '@/lib/server/orders';
 import { createRazorpayOrder, razorpayKeyId, razorpayReady } from '@/lib/server/razorpay';
 import { trackOrder } from '@/lib/server/track';
 
@@ -22,6 +22,9 @@ export const POST = handle(async (req: Request) => {
   if (body.method === 'cod' && !(await codAllowed(userId))) return fail(403, COD_OFF);
   const cart = await priceCart(body.items);
   if ('error' in cart) return fail(400, cart.error);
+  // A payment whose page never heard back (phone asleep in the UPI app) must not be paid for a second time.
+  const already = await unseenPaidOrder(userId, cart.items);
+  if (already) return fail(409, `Your earlier payment went through: order ${already.number} is paid. You’ll find it under Your orders.`);
 
   const _id = new Types.ObjectId();
   const number = await nextOrderNumber();

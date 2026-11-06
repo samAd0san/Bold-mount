@@ -147,10 +147,10 @@ export async function refundOrder(
 }
 
 /** The one place an online order becomes paid. Marked in one step and the status read from the saved order, so a cancel landing at the same moment is still refunded. */
-export async function confirmPayment(order: { _id: unknown }, razorpayPaymentId: string) {
+export async function confirmPayment(order: { _id: unknown }, razorpayPaymentId: string, late = false) {
   const paid = await OrderModel.findOneAndUpdate(
     { _id: order._id, method: 'online', payment: { $nin: ['paid', 'refunded'] } },
-    { $set: { payment: 'paid', razorpayPaymentId, paidAt: new Date() } },
+    { $set: { payment: 'paid', razorpayPaymentId, paidAt: new Date(), ...(late ? { paidLate: true } : {}) } },
     { returnDocument: 'after' },
   ).lean();
   if (!paid) return OrderModel.findById(order._id).lean(); // a twin request (or the refund) got there first
@@ -187,7 +187,7 @@ export async function reconcilePayments(filter: Record<string, unknown> = {}): P
     const results = await Promise.allSettled(
       due.map(async (o) => {
         const paymentId = await capturedPayment(o.razorpayOrderId!);
-        if (paymentId) await confirmPayment(o, paymentId);
+        if (paymentId) await confirmPayment(o, paymentId, true);
       }),
     );
     const failed = results.filter((r) => r.status === 'rejected');
@@ -195,4 +195,16 @@ export async function reconcilePayments(filter: Record<string, unknown> = {}): P
   } catch (e) {
     console.error('[reconcile] could not check payments:', (e as Error).message);
   }
+}
+
+const LATE_WARN_MS = 60 * 60_000;
+const cartKey = (items: { slug?: string | null; variant?: string | null; qty?: number | null }[]) => items.map((i) => `${i.slug}|${i.variant}|${i.qty}`).sort().join(',');
+
+/** A paid order for exactly these items that the customer's checkout never showed as paid (in the last hour); null if none. Clears the mark, so they are told only once. */
+export async function unseenPaidOrder(userId: string, items: OrderItem[]) {
+  await reconcilePayments({ userId });
+  const late = await OrderModel.find({ userId, paidLate: true, payment: 'paid', paidAt: { $gte: new Date(Date.now() - LATE_WARN_MS) } }, { number: 1, items: 1 }).lean();
+  const match = late.find((o) => cartKey(o.items ?? []) === cartKey(items));
+  if (match) await OrderModel.collection.updateOne({ _id: match._id }, { $unset: { paidLate: '' } });
+  return match ?? null;
 }
