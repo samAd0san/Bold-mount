@@ -150,6 +150,8 @@ test('phone: opening a product or category from a scrolled page starts at the to
 
   // Category links in the sticky bar do the same.
   await page.evaluate(() => window.scrollTo(0, 250));
+  // The site scrolls smoothly; tapping mid-glide leaves the old glide running on the new page.
+  await expect.poll(at).toBe(250);
   await tap('header a[href="/dates"]');
   await expect(page).toHaveURL(/\/dates$/);
   await expect.poll(at).toBe(0);

@@ -45,7 +45,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${albert.variable} ${amiri.variable}`}>
+    // data-scroll-behavior: Next switches off our CSS smooth scroll while changing pages, so its scroll can't glide past ScrollToTop.
+    <html lang="en" data-scroll-behavior="smooth" className={`${albert.variable} ${amiri.variable}`}>
       <body>
         <ScrollToTop />
         {children}
