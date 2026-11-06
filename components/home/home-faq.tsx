@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, Plus } from 'lucide-react';
-import { formatINR } from '@/lib/format';
+import { getDelivery } from '@/lib/catalog';
+import { deliveryWords, type DeliverySettings } from '@/lib/delivery';
 import { SITE } from '@/lib/site';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { buttonClass } from '@/components/ui/button-styles';
@@ -9,14 +10,14 @@ import { Container } from '@/components/ui/container';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Reveal } from '@/components/motion/reveal';
 
-const FAQS = [
+const faqs = (d: DeliverySettings) => [
   {
     q: 'How do I place an order?',
     a: 'Add what you like to the cart and check out. Pay online (UPI, cards, netbanking) or cash on delivery. An online order is placed once the payment goes through, a cash on delivery order straight away, and we confirm delivery with you.',
   },
   {
     q: 'How does delivery work?',
-    a: `We deliver to your door. Share your drop address or location at checkout and we confirm the time before dispatch. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders of ${formatINR(SITE.freeShippingAbove)} or more.`,
+    a: `We deliver to your door. Share your drop address or location at checkout and we confirm the time before dispatch. ${deliveryWords(d).sentence}`,
   },
   {
     q: 'How do I prepare Talbeenah?',
@@ -29,7 +30,8 @@ const FAQS = [
 ];
 
 /** Four common questions; native <details name> keeps one open at a time with no JavaScript. */
-export function HomeFaq() {
+export async function HomeFaq() {
+  const items = faqs(await getDelivery());
   return (
     <section className="border-t border-line py-16 md:py-24">
       <Container className="grid gap-10 md:grid-cols-[0.8fr_1.2fr] md:gap-16">
@@ -55,7 +57,7 @@ export function HomeFaq() {
 
         <Reveal delay={0.08}>
           <div className="border-t border-line">
-            {FAQS.map((f) => (
+            {items.map((f) => (
               <details key={f.q} name="home-faq" className="group border-b border-line">
                 <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 font-semibold text-ink transition-colors hover:text-navy md:text-lg [&::-webkit-details-marker]:hidden">
                   {f.q}

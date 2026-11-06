@@ -1,12 +1,10 @@
 import type { ComponentType } from 'react';
 import { HandHeart, Leaf, Lock, MapPin, PackageCheck, Truck } from 'lucide-react';
-import { formatINR } from '@/lib/format';
-import { SITE } from '@/lib/site';
 import { Container } from '@/components/ui/container';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Reveal } from '@/components/motion/reveal';
 
-// Only promises the brand already makes (lib/site.ts) — no numbers, ratings or certifications.
+// Only promises the brand already makes — no numbers, ratings or certifications.
 const FEATURES: { icon: ComponentType<{ size?: number; className?: string }>; title: string; text: string }[] = [
   { icon: Leaf, title: '100% natural', text: 'Nothing added, nothing hidden.' },
   { icon: MapPin, title: 'Sourced from blessed lands', text: 'Dates from Madinah, Jordan and beyond.' },
@@ -14,7 +12,7 @@ const FEATURES: { icon: ComponentType<{ size?: number; className?: string }>; ti
   {
     icon: Truck,
     title: 'Doorstep delivery',
-    text: `Free above ${formatINR(SITE.freeShippingAbove)}, right to your door.`,
+    text: 'Right to your door, with the charge shown before you pay.',
   },
   { icon: Lock, title: 'Pay securely online', text: 'UPI, cards or netbanking — no sign-up needed.' },
   { icon: HandHeart, title: 'Every order gives', text: 'A share of every order feeds a family.' },

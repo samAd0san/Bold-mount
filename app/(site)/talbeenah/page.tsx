@@ -13,8 +13,8 @@ import { ScriptureBand } from '@/components/shop/scripture-band';
 import { PosterGallery, type GalleryItem } from '@/components/shop/poster-gallery';
 import { MiniFaq, type FaqItem } from '@/components/shop/mini-faq';
 import { CAMPAIGN, STOCK } from '@/lib/media';
-import { getProduct } from '@/lib/catalog';
-import { formatINR } from '@/lib/format';
+import { getDelivery, getProduct } from '@/lib/catalog';
+import { deliveryWords, type DeliverySettings } from '@/lib/delivery';
 import { SITE } from '@/lib/site';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 
@@ -47,7 +47,7 @@ const GALLERY: GalleryItem[] = [
   { src: STOCK.porridgeBowl, alt: 'A warm bowl of Talbeenah topped with crushed nuts' },
 ];
 
-const FAQ: FaqItem[] = [
+const faq = (d: DeliverySettings): FaqItem[] => [
   {
     q: 'What does Talbeenah taste like?',
     a: 'Mild, nutty and creamy — like a smooth, warm barley porridge. Roasting gives it a gentle toasty aroma; honey and dates bring the sweetness.',
@@ -68,7 +68,7 @@ const FAQ: FaqItem[] = [
         <a href={whatsappGeneralLink()} target="_blank" rel="noopener noreferrer" className="font-semibold text-navy underline-offset-4 hover:underline">
           {SITE.phoneDisplay}
         </a>
-        . Delivery is {formatINR(SITE.deliveryFee)}, and free on orders above {formatINR(SITE.freeShippingAbove)}.
+        . {deliveryWords(d).sentence}
       </>
     ),
   },
@@ -77,7 +77,7 @@ const FAQ: FaqItem[] = [
 const inlineLink = 'font-semibold text-navy underline underline-offset-4 decoration-gold-deep/50 hover:decoration-navy';
 
 export default async function TalbeenahPage() {
-  const pack = await getProduct('premium-roasted-talbeenah');
+  const [pack, delivery] = await Promise.all([getProduct('premium-roasted-talbeenah'), getDelivery()]);
   return (
     <CategoryPage
       slug="talbeenah"
@@ -224,7 +224,7 @@ export default async function TalbeenahPage() {
               </a>
             </div>
             <Reveal className="md:col-span-8">
-              <MiniFaq items={FAQ} />
+              <MiniFaq items={faq(delivery)} />
             </Reveal>
           </div>
         </Container>

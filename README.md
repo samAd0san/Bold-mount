@@ -34,7 +34,7 @@ Node 20+ is recommended.
 | Serve & Give | `/khidmat-e-khalq` · `/zakat` (calculator + pledge) · `/volunteer` · `/giveaway` · `/umrah` (packages + booking) |
 | Info | `/about` · `/contact` · `/faq` · `/policies/shipping` (Delivery & Returns) · `/policies/privacy` · `/policies/terms` · `/credits` |
 | Account | `/account` (Google sign-in, "My orders") · `/category/[slug]` (categories added in the admin) |
-| Admin | `/admin` (dashboard) · `/admin/orders` · `/admin/products` · `/admin/categories` · `/admin/users` · `/admin/forms` · `/admin/settings` (change PIN) |
+| Admin | `/admin` (dashboard) · `/admin/orders` · `/admin/products` · `/admin/categories` · `/admin/users` · `/admin/forms` · `/admin/settings` (delivery charge, change PIN) |
 
 ## Where to change things
 
@@ -42,9 +42,9 @@ Node 20+ is recommended.
 |------------|------|
 | Products, prices, pack sizes, product photos, shop categories | **`/admin`** → Products / Categories (photos upload to Cloudinary). Prices are whole rupees; the seeded ones are **placeholders** |
 | The five "Serve & Give" sections in the header row, home tiles and footer | `lib/sections.ts` |
-| Delivery charge below the free-delivery threshold | `lib/site.ts` (`deliveryFee`, a placeholder ₹50) |
+| Delivery fee and "free delivery on bigger orders" | **`/admin`** → Settings → Delivery (one fee for every order; defaults ₹50 and free from ₹999). Wording lives in `deliveryWords` and the formula in `deliveryFor`, both in `lib/delivery.ts` |
 | Any image path | `lib/media.ts` (files live in `public/images/…`) |
-| WhatsApp number, email, free-delivery threshold, announcement bar | `lib/site.ts` |
+| WhatsApp number, email, announcement bar | `lib/site.ts` |
 | WhatsApp message wording | `lib/whatsapp.ts` |
 | Umrah Badal packages | `app/umrah/page.tsx` |
 | Colours, fonts, shared styles | `app/globals.css` (Tailwind v4 `@theme` tokens) |
@@ -56,7 +56,7 @@ Node 20+ is recommended.
 3. **Pay online:** the server re-prices the cart from the database, creates a Razorpay order, and marks it paid only after checking Razorpay's signature. **Or cash on delivery:** the order is saved straight away as "cash to collect". Anyone who has cancelled one of their own orders can't use cash on delivery any more (one rule, `codAllowed` in `lib/server/orders.ts`); they pay online.
 4. Every order appears in `/admin/orders`, where its status is set (New → Confirmed → Delivered / Cancelled). Marking a cash-on-delivery order Delivered records it as "Paid in cash"; "Mark cash received" does the same without changing the status. Refunds work the same for both: online ones go back through Razorpay, and for cash on delivery the shop pays it back by cash or UPI and presses Refund to record it (`refundOrder` in `lib/server/orders.ts`). Old orders sent on WhatsApp stay visible as history.
 
-Delivery is doorstep delivery by Bold Mount; free above the threshold in `lib/site.ts`, otherwise `deliveryFee`.
+Delivery is doorstep delivery by Bold Mount. The server charges the fee saved in Settings → Delivery (free from the saved order total, if set), and each order keeps the delivery it was charged.
 
 ## Backend
 
@@ -69,7 +69,7 @@ The API is Next.js route handlers in `app/api/*` (helpers in `lib/server/*`), de
 | `users` | Customers who signed in with Google |
 | `forms` | Contact / zakat / volunteer / giveaway / umrah submissions |
 | `visits` | Anonymous page views for the admin dashboard (bots skipped) |
-| `settings`, `counters`, `admin_attempts` | Admin PIN (hashed), order numbers, PIN lockout |
+| `settings`, `counters`, `admin_attempts` | Admin PIN (hashed) and the delivery rule, order numbers, PIN lockout |
 
 Environment variables are listed in `.env.example`. The same values are set in Vercel (Production + Preview; `APP_URL` is Production only). **Razorpay keys are test keys** — switch to live keys after Bold Mount's own Razorpay KYC.
 

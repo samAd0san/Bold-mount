@@ -4,6 +4,7 @@ import * as React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { useAdmin } from '@/components/admin/admin-gate';
 import { adminFetch } from '@/components/admin/api';
+import { DeliveryCard } from '@/components/admin/delivery-card';
 import { Button, Card, ErrorNote, Field, Input, PageHead } from '@/components/admin/ui';
 
 function PinInput({ value, onChange, label, hint }: { value: string; onChange: (v: string) => void; label: string; hint?: string }) {
@@ -59,6 +60,7 @@ export function Settings() {
   return (
     <div className="flex max-w-xl flex-col gap-5">
       <PageHead title="Settings" sub={`Your admin PIN is ${pinLength} digits.`} />
+      <DeliveryCard />
       <Card>
         <h2 className="text-[15px] font-semibold text-navy">Change PIN</h2>
         <p className="mt-0.5 mb-4 text-[13px] text-ink-soft">Use 4 to 8 digits. Changing it signs out other devices.</p>

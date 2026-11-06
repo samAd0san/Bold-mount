@@ -6,6 +6,7 @@ import { CategoriesProvider } from '@/components/layout/categories-context';
 import { ProductCard } from '@/components/product/product-card';
 import { ProductGallery } from '@/components/product/product-gallery';
 import { ProductInfo } from '@/components/product/product-info';
+import type { DeliverySettings } from '@/lib/delivery';
 import type { Category, Product } from '@/lib/types';
 
 /**
@@ -42,7 +43,7 @@ export function PreviewFrame({ testId, onLink, children }: { testId: string; onL
 }
 
 /** The product's shop tile and page, built from the real storefront parts, so everything works as in the shop: sizes, quantity, pictures, detail rows. */
-export function ProductPreview({ product, categories }: { product: Product; categories: Category[] }) {
+export function ProductPreview({ product, categories, delivery }: { product: Product; categories: Category[]; delivery: DeliverySettings }) {
   const category = categories.find((c) => c.slug === product.category);
   const pageRef = React.useRef<HTMLElement>(null);
   // Tapping the tile "opens" the product: the page preview below scrolls into view.
@@ -65,7 +66,7 @@ export function ProductPreview({ product, categories }: { product: Product; cate
           <p className="mb-2 text-xs font-semibold text-ink-soft">Its own page (as on a phone)</p>
           <div className="flex flex-col gap-6 rounded-2xl bg-cream p-4 ring-1 ring-line ring-inset">
             <ProductGallery images={product.images} />
-            <ProductInfo product={product} categoryName={category?.name} preview />
+            <ProductInfo product={product} categoryName={category?.name} delivery={delivery} preview />
           </div>
         </section>
       </PreviewFrame>

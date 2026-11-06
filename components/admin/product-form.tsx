@@ -8,6 +8,7 @@ import { adminFetch, useFetch } from '@/components/admin/api';
 import { ImagesEditor } from '@/components/admin/image-fields';
 import { ProductPreview } from '@/components/admin/product-preview';
 import { Button, btn, Card, CardTitle, Checkbox, ConfirmDelete, ErrorNote, Field, Input, Modal, PageHead, Select, Skeleton, Switch, Textarea, TipLabel } from '@/components/admin/ui';
+import type { DeliverySettings } from '@/lib/delivery';
 import { useLive } from '@/lib/live';
 import { PRODUCT_TAGS, type Category, type Product, type ProductImage, type ProductTag } from '@/lib/types';
 
@@ -107,11 +108,15 @@ function previewOf(d: Draft): Product {
 /** Loads what the form needs (categories, and the product when editing) and then shows it. */
 export function ProductEditor({ id }: { id?: string }) {
   const cats = useFetch<{ categories: Category[] }>('/api/admin/categories');
+  const delivery = useFetch<DeliverySettings>('/api/admin/delivery');
   const prod = useFetch<{ product: Product }>(id ? `/api/admin/products/${id}` : null);
-  // A new category added elsewhere shows up in the Category list; the product being edited is left alone.
-  useLive('catalog', cats.reload);
-  const error = cats.error ?? prod.error;
-  const ready = cats.data && (!id || prod.data);
+  // A new category (or a delivery change) made elsewhere shows up here; the product being edited is left alone.
+  useLive('catalog', () => {
+    cats.reload();
+    delivery.reload();
+  });
+  const error = cats.error ?? delivery.error ?? prod.error;
+  const ready = cats.data && delivery.data && (!id || prod.data);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5 xl:max-w-none">
@@ -126,6 +131,7 @@ export function ProductEditor({ id }: { id?: string }) {
           key={prod.data?.product.id ?? 'new'}
           id={id}
           categories={cats.data!.categories}
+          delivery={delivery.data!}
           initial={prod.data ? draftFrom(prod.data.product) : blank(cats.data!.categories[0]?.slug ?? '')}
         />
       )}
@@ -133,7 +139,7 @@ export function ProductEditor({ id }: { id?: string }) {
   );
 }
 
-function ProductForm({ id, categories, initial }: { id?: string; categories: Category[]; initial: Draft }) {
+function ProductForm({ id, categories, delivery, initial }: { id?: string; categories: Category[]; delivery: DeliverySettings; initial: Draft }) {
   const router = useRouter();
   const [d, setD] = React.useState<Draft>(initial);
   const [tried, setTried] = React.useState(false);
@@ -338,7 +344,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
               <h2 className="text-[15px] font-semibold text-navy">Preview</h2>
               <p className="text-xs text-ink-soft">How customers will see it. Updates as you type.</p>
             </div>
-            <ProductPreview product={preview} categories={categories} />
+            <ProductPreview product={preview} categories={categories} delivery={delivery} />
           </Card>
         </aside>
       </div>
@@ -352,7 +358,7 @@ function ProductForm({ id, categories, initial }: { id?: string; categories: Cat
       </div>
 
       <Modal open={previewing} onOpenChange={setPreviewing} title="Preview" description="How customers will see it. Close to keep editing.">
-        <ProductPreview product={preview} categories={categories} />
+        <ProductPreview product={preview} categories={categories} delivery={delivery} />
       </Modal>
       <ConfirmDelete open={deleting} onOpenChange={setDeleting} title="Delete this product?" description={`"${d.name}" will be removed from the shop for good. To just hide it, turn off "Show in the shop" instead.`} onConfirm={remove} />
     </form>

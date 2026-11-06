@@ -5,8 +5,9 @@ import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { Reveal } from '@/components/motion/reveal';
 import { FaqAccordion } from '@/components/info/faq-accordion';
-import { FAQ_GROUPS } from '@/components/info/faq-data';
+import { faqGroups } from '@/components/info/faq-data';
 import { pageMeta } from '@/components/info/page-meta';
+import { getDelivery } from '@/lib/catalog';
 import { STOCK } from '@/lib/media';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 
@@ -17,16 +18,17 @@ export const metadata = pageMeta({
   path: '/faq',
 });
 
-// FAQPage structured data lets search engines show these answers directly.
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: FAQ_GROUPS.flatMap((g) =>
-    g.items.map((i) => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })),
-  ),
-};
+export default async function FaqPage() {
+  const groups = faqGroups(await getDelivery());
+  // FAQPage structured data lets search engines show these answers directly.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: groups.flatMap((g) =>
+      g.items.map((i) => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })),
+    ),
+  };
 
-export default function FaqPage() {
   return (
     <>
       <PageHero
@@ -41,7 +43,7 @@ export default function FaqPage() {
       <section className="py-14 md:py-20">
         <Container className="max-w-3xl">
           <nav aria-label="FAQ topics" className="mb-12 flex flex-wrap gap-2 md:mb-16">
-            {FAQ_GROUPS.map((g) => (
+            {groups.map((g) => (
               <a
                 key={g.id}
                 href={`#${g.id}`}
@@ -51,7 +53,7 @@ export default function FaqPage() {
               </a>
             ))}
           </nav>
-          <FaqAccordion groups={FAQ_GROUPS} />
+          <FaqAccordion groups={groups} />
         </Container>
       </section>
 

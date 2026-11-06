@@ -1,6 +1,5 @@
 import { Check, ChevronDown, Lock, MapPin, PackageCheck, Truck } from 'lucide-react';
-import { formatINR } from '@/lib/format';
-import { SITE } from '@/lib/site';
+import { deliveryWords, type DeliverySettings } from '@/lib/delivery';
 import type { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ProductPurchase } from './product-purchase';
@@ -10,18 +9,19 @@ const ARABIC: Record<string, string> = { talbeenah: 'تلبينة', dates: 'تم
 const FOOD = new Set(['talbeenah', 'dates', 'honey', 'dry-fruits']);
 
 /** The product page's text column: labels, name, price and sizes, assurances, about and detail rows. Also drives the admin preview (`preview` = phone sizes, no page-level headings). */
-export function ProductInfo({ product, categoryName, preview = false }: { product: Product; categoryName?: string; preview?: boolean }) {
+export function ProductInfo({ product, categoryName, delivery, preview = false }: { product: Product; categoryName?: string; delivery: DeliverySettings; preview?: boolean }) {
   const Title = preview ? 'h3' : 'h1';
   const Sub = preview ? 'h4' : 'h2';
+  const words = deliveryWords(delivery);
   const details = [
     ...(product.details ?? []),
     {
       label: 'Delivery & payment',
-      value: `Pay online (UPI, cards, netbanking) or cash on delivery. Online payments are handled by Razorpay, so we never see or store your card details. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders above ${formatINR(SITE.freeShippingAbove)}. We deliver to your door and confirm the delivery time with you before we dispatch.`,
+      value: `Pay online (UPI, cards, netbanking) or cash on delivery. Online payments are handled by Razorpay, so we never see or store your card details. ${words.sentence} We deliver to your door and confirm the delivery time with you before we dispatch.`,
     },
   ];
   const assurances = [
-    { icon: Truck, label: `Free delivery above ${formatINR(SITE.freeShippingAbove)}` },
+    { icon: Truck, label: words.label },
     { icon: PackageCheck, label: FOOD.has(product.category) ? 'Freshly packed' : 'Carefully packed' },
     { icon: Lock, label: 'Secure checkout' },
   ];

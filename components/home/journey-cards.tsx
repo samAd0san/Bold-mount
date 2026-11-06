@@ -2,10 +2,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ArrowRight, Home, Lock, MapPin, Navigation } from 'lucide-react';
+import { getDelivery } from '@/lib/catalog';
+import { deliveryFor, deliveryWords, type DeliverySettings } from '@/lib/delivery';
 import { formatINR } from '@/lib/format';
 import { PRODUCT_IMG } from '@/lib/media';
-import { PAY_LINE, SITE } from '@/lib/site';
-import { deliveryFor } from '@/lib/shop';
+import { PAY_LINE } from '@/lib/site';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
 import { buttonClass } from '@/components/ui/button-styles';
@@ -44,10 +45,10 @@ function PackIllustration() {
 
 // Sample basket for the pay card: one 500 g Talbeenah plus the real delivery rule.
 const SAMPLE_SUBTOTAL = 449;
-const SAMPLE_TOTAL = SAMPLE_SUBTOTAL + deliveryFor(SAMPLE_SUBTOTAL);
 const PAY_METHODS = ['Pay online', 'Cash on delivery'];
 
-function PayIllustration() {
+function PayIllustration({ delivery }: { delivery: DeliverySettings }) {
+  const total = SAMPLE_SUBTOTAL + deliveryFor(SAMPLE_SUBTOTAL, delivery);
   return (
     <div className="w-44 overflow-hidden rounded-xl bg-pearl leading-tight shadow-card ring-1 ring-line">
       <div className="flex items-center justify-between border-b border-line px-2.5 py-2">
@@ -58,7 +59,7 @@ function PayIllustration() {
       </div>
       <div className="p-2.5">
         <p className="text-[9px] text-ink-soft">Order total</p>
-        <p className="text-base font-semibold tabular-nums text-navy">{formatINR(SAMPLE_TOTAL)}</p>
+        <p className="text-base font-semibold tabular-nums text-navy">{formatINR(total)}</p>
         <div className="mt-2 space-y-1">
           {PAY_METHODS.map((label, i) => (
             <span
@@ -76,7 +77,7 @@ function PayIllustration() {
           ))}
         </div>
         <span className="mt-2 block rounded-full bg-gold py-1.5 text-center text-[10px] font-semibold text-night">
-          Pay {formatINR(SAMPLE_TOTAL)}
+          Pay {formatINR(total)}
         </span>
       </div>
     </div>
@@ -103,7 +104,7 @@ function PinIllustration() {
   );
 }
 
-const STEPS: { title: string; text: string; art: ReactNode }[] = [
+const steps = (d: DeliverySettings): { title: string; text: string; art: ReactNode }[] => [
   {
     title: 'Pick your pack',
     text: 'Choose Talbeenah, dates or honey, then the pack size that suits your home.',
@@ -112,17 +113,18 @@ const STEPS: { title: string; text: string; art: ReactNode }[] = [
   {
     title: 'Pay your way',
     text: `${PAY_LINE}. Online payments are handled by Razorpay.`,
-    art: <PayIllustration />,
+    art: <PayIllustration delivery={d} />,
   },
   {
     title: 'Delivered to your door',
-    text: `We deliver to your door and confirm the time with you. Free above ${formatINR(SITE.freeShippingAbove)}, otherwise ${formatINR(SITE.deliveryFee)}.`,
+    text: `We deliver to your door and confirm the time with you. ${deliveryWords(d).sentence}`,
     art: <PinIllustration />,
   },
 ];
 
 /** "How ordering works": three numbered cards with small UI mock-ups, then shop (primary) or ask on WhatsApp. */
-export function JourneyCards() {
+export async function JourneyCards() {
+  const list = steps(await getDelivery());
   return (
     <section className="py-10 md:py-20">
       <Container>
@@ -138,7 +140,7 @@ export function JourneyCards() {
 
         {/* Phones: swipe row with the next card peeking; md+: the three-column grid. */}
         <ol className="no-scrollbar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pt-1 pb-3 md:mx-0 md:grid md:snap-none md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pt-0 md:pb-0">
-          {STEPS.map((s, i) => (
+          {list.map((s, i) => (
             <li key={s.title} className="relative flex w-[82vw] max-w-[340px] shrink-0 snap-start md:w-auto md:max-w-none md:shrink">
               {/* Off-screen cards never trigger the scroll-reveal, so on phones show them straight away. */}
               <Reveal
@@ -157,7 +159,7 @@ export function JourneyCards() {
                   <p className="mt-1.5 text-sm leading-relaxed text-ink-soft md:mt-2 md:text-base">{s.text}</p>
                 </div>
               </Reveal>
-              {i < STEPS.length - 1 && (
+              {i < list.length - 1 && (
                 <span
                   aria-hidden="true"
                   className="absolute -right-[30px] top-32 z-10 hidden h-9 w-9 items-center justify-center rounded-full bg-cream text-gold-ink ring-1 ring-gold-deep/50 md:flex"

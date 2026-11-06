@@ -1,9 +1,10 @@
 import 'server-only';
 import { z } from 'zod';
 import { db } from '@/lib/server/db';
+import { readDelivery } from '@/lib/server/delivery';
 import { CategoryModel, OrderModel, ProductModel } from '@/lib/server/models';
 import { capturedPayment, razorpayReady, refundPayment } from '@/lib/server/razorpay';
-import { deliveryFor } from '@/lib/shop';
+import { deliveryFor } from '@/lib/delivery';
 import { PAYMENT_CHECK_DAYS, type OrderItem, type OrderStatus } from '@/lib/types';
 
 // Indian mobile → "+91 98480 22338"; accepts spaces, dashes, +91, 91 or 0 in front.
@@ -57,15 +58,16 @@ export async function settleCash(order: { _id: unknown; method?: string | null; 
 
 export type PricedCart = { items: OrderItem[]; subtotal: number; delivery: number; total: number };
 
-/** Builds the order lines from the live catalog; prices, names and photos always come from the database, never the client. */
+/** Builds the order lines from the live catalog; prices, names, photos and the delivery charge always come from the database, never the client. */
 export async function priceCart(lines: { slug: string; variantId: string; qty: number }[]): Promise<PricedCart | { error: string }> {
   const wanted = new Map<string, number>(); // "slug|variantId" → qty (same line twice = one line)
   for (const l of lines) wanted.set(`${l.slug}|${l.variantId}`, (wanted.get(`${l.slug}|${l.variantId}`) ?? 0) + l.qty);
 
   const slugs = [...new Set(lines.map((l) => l.slug))];
-  const [products, categories] = await Promise.all([
+  const [products, categories, rule] = await Promise.all([
     ProductModel.find({ slug: { $in: slugs }, active: true }).lean(),
     CategoryModel.find({ active: true }, { slug: 1 }).lean(),
+    readDelivery(),
   ]);
   const live = new Set(categories.map((c) => c.slug));
   const bySlug = new Map(products.filter((p) => live.has(p.category)).map((p) => [p.slug, p]));
@@ -82,7 +84,7 @@ export async function priceCart(lines: { slug: string; variantId: string; qty: n
     items.push({ slug, name: product.name, variant: variant.label ?? variantId, price, qty, ...(image ? { image } : {}) });
   }
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-  const delivery = deliveryFor(subtotal);
+  const delivery = deliveryFor(subtotal, rule);
   return { items, subtotal, delivery, total: subtotal + delivery };
 }
 

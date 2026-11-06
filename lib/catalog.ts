@@ -1,5 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
+import type { DeliverySettings } from '@/lib/delivery';
 import type { Catalog, Category, Product } from '@/lib/types';
 
 /**
@@ -15,6 +16,18 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
   }
   const { catalogFromDb } = await import('@/lib/server/catalog');
   return catalogFromDb();
+});
+
+/** The delivery fee and free-delivery rule for server components, read the same way as the catalog (Render API when API_ORIGIN is set, else MongoDB). */
+export const getDelivery = cache(async (): Promise<DeliverySettings> => {
+  const origin = process.env.API_ORIGIN?.replace(/\/$/, '');
+  if (origin) {
+    const res = await fetch(`${origin}/api/delivery`, { next: { revalidate: 60, tags: ['delivery'] } });
+    if (!res.ok) throw new Error(`Delivery request failed (${res.status})`);
+    return res.json();
+  }
+  const { readDelivery } = await import('@/lib/server/delivery');
+  return readDelivery();
 });
 
 export const getCategories = async (): Promise<Category[]> => (await getCatalog()).categories;

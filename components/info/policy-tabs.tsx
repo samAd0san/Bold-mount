@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { POLICIES } from './policy-data';
+import { POLICY_LINKS } from './policy-data';
 
 // Pills on phones, a vertical list beside the text on large screens.
 export function PolicyTabs({ active }: { active: string }) {
   return (
     <nav aria-label="Policies" className="lg:sticky lg:top-28 lg:self-start">
       <ul className="flex flex-wrap gap-2 lg:flex-col">
-        {POLICIES.map((p) => {
+        {POLICY_LINKS.map((p) => {
           const current = p.slug === active;
           return (
             <li key={p.slug}>

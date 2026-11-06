@@ -7,8 +7,9 @@ import { ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart, cartCount, cartSubtotal } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
 import { formatINR } from '@/lib/format';
-import { PAY_WAYS, SITE } from '@/lib/site';
-import { deliveryFor } from '@/lib/shop';
+import { PAY_WAYS } from '@/lib/site';
+import { deliveryFor, freeDeliveryGap } from '@/lib/delivery';
+import { useDelivery } from '@/components/layout/delivery-context';
 import type { Order } from '@/lib/types';
 import { buttonClass } from '@/components/ui/button-styles';
 import { refreshOrders } from '@/components/auth/use-orders';
@@ -21,6 +22,7 @@ const CARD = 'rounded-2xl bg-pearl ring-1 ring-line ring-inset';
 /** Cart lines, order summary and the checkout form (cart lives in localStorage, so render after hydration). */
 export function CartView() {
   const hydrated = useHydrated();
+  const rule = useDelivery();
   const items = useCart((s) => s.items);
   const setQty = useCart((s) => s.setQty);
   const remove = useCart((s) => s.remove);
@@ -44,9 +46,9 @@ export function CartView() {
   const count = cartCount(items);
   const subtotal = cartSubtotal(items);
   const savings = items.reduce((s, i) => s + (i.compareAt && i.compareAt > i.price ? (i.compareAt - i.price) * i.qty : 0), 0);
-  const delivery = deliveryFor(subtotal);
+  const delivery = deliveryFor(subtotal, rule);
   const free = delivery === 0;
-  const progress = Math.min(100, (subtotal / SITE.freeShippingAbove) * 100);
+  const gap = freeDeliveryGap(subtotal, rule);
 
   return (
     // Explicit placement: summary sits between items and form on phones, in its own column on desktop.
@@ -98,25 +100,27 @@ export function CartView() {
       <aside aria-labelledby="summary-title" className={`p-5 md:p-6 lg:sticky lg:top-36 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start ${CARD}`}>
         <h2 id="summary-title" className="text-lg text-ink">Order summary</h2>
 
-        <div className="mt-4 rounded-xl bg-cream p-4 text-sm">
-          {free ? (
-            <p className="font-medium text-whatsapp-ink">You’ve unlocked free delivery</p>
-          ) : (
-            <p className="text-ink-soft">
-              Add <span className="font-semibold text-ink">{formatINR(SITE.freeShippingAbove - subtotal)}</span> more for free delivery
-            </p>
-          )}
-          <div
-            role="progressbar"
-            aria-label="Progress to free delivery"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progress)}
-            className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-sand"
-          >
-            <div className="h-full rounded-full bg-gold transition-all duration-500 ease-expo" style={{ width: `${progress}%` }} />
+        {gap && (
+          <div className="mt-4 rounded-xl bg-cream p-4 text-sm">
+            {free ? (
+              <p className="font-medium text-whatsapp-ink">You’ve unlocked free delivery</p>
+            ) : (
+              <p className="text-ink-soft">
+                Add <span className="font-semibold text-ink">{formatINR(gap.left)}</span> more for free delivery
+              </p>
+            )}
+            <div
+              role="progressbar"
+              aria-label="Progress to free delivery"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(gap.pct)}
+              className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-sand"
+            >
+              <div className="h-full rounded-full bg-gold transition-all duration-500 ease-expo" style={{ width: `${gap.pct}%` }} />
+            </div>
           </div>
-        </div>
+        )}
 
         <dl className="mt-5 space-y-3 text-sm">
           <div className="flex justify-between gap-4">

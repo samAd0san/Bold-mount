@@ -7,8 +7,9 @@ import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useCart, cartSubtotal } from '@/store/cart';
 import { useHydrated } from '@/lib/use-hydrated';
 import { formatINR } from '@/lib/format';
-import { PAY_LINE, SITE } from '@/lib/site';
-import { deliveryFor } from '@/lib/shop';
+import { PAY_LINE } from '@/lib/site';
+import { deliveryFor, freeDeliveryGap } from '@/lib/delivery';
+import { useDelivery } from '@/components/layout/delivery-context';
 import { buttonClass } from '@/components/ui/button-styles';
 import { cn } from '@/lib/utils';
 
@@ -17,9 +18,10 @@ export function CartDrawer() {
   const { items: stored, open, setOpen, setQty, remove } = useCart();
   // The saved cart isn't known on the server, so show it empty until the page has hydrated.
   const items = hydrated ? stored : [];
+  const rule = useDelivery();
   const subtotal = cartSubtotal(items);
-  const delivery = deliveryFor(subtotal);
-  const toFree = Math.max(0, SITE.freeShippingAbove - subtotal);
+  const delivery = deliveryFor(subtotal, rule);
+  const gap = freeDeliveryGap(subtotal, rule);
   const show = hydrated && open;
 
   useEffect(() => {
@@ -68,18 +70,20 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
-            <div className="border-b border-line bg-cream px-5 py-3 text-sm">
-              {toFree > 0 ? (
-                <p className="text-ink-soft">
-                  Add <span className="font-semibold text-ink">{formatINR(toFree)}</span> more for free delivery
-                </p>
-              ) : (
-                <p className="font-medium text-whatsapp-ink">You’ve unlocked free delivery</p>
-              )}
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sand">
-                <div className="h-full rounded-full bg-gold transition-all duration-500" style={{ width: `${Math.min(100, (subtotal / SITE.freeShippingAbove) * 100)}%` }} />
+            {gap && (
+              <div className="border-b border-line bg-cream px-5 py-3 text-sm">
+                {gap.left > 0 ? (
+                  <p className="text-ink-soft">
+                    Add <span className="font-semibold text-ink">{formatINR(gap.left)}</span> more for free delivery
+                  </p>
+                ) : (
+                  <p className="font-medium text-whatsapp-ink">You’ve unlocked free delivery</p>
+                )}
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sand">
+                  <div className="h-full rounded-full bg-gold transition-all duration-500" style={{ width: `${gap.pct}%` }} />
+                </div>
               </div>
-            </div>
+            )}
 
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
               {items.map((item) => (

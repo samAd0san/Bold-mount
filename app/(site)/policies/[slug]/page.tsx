@@ -6,27 +6,28 @@ import { Container } from '@/components/ui/container';
 import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
 import { PolicyTabs } from '@/components/info/policy-tabs';
-import { POLICIES, POLICY_UPDATED, getPolicy } from '@/components/info/policy-data';
+import { POLICY_SLUGS, POLICY_UPDATED, getPolicy } from '@/components/info/policy-data';
 import { pageMeta } from '@/components/info/page-meta';
+import { getDelivery } from '@/lib/catalog';
 import { whatsappGeneralLink } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
 
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return POLICIES.map((p) => ({ slug: p.slug }));
+  return POLICY_SLUGS.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const policy = getPolicy(slug);
+  const policy = getPolicy(slug, await getDelivery());
   if (!policy) return {};
   return pageMeta({ title: policy.title, description: policy.description, path: `/policies/${policy.slug}` });
 }
 
 export default async function PolicyPage({ params }: Props) {
   const { slug } = await params;
-  const policy = getPolicy(slug);
+  const policy = getPolicy(slug, await getDelivery());
   if (!policy) notFound();
 
   return (

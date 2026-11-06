@@ -1,5 +1,5 @@
 import 'server-only';
-import { POLICIES } from '@/components/info/policy-data';
+import { POLICY_LINKS } from '@/components/info/policy-data';
 import { SERVE_SECTIONS } from '@/lib/sections';
 import { connectDb } from '@/lib/server/db';
 import { CategoryModel, ProductModel } from '@/lib/server/models';
@@ -33,7 +33,7 @@ const fixedName = (path: string) =>
   FIXED[path] ??
   (path.startsWith('/orders/') ? FIXED['/orders/[id]'] : undefined) ??
   SERVE_SECTIONS.find((s) => s.href === path)?.title ??
-  POLICIES.find((p) => path === `/policies/${p.slug}`)?.title;
+  POLICY_LINKS.find((p) => path === `/policies/${p.slug}`)?.title;
 
 /** Product names by slug (a removed product falls back to its slug, spelled out). */
 export async function productNames(slugs: string[]): Promise<Map<string, string>> {

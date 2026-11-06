@@ -1,4 +1,4 @@
-import { formatINR } from '@/lib/format';
+import { DEFAULT_DELIVERY, deliveryWords, type DeliverySettings } from '@/lib/delivery';
 import { SITE } from '@/lib/site';
 
 export interface PolicyBlock {
@@ -19,15 +19,13 @@ export interface Policy {
 
 export const POLICY_UPDATED = 'November 2026';
 
-const FREE = formatINR(SITE.freeShippingAbove);
-
 // Short, plain-English drafts: the owner should review them before relying on them.
-export const POLICIES: Policy[] = [
+export const policies = (d: DeliverySettings): Policy[] => [
   {
     slug: 'shipping',
     title: 'Delivery & Returns',
     intro: 'How delivery works, and what to do if something is not right with your order.',
-    description: `Bold Mount delivers to your door ourselves. Pay online (UPI, cards, netbanking) or cash on delivery, and share your drop address or location; delivery time is confirmed before dispatch. Delivery is ${formatINR(SITE.deliveryFee)}, and free on orders of ${FREE} or more.`,
+    description: `Bold Mount delivers to your door ourselves. Pay online (UPI, cards, netbanking) or cash on delivery, and share your drop address or location; delivery time is confirmed before dispatch. ${deliveryWords(d).sentence}`,
     blocks: [
       {
         heading: 'Delivery to your door',
@@ -35,7 +33,7 @@ export const POLICIES: Policy[] = [
         list: [
           'Share your drop address at checkout, or tap “Use my current location”.',
           'We confirm the delivery time with you before we dispatch your order.',
-          `Delivery is ${formatINR(SITE.deliveryFee)} per order, and free on orders of ${FREE} or more.`,
+          deliveryWords(d).sentence,
         ],
       },
       {
@@ -237,8 +235,10 @@ export const POLICIES: Policy[] = [
   },
 ];
 
-export const POLICY_SLUGS = POLICIES.map((p) => p.slug);
+// Slugs and titles don't depend on the delivery settings, so the defaults are enough for tabs, sitemap and page names.
+export const POLICY_LINKS = policies(DEFAULT_DELIVERY).map(({ slug, title }) => ({ slug, title }));
+export const POLICY_SLUGS = POLICY_LINKS.map((p) => p.slug);
 
-export function getPolicy(slug: string): Policy | undefined {
-  return POLICIES.find((p) => p.slug === slug);
+export function getPolicy(slug: string, d: DeliverySettings): Policy | undefined {
+  return policies(d).find((p) => p.slug === slug);
 }

@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { addToCart, adminLogin, api, TALBEENAH } from './helpers';
-import { FAQ_GROUPS } from '../components/info/faq-data';
-import { POLICIES } from '../components/info/policy-data';
+import { faqGroups } from '../components/info/faq-data';
+import { policies } from '../components/info/policy-data';
+import { DEFAULT_DELIVERY } from '../lib/delivery';
 
 test('home lists the shop categories from the database', async ({ page }) => {
   const res = await page.goto('/');
@@ -45,7 +46,7 @@ test('no page tells customers to order or pay on WhatsApp', async ({ page }) => 
     expect(orderingOnWhatsApp(text), path).toEqual([]);
   }
   // Collapsed FAQ answers and policy text too, straight from where the words are written.
-  expect(orderingOnWhatsApp(JSON.stringify([FAQ_GROUPS, POLICIES]))).toEqual([]);
+  expect(orderingOnWhatsApp(JSON.stringify([faqGroups(DEFAULT_DELIVERY), policies(DEFAULT_DELIVERY)]))).toEqual([]);
   // Every page that explains how to pay says the same two ways.
   for (const path of ['/', '/shop', '/cart', '/policies/shipping']) {
     await page.goto(path);

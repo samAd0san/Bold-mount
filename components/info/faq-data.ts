@@ -1,5 +1,4 @@
-import { formatINR } from '@/lib/format';
-import { SITE } from '@/lib/site';
+import { deliveryWords, type DeliverySettings } from '@/lib/delivery';
 
 export interface FaqItem {
   q: string;
@@ -13,10 +12,8 @@ export interface FaqGroup {
   items: FaqItem[];
 }
 
-const FREE = formatINR(SITE.freeShippingAbove);
-
 // Answers stay in step with the site: two ways to pay (online or cash on delivery); delivery time is confirmed with each customer.
-export const FAQ_GROUPS: FaqGroup[] = [
+export const faqGroups = (d: DeliverySettings): FaqGroup[] => [
   {
     id: 'orders',
     title: 'Orders & delivery',
@@ -41,7 +38,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'Is delivery free?',
-        a: `Delivery is ${formatINR(SITE.deliveryFee)} per order, and free on orders of ${FREE} or more. The charge is shown in your cart before you pay.`,
+        a: `${deliveryWords(d).sentence}${d.fee ? ' The charge is shown in your cart before you pay.' : ''}`,
       },
       {
         q: 'How do I pay?',

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
-import { getCategory, getProduct, getProducts, relatedProducts } from '@/lib/catalog';
+import { getCategory, getDelivery, getProduct, getProducts, relatedProducts } from '@/lib/catalog';
 import { categoryHref } from '@/lib/shop';
 import { SITE } from '@/lib/site';
 import { Container } from '@/components/ui/container';
@@ -49,6 +49,7 @@ export default async function ProductPage({ params }: Props) {
 
   const category = await getCategory(product.category);
   const related = await relatedProducts(product);
+  const delivery = await getDelivery();
   const prices = product.variants.map((v) => v.price);
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -90,7 +91,7 @@ export default async function ProductPage({ params }: Props) {
             <ProductGallery images={product.images} />
           </div>
 
-          <ProductInfo product={product} categoryName={category?.name} />
+          <ProductInfo product={product} categoryName={category?.name} delivery={delivery} />
         </div>
       </Container>
 

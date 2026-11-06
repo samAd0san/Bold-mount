@@ -6,10 +6,11 @@ import { AlertCircle, Banknote, Loader2, Lock } from 'lucide-react';
 import { cartSubtotal, type CartItem } from '@/store/cart';
 import { postJson } from '@/lib/client-api';
 import { formatINR } from '@/lib/format';
-import { deliveryFor } from '@/lib/shop';
+import { deliveryFor } from '@/lib/delivery';
 import type { Order, OrderCustomer } from '@/lib/types';
 import { buttonClass } from '@/components/ui/button-styles';
 import { GoogleMark } from '@/components/auth/google-button';
+import { useDelivery } from '@/components/layout/delivery-context';
 import { signInHref, signOut, useAccount } from '@/components/auth/use-account';
 import { cn } from '@/lib/utils';
 import { LocationShare, mapsUrl, type Coords } from './location-share';
@@ -118,6 +119,7 @@ function PayOption({ checked, disabled, onSelect, title, text }: { checked: bool
 /** Delivery details → sign in → choose to pay online with Razorpay or cash on delivery; both orders are saved to the customer's account. */
 export function CheckoutForm({ items, onPlaced }: { items: CartItem[]; onPlaced: (order: Order) => void }) {
   const { ready, user, google } = useAccount();
+  const rule = useDelivery();
   // This form only mounts after hydration (see CartView), so reading sessionStorage here is safe.
   const [values, setValues] = useState<Partial<Record<Key, string>>>(() => readDraft()?.values ?? {});
   const [errors, setErrors] = useState<Partial<Record<Key, string>>>({});
@@ -152,7 +154,7 @@ export function CheckoutForm({ items, onPlaced }: { items: CartItem[]; onPlaced:
   }, [userId]);
 
   const subtotal = cartSubtotal(items);
-  const fee = deliveryFor(subtotal);
+  const fee = deliveryFor(subtotal, rule);
   const total = subtotal + fee;
   const codOff = cod.allowed === false;
   const method: Method = codOff ? 'online' : picked;
