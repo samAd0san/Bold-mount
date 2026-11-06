@@ -153,7 +153,7 @@ export const POLICIES: Policy[] = [
       {
         heading: 'Your cart',
         paragraphs: [
-          'Your cart is stored in your own browser, on your device. It is not sent to us until you check out and place your order, paying online or choosing cash on delivery. Clearing your browser data removes it.',
+          'Your cart is stored in your own browser, on your device. The full cart is not sent to us until you place your order, paying online or choosing cash on delivery; we only note which product was added (see Visits to this website). Clearing your browser data removes it.',
         ],
       },
       {
