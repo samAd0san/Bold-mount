@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { formatINR } from '@/lib/format';
-import { canCancel, canRequestRefund, cashDue, formatDate, refundText } from '@/lib/order-view';
+import { canCancel, canRequestRefund, cashDue, confirming, formatDate, refundText } from '@/lib/order-view';
 import { whatsappLink } from '@/lib/whatsapp';
 import { buttonClass } from '@/components/ui/button-styles';
 import { WhatsAppGlyph } from '@/components/ui/whatsapp-glyph';
@@ -112,6 +112,11 @@ export function TrackOrderView({ id }: { id: string }) {
         <p className="mt-3">
           <PaymentPill order={order} />
         </p>
+        {confirming(order) && (
+          <p className="mt-3 text-sm leading-relaxed text-ink">
+            We’re confirming this payment with Razorpay. This page updates by itself. If you paid and it still says pending after a few minutes, message us with order {order.number}.
+          </p>
+        )}
         {cashDue(order) && <p className="mt-3 text-sm leading-relaxed text-ink">Please keep {formatINR(order.total)} ready in cash. You pay it when your order arrives.</p>}
         {order.refund && <p className="mt-3 rounded-xl bg-cream px-4 py-3 text-sm leading-relaxed text-ink">{refundText(order.refund)}</p>}
         {(cancellable || refundable) && (

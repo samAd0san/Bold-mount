@@ -81,6 +81,8 @@ export const ORDER_STATUSES: OrderStatus[] = ['new', 'confirmed', 'dispatched', 
 export const CANCELLABLE: OrderStatus[] = ['new', 'confirmed'];
 /** Days after delivery the customer can still ask for a refund. */
 export const REFUND_REQUEST_DAYS = 7;
+/** Days the shop keeps asking Razorpay about an online order that isn't marked paid yet. */
+export const PAYMENT_CHECK_DAYS = 3;
 export const REFUND_REASONS = ['Damaged or leaking', 'Wrong item', 'Item missing', 'Expired or quality issue', 'Size or fit (modest wear)', 'Other'] as const;
 
 /** requested = customer asked, waiting for the shop; refunded = money sent back via Razorpay; failed = Razorpay refused, retry from admin. */

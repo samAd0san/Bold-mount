@@ -81,6 +81,19 @@ const readDraft = (): Draft | null => {
   }
 };
 
+const VERIFY_RETRY_WAITS = [1000, 3000];
+
+// Razorpay has already taken the money, so one dropped request must not lose it: retry a network error or 5xx after 1s, then 3s (never a 400, a real refusal).
+async function verifyPayment(body: object) {
+  let res = await postJson<{ order: Order }>('/api/orders/verify', body);
+  for (const wait of VERIFY_RETRY_WAITS) {
+    if (res.ok || (res.status > 0 && res.status < 500)) break;
+    await new Promise((resolve) => setTimeout(resolve, wait));
+    res = await postJson<{ order: Order }>('/api/orders/verify', body);
+  }
+  return res;
+}
+
 const FINE_LINK = 'font-semibold text-navy underline underline-offset-4';
 
 /** One choice in "How would you like to pay?"; a disabled one shows its reason instead of the usual text. */
@@ -256,18 +269,14 @@ export function CheckoutForm({ items, onPlaced }: { items: CartItem[]; onPlaced:
       theme: { color: '#183c60' },
       handler: async (resp: RazorpayResponse) => {
         finished = true;
-        const verified = await postJson<{ order: Order }>('/api/orders/verify', {
+        const verified = await verifyPayment({
           orderId: order.id,
           razorpayOrderId: resp.razorpay_order_id,
           razorpayPaymentId: resp.razorpay_payment_id,
           razorpaySignature: resp.razorpay_signature,
         });
-        if (verified.ok) {
-          onPlaced(verified.data.order);
-          return;
-        }
-        setPaying(false);
-        setProblem(`Your payment went through, but we couldn’t confirm it here. Please message us on WhatsApp with order ${order.number} and we’ll sort it out.`);
+        // If we still couldn't confirm, the money is taken: show the order as placed and "confirming" (the server re-checks Razorpay), never a live Pay button.
+        onPlaced(verified.ok ? verified.data.order : order);
       },
       modal: {
         ondismiss: () => {

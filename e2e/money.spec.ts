@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
 import mongoose from 'mongoose';
 import { expect, test, type Browser, type BrowserContext, type Locator, type Page } from '@playwright/test';
-import { addToCart, adminLogin, api, fillCheckout, payWithTestBank, signInAs, testDb } from './helpers';
+import { addToCart, adminLogin, api, closeRazorpay, fillCheckout, payWithTestBank, signInAs, testDb } from './helpers';
 import { cashOrder, emailOf, payCash, payOnlineChoice, placeOrder } from './place-order';
 import { formatINR } from '../lib/format';
 import type { Order } from '../lib/types';
@@ -317,15 +317,6 @@ test.describe.serial('online payment, then dispatched and delivered', () => {
 });
 
 const localCart = (page: Page) => page.evaluate(() => localStorage.getItem('boldmount-cart'));
-
-/** Closes Razorpay's window the way a customer does: the X, then "Yes, exit". */
-async function closeRazorpay(page: Page) {
-  const frame = page.frameLocator('iframe.razorpay-checkout-frame');
-  await frame.locator('[data-testid=checkout-close]').waitFor({ timeout: 30_000 });
-  await page.waitForTimeout(1000);
-  await frame.locator('[data-testid=checkout-close]').click();
-  await frame.locator('[data-testid=confirm-positive]').click();
-}
 
 /** After a payment that didn't go through, the checkout page says so, keeps the cart and lets the customer try again. */
 async function expectCartKept(page: Page, notice: RegExp) {

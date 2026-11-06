@@ -2,9 +2,9 @@ import 'server-only';
 import { z } from 'zod';
 import { db } from '@/lib/server/db';
 import { CategoryModel, OrderModel, ProductModel } from '@/lib/server/models';
-import { refundPayment } from '@/lib/server/razorpay';
+import { capturedPayment, razorpayReady, refundPayment } from '@/lib/server/razorpay';
 import { deliveryFor } from '@/lib/shop';
-import type { OrderItem, OrderStatus } from '@/lib/types';
+import { PAYMENT_CHECK_DAYS, type OrderItem, type OrderStatus } from '@/lib/types';
 
 // Indian mobile → "+91 98480 22338"; accepts spaces, dashes, +91, 91 or 0 in front.
 function cleanMobile(raw: string): string | null {
@@ -144,4 +144,55 @@ export async function refundOrder(
     throw e;
   });
   return { doc, error: null, refused: false };
+}
+
+/** The one place an online order becomes paid. Marked in one step and the status read from the saved order, so a cancel landing at the same moment is still refunded. */
+export async function confirmPayment(order: { _id: unknown }, razorpayPaymentId: string) {
+  const paid = await OrderModel.findOneAndUpdate(
+    { _id: order._id, method: 'online', payment: { $nin: ['paid', 'refunded'] } },
+    { $set: { payment: 'paid', razorpayPaymentId, paidAt: new Date() } },
+    { returnDocument: 'after' },
+  ).lean();
+  if (!paid) return OrderModel.findById(order._id).lean(); // a twin request (or the refund) got there first
+  // Paid after it was cancelled (e.g. in another tab): send the money straight back.
+  if (paid.status === 'cancelled') {
+    const { doc } = await refundOrder(paid, paid.total ?? 0, { reason: 'Paid after the order was cancelled', requestedAt: new Date() });
+    if (doc) return doc;
+  }
+  return paid;
+}
+
+const CHECK_GAP_MS = 60_000;
+const CHECK_MAX = 10;
+
+/** Backstop for a payment whose confirmation never reached us: asks Razorpay about recent unpaid online orders matching `filter` and confirms the captured ones. Never throws. */
+export async function reconcilePayments(filter: Record<string, unknown> = {}): Promise<void> {
+  if (!razorpayReady()) return;
+  try {
+    const now = Date.now();
+    const due = await OrderModel.find(
+      {
+        ...filter,
+        method: 'online',
+        payment: { $in: ['pending', 'failed'] },
+        razorpayOrderId: { $nin: [null, ''] },
+        createdAt: { $gte: new Date(now - PAYMENT_CHECK_DAYS * 86_400_000) },
+        paymentCheckedAt: { $not: { $gt: new Date(now - CHECK_GAP_MS) } }, // never checked, or not in the last minute
+      },
+      { razorpayOrderId: 1 },
+    ).sort({ createdAt: -1 }).limit(CHECK_MAX).lean();
+    if (!due.length) return;
+    // Stamped before asking, so a slow Razorpay isn't hit by every page load; the raw driver keeps a stamp from sending a live "order changed" event.
+    await OrderModel.collection.updateMany({ _id: { $in: due.map((o) => o._id) } }, { $set: { paymentCheckedAt: new Date(now) } });
+    const results = await Promise.allSettled(
+      due.map(async (o) => {
+        const paymentId = await capturedPayment(o.razorpayOrderId!);
+        if (paymentId) await confirmPayment(o, paymentId);
+      }),
+    );
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length) console.error(`[reconcile] ${failed.length} of ${due.length} payment checks failed:`, (failed[0].reason as Error)?.message ?? failed[0].reason);
+  } catch (e) {
+    console.error('[reconcile] could not check payments:', (e as Error).message);
+  }
 }

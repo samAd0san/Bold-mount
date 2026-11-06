@@ -85,6 +85,15 @@ export async function payWithTestBank(page: Page, outcome: 'Success' | 'Failure'
   await bank.getByRole('button', { name: new RegExp(`^${outcome}`, 'i') }).click();
 }
 
+/** Closes Razorpay's window the way a customer does: the X, then "Yes, exit". */
+export async function closeRazorpay(page: Page) {
+  const frame = page.frameLocator('iframe.razorpay-checkout-frame');
+  await frame.locator('[data-testid=checkout-close]').waitFor({ timeout: 30_000 });
+  await page.waitForTimeout(1000);
+  await frame.locator('[data-testid=checkout-close]').click();
+  await frame.locator('[data-testid=confirm-positive]').click();
+}
+
 /** True for every element that sticks out past the right or left edge of the screen (ignores things inside scrollers/clippers). */
 export async function overflowing(page: Page) {
   return page.evaluate(() => {

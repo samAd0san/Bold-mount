@@ -1,11 +1,14 @@
 // What the customer sees for an order: wording, dates and the rules for which actions to offer.
 import { formatINR } from './format';
-import { CANCELLABLE, REFUND_REQUEST_DAYS, type Order, type OrderRefund, type OrderStatus } from './types';
+import { CANCELLABLE, PAYMENT_CHECK_DAYS, REFUND_REQUEST_DAYS, type Order, type OrderRefund, type OrderStatus } from './types';
 
 /** Orders still on their way to the customer. */
 export const ONGOING: OrderStatus[] = ['new', 'confirmed', 'dispatched'];
 /** An online order whose payment never went through: nothing is on its way. */
 export const unpaid = (o: Pick<Order, 'method' | 'payment'>) => o.method === 'online' && (o.payment === 'pending' || o.payment === 'failed');
+/** An online order Razorpay hasn't confirmed to us yet while the shop is still checking (it may well be paid): "Confirming", not "failed". */
+export const confirming = (o: Pick<Order, 'method' | 'payment' | 'createdAt'>) =>
+  o.method === 'online' && o.payment === 'pending' && Date.now() - new Date(o.createdAt).getTime() < PAYMENT_CHECK_DAYS * 86_400_000;
 export const isOngoing = (o: Order) => ONGOING.includes(o.status) && !unpaid(o);
 /** The customer can cancel before dispatch, but not an unpaid online order: there is nothing to cancel, and it would switch cash off for them. */
 export const canCancel = (o: Order) => CANCELLABLE.includes(o.status) && !unpaid(o);
@@ -17,6 +20,7 @@ const STATUS_LABEL: Record<OrderStatus, string> = { new: 'Placed', confirmed: 'C
 
 /** "Placed", "Confirmed", "Dispatched", "Delivered", "Cancelled by you" or "Cancelled by the shop". */
 export function statusText(o: Order): string {
+  if (o.status !== 'cancelled' && confirming(o)) return 'Confirming your payment';
   if (o.status !== 'cancelled' && unpaid(o)) return 'Payment not completed';
   if (o.status !== 'cancelled') return STATUS_LABEL[o.status];
   return o.cancelledBy === 'customer' ? 'Cancelled by you' : o.cancelledBy === 'shop' ? 'Cancelled by the shop' : 'Cancelled';
