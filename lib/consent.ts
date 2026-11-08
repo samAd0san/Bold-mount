@@ -1,5 +1,5 @@
 export const CONSENT_COOKIE = 'bm_consent';
-export const CONSENT_MAX_AGE = 60 * 60 * 24 * 365;
+export const CONSENT_MAX_AGE = 60 * 60 * 24 * 7;
 export type Consent = 'yes' | 'no';
 
 const PATTERN = new RegExp(`(?:^|;\\s*)${CONSENT_COOKIE}=(yes|no)\\s*(?:;|$)`);

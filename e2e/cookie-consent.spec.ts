@@ -4,7 +4,7 @@ import { adminLogin, api, overflowing, signInAs, testDb } from './helpers';
 // A real-looking user-agent: the stats ignore Playwright's default "HeadlessChrome" as a bot.
 const DESKTOP = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
-const NOTE = 'We use a small cookie to count visits and improve the shop.';
+const NOTE = 'Accept cookies?';
 const COUNTED = 'Only visitors who pressed OK on the cookie notice are counted.';
 
 const notice = (page: Page) => page.getByRole('region', { name: 'Cookie notice' });
@@ -59,7 +59,7 @@ test.describe.serial('cookie notice', () => {
     await context.close();
   });
 
-  test('after OK the visit is recorded, with where the visitor came from, and the choice lasts a year', async ({ browser }) => {
+  test('after OK the visit is recorded, with where the visitor came from, and the choice lasts a week', async ({ browser }) => {
     const { context, page } = await visitor(browser);
     await page.goto('/?utm_source=whatsapp&utm_campaign=eid-sale', { referer: 'https://l.wl.co/' });
     await expect(notice(page)).toBeVisible();
@@ -72,8 +72,8 @@ test.describe.serial('cookie notice', () => {
     const consent = await cookie(context, 'bm_consent');
     expect(consent?.value).toBe('yes');
     const days = ((consent?.expires ?? 0) * 1000 - Date.now()) / 86_400_000;
-    expect(days).toBeGreaterThan(364);
-    expect(days).toBeLessThan(366);
+    expect(days).toBeGreaterThan(6);
+    expect(days).toBeLessThan(8);
     const vid = (await cookie(context, 'bm_vid'))?.value;
     expect(vid).toBeTruthy();
 
@@ -116,14 +116,15 @@ test.describe.serial('cookie notice', () => {
     await context.close();
   });
 
-  test('"Change my choice" in the privacy policy reopens the notice, in both directions', async ({ browser }) => {
+  test('the notice is only a question: no link, and after OK the policy has no "Change my choice" button', async ({ browser }) => {
     const { context, page } = await visitor(browser);
     await page.goto('/');
+    await expect(notice(page)).toHaveText(/^Accept cookies\?\s*OK\s*No thanks$/);
+    await expect(notice(page).getByRole('link')).toHaveCount(0);
     const first = tracked(page);
     await ok(page).click();
     await first;
-    const vid = (await cookie(context, 'bm_vid'))?.value;
-    expect(vid).toBeTruthy();
+    expect((await cookie(context, 'bm_vid'))?.value).toBeTruthy();
 
     // The policy names the cookies and says visits are counted only after OK.
     await page.goto('/policies/privacy');
@@ -131,10 +132,22 @@ test.describe.serial('cookie notice', () => {
     await expect(main).toContainText('only after you press OK on the cookie notice');
     const cookies = page.locator('#cookies');
     for (const name of ['bm_session', 'bm_admin', 'bm_consent', 'bm_vid']) await expect(cookies).toContainText(name);
+    await expect(cookies).toContainText('for one week');
+    await page.waitForLoadState('networkidle');
+    await expect(notice(page)).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Change my choice' })).toHaveCount(0);
+    await context.close();
+  });
+
+  test('after No thanks, "Change my choice" in the privacy policy reopens the notice, in both directions', async ({ browser }) => {
+    const { context, page } = await visitor(browser);
+    await page.goto('/');
+    await noThanks(page).click();
     await expect(notice(page)).toHaveCount(0);
 
-    // Change to No thanks: focus goes to the notice and comes back; the visit cookie is removed.
-    const change = cookies.getByRole('button', { name: 'Change my choice' });
+    // Reopen and say No thanks again: focus goes to the notice and comes back to the button.
+    await page.goto('/policies/privacy');
+    const change = page.locator('#cookies').getByRole('button', { name: 'Change my choice' });
     await change.click();
     await expect(notice(page)).toContainText(NOTE);
     await expect(ok(page)).toBeFocused();
@@ -142,23 +155,20 @@ test.describe.serial('cookie notice', () => {
     await expect(notice(page)).toHaveCount(0);
     await expect(change).toBeFocused();
     expect((await cookie(context, 'bm_consent'))?.value).toBe('no');
-    expect(await cookie(context, 'bm_vid')).toBeUndefined();
-
-    // The visit that was counted while the answer was still OK (the '/' page and this policy page) stays; nothing new is added.
-    await expect.poll(async () => (await saved(vid)).length).toBe(2);
     await page.goto('/about');
     await page.waitForTimeout(1500);
-    expect((await saved()).length).toBe(2);
+    expect(await saved()).toEqual([]);
 
-    // And back to OK: counting starts again.
+    // Then OK: counting starts, and the button is gone.
     await page.goto('/policies/privacy');
-    await page.getByRole('button', { name: 'Change my choice' }).click();
+    await change.click();
     const again = tracked(page);
     await ok(page).click();
     await again;
     expect((await cookie(context, 'bm_consent'))?.value).toBe('yes');
-    await expect.poll(async () => (await saved()).length).toBe(3);
-    expect((await saved()).map((v) => v.path)).toEqual(['/', '/policies/privacy', '/policies/privacy']);
+    await expect(notice(page)).toHaveCount(0);
+    await expect(change).toHaveCount(0);
+    await expect.poll(async () => (await saved()).map((v) => v.path)).toEqual(['/policies/privacy']);
     await context.close();
   });
 
@@ -174,8 +184,6 @@ test.describe.serial('cookie notice', () => {
     await page.keyboard.press('Tab');
     await expect(noThanks(page)).toBeFocused();
     await ok(page).focus();
-    await page.keyboard.press('Shift+Tab');
-    await expect(notice(page).getByRole('link', { name: 'Details' })).toBeFocused();
     await page.keyboard.press('Shift+Tab');
     expect(await page.evaluate(() => !!document.activeElement?.closest('[aria-label="Cookie notice"]'))).toBe(false);
 

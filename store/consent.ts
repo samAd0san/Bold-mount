@@ -18,7 +18,7 @@ export const useConsent = create<ConsentState>()((set) => ({
   asking: false,
   load: () => set({ choice: readConsent(document.cookie), ready: true }),
   ask: () => set({ asking: true }),
-  // The server saves the choice (a cookie set by the server lasts the full year even on Safari); the browser then just reads it back.
+  // The server saves the choice (a cookie set by the server keeps its full lifetime even on Safari); the browser then just reads it back.
   choose: async (choice) => {
     const res = await fetch('/api/consent', {
       method: 'POST',

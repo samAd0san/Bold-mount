@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { buttonClass } from '@/components/ui/button-styles';
 import { useConsent } from '@/store/consent';
@@ -39,12 +38,7 @@ export function CookieNotice() {
       // Phones leave the right edge free for the WhatsApp button; z-55 sits under the menu, cart drawer and pop-ups.
       className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] right-[calc(5.5rem+env(safe-area-inset-right))] z-[55] rounded-2xl border border-white/15 bg-night/95 p-4 text-on-night shadow-2xl backdrop-blur motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 md:right-auto md:w-[31rem]"
     >
-      <p className="text-[0.82rem] leading-relaxed">
-        We use a small cookie to count visits and improve the shop.{' '}
-        <Link href="/policies/privacy#cookies" className="whitespace-nowrap text-gold underline underline-offset-4 hover:text-gold-bright">
-          Details
-        </Link>
-      </p>
+      <p className="text-[0.9rem] font-medium leading-relaxed">Accept cookies?</p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button ref={okRef} type="button" disabled={busy} onClick={() => pick('yes')} className={buttonClass('gold', BUTTON)}>
           OK

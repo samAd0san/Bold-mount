@@ -174,7 +174,7 @@ export const policies = (d: DeliverySettings): Policy[] => [
           'Sign-in (bm_session, bm_oauth): keeps you signed in with Google so you can place and track your orders.',
           'Admin sign-in (bm_admin): used only by the shop owner.',
           'Your cart, and the details you type at checkout: kept in your own browser’s storage on your device. Nothing is sent to us until you place your order.',
-          'Your cookie choice (bm_consent): remembers whether you pressed OK or No thanks, for one year.',
+          'Your cookie choice (bm_consent): remembers whether you pressed OK or No thanks, for one week; after that we ask again.',
           'Counting visits (bm_vid), only if you press OK: a random ID that lets us count visits without knowing who you are, kept for one year. Your browser also keeps the time of your last visit (bm_seen) so that coming back later counts as a new visit.',
         ],
         cookieChoice: true,
@@ -191,7 +191,7 @@ export const policies = (d: DeliverySettings): Policy[] => [
       },
       {
         heading: 'Your choices',
-        paragraphs: ['You can ask us to remove the details you have sent us at any time by messaging us on WhatsApp. You can also change your cookie choice at any time with the button under Cookies.'],
+        paragraphs: ['You can ask us to remove the details you have sent us at any time by messaging us on WhatsApp. If you pressed No thanks, a button under Cookies lets you change your mind. If you pressed OK, we ask again after a week.'],
       },
     ],
   },

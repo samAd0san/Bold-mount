@@ -4,7 +4,7 @@ import { VID_COOKIE } from '@/lib/server/analytics';
 import { rejectCrossSite } from '@/lib/server/auth';
 import { fail, handle, ok, readJson } from '@/lib/server/http';
 
-// Saves the visitor's cookie choice for a year. "No" also removes the visit cookie, which only the server can do.
+// Saves the visitor's cookie choice for a week. "No" also removes the visit cookie, which only the server can do.
 export const POST = handle(async (req: Request) => {
   const blocked = rejectCrossSite(req);
   if (blocked) return blocked;
