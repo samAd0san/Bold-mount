@@ -24,6 +24,16 @@ test('wrong PIN is refused, right PIN opens the dashboard, Log out locks it agai
   await expect(page.getByRole('heading', { name: 'Enter your PIN' })).toBeVisible();
 });
 
+test('the PIN login is remembered for at least 10 days, not just a day', async ({ page, context }) => {
+  await adminLogin(page);
+  const cookie = (await context.cookies()).find((c) => c.name === 'bm_admin');
+  const days = ((cookie?.expires ?? 0) * 1000 - Date.now()) / 86_400_000;
+  expect(days).toBeGreaterThan(29);
+  expect(days).toBeLessThan(31);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+});
+
 test('sidebar collapses to icons, remembers it, and expands again', async ({ page }) => {
   await adminLogin(page);
   const nav = page.getByRole('navigation', { name: 'Admin sections' });

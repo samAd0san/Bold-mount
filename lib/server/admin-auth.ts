@@ -2,11 +2,13 @@ import 'server-only';
 import { createHash, createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { cookies, headers } from 'next/headers';
 import { statsDb } from '@/lib/server/analytics';
+import { SESSION_DAYS } from '@/lib/server/auth-token';
 import { rejectCrossSite } from '@/lib/server/auth';
 import { fail } from '@/lib/server/http';
 
 const COOKIE = 'bm_admin';
-const SESSION_MS = 12 * 60 * 60 * 1000;
+// Same lifetime as a customer sign-in, so the owner isn't asked for the PIN again every day.
+const SESSION_MS = SESSION_DAYS * 24 * 60 * 60 * 1000;
 const DEFAULT_PIN = '1111';
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_TRIES = 5;
